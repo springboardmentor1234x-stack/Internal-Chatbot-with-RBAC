@@ -1,0 +1,11 @@
+__pycache__/
+.env
+.env.*
+venv/
+.venv/
+data/chroma/   # if you store local vector DB
+*.sqlite3
+*.db
+.DS_Store
+.vscode/
+.ipynb_checkpoints/
