@@ -1,11 +1,11 @@
 import json
 from datetime import datetime
 
-INPUT_FILE = "Internal-Chatbot-with-RBAC/engineering_master_doc_cleaned.txt"
+INPUT_FILE = "D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/normalization/engineering_master_doc_cleaned.txt"
 CHUNK_SIZE = 350
 OVERLAP = 50
-OUTPUT_CHUNKS_FILE = "Tasks/engineering_chunks.json"
-OUTPUT_METADATA_FILE = "Tasks/engineering_metadata.json"
+OUTPUT_CHUNKS_FILE = "engineering_chunks.json"
+OUTPUT_METADATA_FILE = "engineering_metadata.json"
 
 with open(INPUT_FILE, "r", encoding="utf-8") as file:
     text = file.read()
