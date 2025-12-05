@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-INPUT_FILE = "Internal-Chatbot-with-RBAC/Fintech-data/engineering/engineering_master_doc.md"
+INPUT_FILE = "Internal-Chatbot-with-RBAC/engineering_master_doc_cleaned.txt"
 CHUNK_SIZE = 350
 OVERLAP = 50
 OUTPUT_CHUNKS_FILE = "Tasks/engineering_chunks.json"
