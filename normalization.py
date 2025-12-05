@@ -13,7 +13,7 @@ for line in lines:
     line = line.lower()
 
     # Remove ONLY unwanted symbols
-    line = re.sub(r"[#*`~]", "", line)
+    line = re.sub(r"[#*`~|-├──└──]", "", line)
 
     # Remove extra spaces
     line = re.sub(r"[ \t]+", " ", line).rstrip()
