@@ -1,69 +1,105 @@
+import os
 import json
-from datetime import datetime
 
-INPUT_FILE = "D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/normalization/engineering_master_doc_cleaned.txt"
+INPUT_ROOT = "D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/Fintech-data-normalized"
+OUTPUT_CHUNKS_FILE = "all_chunks.json"
+OUTPUT_METADATA_FILE = "all_metadata.json"
+
 CHUNK_SIZE = 350
 OVERLAP = 50
-OUTPUT_CHUNKS_FILE = "engineering_chunks.json"
-OUTPUT_METADATA_FILE = "engineering_metadata.json"
 
-with open(INPUT_FILE, "r", encoding="utf-8") as file:
-    text = file.read()
+ROLE_MAP = {
+    "engineering": [
+        "Engineering Lead", "Backend Developer", "Frontend Developer",
+        "DevOps Engineer", "System Architect", "Security Team", "C-Level Executive"
+    ],
+    "finance": [
+        "Finance Manager", "Accounts Team", "Auditor",
+        "Risk Analyst", "CFO", "C-Level Executive"
+    ],
+    "marketing": [
+        "Marketing Manager", "SEO Team", "Content Strategist",
+        "Growth Lead", "CMO", "C-Level Executive"
+    ],
+    "hr": [
+        "HR Manager", "Talent Acquisition", "Compliance Officer",
+        "Payroll Team", "C-Level Executive"
+    ],
+    "general": [
+        "Employees", "Department Heads", "C-Level Executive"
+    ]
+}
 
-tokens = text.split()
+def restore_original_filename(cleaned_name):
+    if cleaned_name.endswith("_cleaned.txt"):
+        base = cleaned_name.replace("_cleaned.txt", "")
+        # Assume original was md unless HR (csv)
+        if "hr" in base.lower():
+            return base + ".csv"
+        return base + ".md"
+    return cleaned_name
 
-total_tokens = len(tokens)
-print(f"Total Tokens in Document: {total_tokens}")
+all_chunks = []
+all_metadata = []
+global_chunk_counter = 1
 
-chunks = []
-start = 0
+for root, dirs, files in os.walk(INPUT_ROOT):
+    for file in files:
+        if not file.endswith("_cleaned.txt"):
+            continue
 
-for i in range(3):
-    end = start + CHUNK_SIZE
-    chunk_tokens = tokens[start:end]
-    chunk_text = " ".join(chunk_tokens)
-    chunks.append(chunk_text)
-    start = end - OVERLAP
+        file_path = os.path.join(root, file)
 
-chunk_data = []
+        # Extract department from folder name
+        department = os.path.basename(root).lower()
 
-for i, chunk in enumerate(chunks, start=1):
-    chunk_data.append({
-        "chunk_id": f"ENG_CHUNK_{i}",
-        "content": chunk
-    })
+        # Restore original source filename
+        source_document = restore_original_filename(file)
+
+        print(f"Processing: {department}/{file}")
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+
+        tokens = text.split()
+        total_tokens = len(tokens)
+
+        start = 0
+        chunk_index = 1
+
+        while start < total_tokens:
+            end = start + CHUNK_SIZE
+            chunk_tokens = tokens[start:end]
+            chunk_text = " ".join(chunk_tokens)
+
+            chunk_id = f"{department.upper()}_CHUNK_{global_chunk_counter}"
+
+            all_chunks.append({
+                "chunk_id": chunk_id,
+                "content": chunk_text
+            })
+
+            all_metadata.append({
+                "chunk_id": chunk_id,
+                "source_document": source_document,
+                "department": department.capitalize(),
+                "chunk_index": chunk_index,
+                "approx_token_count": len(chunk_tokens),
+                "security_level": "Confidential",
+                "allowed_roles": ROLE_MAP.get(department, ["C-Level Executive"])
+            })
+
+            global_chunk_counter += 1
+            chunk_index += 1
+            start = end - OVERLAP
 
 with open(OUTPUT_CHUNKS_FILE, "w", encoding="utf-8") as f:
-    json.dump(chunk_data, f, indent=4)
-
-print("Chunks saved to:", OUTPUT_CHUNKS_FILE)
-
-metadata = []
-
-for i, chunk in enumerate(chunks, start=1):
-    meta = {
-        "chunk_id": f"ENG_CHUNK_{i}",
-        "source_document": "engineering_master_doc.md",
-        "department": "Engineering",
-        "chunk_index": i,
-        "total_chunks": 3,
-        "approx_token_count": len(chunk.split()),
-        "security_level": "Confidential",
-        "allowed_roles": [
-            "Engineering Lead",
-            "Backend Developer",
-            "Frontend Developer",
-            "DevOps Engineer",
-            "System Architect",
-            "Security Team",
-            "C-Level Executive"
-        ],
-        "created_at": datetime.now().isoformat()
-    }
-
-    metadata.append(meta)
+    json.dump(all_chunks, f, indent=4)
 
 with open(OUTPUT_METADATA_FILE, "w", encoding="utf-8") as f:
-    json.dump(metadata, f, indent=4)
+    json.dump(all_metadata, f, indent=4)
 
-print("Metadata saved to:", OUTPUT_METADATA_FILE)
+print("\nALL FILES CHUNKED SUCCESSFULLY")
+print("Chunks Saved as ", OUTPUT_CHUNKS_FILE)
+print("Metadata Saved as ", OUTPUT_METADATA_FILE)
+print("Total Chunks Created:", len(all_chunks))
