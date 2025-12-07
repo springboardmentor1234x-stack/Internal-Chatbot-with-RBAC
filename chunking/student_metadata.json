@@ -1,0 +1,774 @@
+[
+    {
+        "chunk_id": "ENGINEERING_1",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_2",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_3",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 3,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_4",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 4,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_5",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 5,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_6",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 6,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_7",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 7,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_8",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 8,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_9",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 9,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_10",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 10,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_11",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 11,
+        "word_count": 325,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_12",
+        "original_file": "engineering_master_doc (1).md",
+        "department": "Engineering",
+        "section_index": 12,
+        "word_count": 25,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_13",
+        "original_file": "financial_summary (1).md",
+        "department": "Finance",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_14",
+        "original_file": "financial_summary (1).md",
+        "department": "Finance",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_15",
+        "original_file": "financial_summary (1).md",
+        "department": "Finance",
+        "section_index": 3,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_16",
+        "original_file": "financial_summary (1).md",
+        "department": "Finance",
+        "section_index": 4,
+        "word_count": 77,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_17",
+        "original_file": "quarterly_financial_report (3).md",
+        "department": "Finance",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_18",
+        "original_file": "quarterly_financial_report (3).md",
+        "department": "Finance",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_19",
+        "original_file": "quarterly_financial_report (3).md",
+        "department": "Finance",
+        "section_index": 3,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_20",
+        "original_file": "quarterly_financial_report (3).md",
+        "department": "Finance",
+        "section_index": 4,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_21",
+        "original_file": "quarterly_financial_report (3).md",
+        "department": "Finance",
+        "section_index": 5,
+        "word_count": 269,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Risk Analyst",
+            "CFO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_22",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_23",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_24",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 3,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_25",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 4,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_26",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 5,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_27",
+        "original_file": "employee_handbook (1).md",
+        "department": "General",
+        "section_index": 6,
+        "word_count": 285,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Employees",
+            "Department Heads",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_28",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_29",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_30",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 3,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_31",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 4,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_32",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 5,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_33",
+        "original_file": "hr_data (1).csv",
+        "department": "Hr",
+        "section_index": 6,
+        "word_count": 222,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_34",
+        "original_file": "marketing_report_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_35",
+        "original_file": "marketing_report_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_36",
+        "original_file": "marketing_report_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 3,
+        "word_count": 345,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_37",
+        "original_file": "marketing_report_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 4,
+        "word_count": 45,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_38",
+        "original_file": "marketing_report_q1_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_39",
+        "original_file": "marketing_report_q1_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_40",
+        "original_file": "marketing_report_q1_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 3,
+        "word_count": 235,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_41",
+        "original_file": "marketing_report_q2_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_42",
+        "original_file": "marketing_report_q2_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_43",
+        "original_file": "marketing_report_q2_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 3,
+        "word_count": 252,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_44",
+        "original_file": "marketing_report_q3_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_45",
+        "original_file": "marketing_report_q3_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_46",
+        "original_file": "marketing_report_q3_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 3,
+        "word_count": 227,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_47",
+        "original_file": "market_report_q4_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 1,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_48",
+        "original_file": "market_report_q4_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 2,
+        "word_count": 350,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_49",
+        "original_file": "market_report_q4_2024 (1).md",
+        "department": "Marketing",
+        "section_index": 3,
+        "word_count": 296,
+        "classification": "Confidential",
+        "permitted_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO",
+            "C-Level Executive"
+        ]
+    }
+]
