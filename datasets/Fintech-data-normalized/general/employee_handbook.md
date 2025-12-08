@@ -1,0 +1,353 @@
+ employee handbook
+
+ table of contents
+1. welcome  introductionwelcome--introduction
+2. employee onboarding  benefitsemployee-onboarding--benefits
+3. leave policiesleave-policies
+4. work hours  attendancework-hours--attendance
+5. code of conduct  workplace behaviorcode-of-conduct--workplace-behavior
+6. health  safetyhealth--safety
+7. compensation  payrollcompensation--payroll
+8. reimbursement policiesreimbursement-policies
+9. training  developmenttraining--development
+10. performance  feedbackperformance--feedback
+11. privacy  data securityprivacy--data-security
+12. exit policyexit-policy
+13. faqsfaqs
+14. miscellaneousmiscellaneous
+
+---
+
+ welcome  introduction
+
+ company vision and mission
+at finsolve technologies, our vision is to empower businesses and individuals through innovative technology solutions. our mission is to deliver high-quality, sustainable products and services that create value for our stakeholders.
+
+ core values
+- integrity: we act with honesty and transparency.
+- respect: we value diversity and treat everyone with dignity.
+- innovation: we encourage creativity and continuous improvement.
+- customer focus: our customers are at the heart of everything we do.
+- accountability: we take responsibility for our actions and results.
+
+ company overview
+founded in 2016, finsolve technologies is a leading player in fintech with a presence across india and global markets. we are committed to ethical business, social responsibility, and fostering a culture of learning and growth.
+
+---
+
+ employee onboarding  benefits
+
+ onboarding process
+- pre-joining: offer letter issuance, document submission id, address, education, previous employment.
+- day 1: welcome session, hr induction, it setup, introduction to team and mentor.
+- first week: policy orientation, compliance training, role-specific training, buddy program.
+- first month: probation objectives set, regular check-ins with manager and hr.
+
+ employee benefits
+
+ statutory benefits
+ benefit  details 
+------------------
+ employees provident fund epf  12% employer  employee contribution; as per epf act, 1952 
+ employee state insurance esi  for employees earning  21,000month; covers medical, disability, maternity 
+ gratuity  payable after 5 years of continuous service; as per payment of gratuity act 
+ maternity benefit  26 weeks paid leave for first two children; as per maternity benefit act 
+ bonus  as per payment of bonus act; minimum 8.33% of basic salary 
+
+ company benefits
+- group health insurance: family floater policy covering employee, spouse, and up to 2 children.
+- accident  life insurance: additional coverage for accidental death or disability.
+- wellness programs: annual health check-ups, yogameditation sessions, mental health counseling.
+- employee assistance program eap: confidential counseling and support for personal or professional issues.
+- flexible work arrangements: remote work, flexible hours role-dependent.
+
+---
+
+ leave policies
+
+ types of leave
+ leave type  entitlementdetails 
+---------------------------------
+ privilegeannual  15-21 daysyear as per state shops  establishments act; accrued monthly 
+ sick leave  12 daysyear non-cumulative; medical certificate for 2 days 
+ casual leave  7 daysyear state-specific 
+ maternity leave  26 weeks first two children; 12 weeks for subsequent children 
+ paternity leave  7-15 days company policy; not statutory 
+ bereavement leave  3-7 days for immediate family company policy 
+ compensatory off  for work on holidaysweekends manager approval required 
+ public holidays  10-14 daysyear as per company calendar and state notifications 
+ leave without pay  allowed with approval after exhausting paid leave 
+
+ leave application process
+- apply via hrmsleave portal at least 3 days in advance except emergencies.
+- sick leave for more than 2 days requires a medical certificate.
+- emergency leave to be communicated to managerhr as soon as possible.
+- approval from reporting manager and hr required for all leave requests.
+- leave balance can be viewed on the hrms portal.
+
+ public holidays policy
+- annual holiday list circulated at the start of each year.
+- includes national republic day, independence day, gandhi jayanti, festival, and restricted holidays.
+- employees may choose restricted holidays as per personal preference.
+
+---
+
+ work hours  attendance
+
+ work hours
+- standard hours: 9 hoursday including 1 hour break, 6 daysweek or 8 hoursday, 5 daysweek as per company policy.
+- flexible timings: allowed for eligible roles, subject to manager approval.
+- shift work: applicable for certain roles; shift allowance as per policy.
+
+ attendance  punctuality
+- attendance must be marked daily via biometric, swipe card, or hrms app.
+- late arrivalsearly departures must be notified to the manager.
+- three or more late arrivals in a month may attract disciplinary action.
+
+ time tracking
+- all employees must record work hours and breaks accurately.
+- use of company-approved time tracking tools is mandatory for remotehybrid roles.
+
+ overtime  compensation
+- overtime is voluntary and paid at double the regular wage rate as per factories act.
+- prior approval from manager required for overtime.
+- compensatory off may be provided in lieu of overtime for certain roles.
+
+---
+
+ code of conduct  workplace behavior
+
+ professionalism  respect
+- treat all colleagues, clients, and vendors with respect and courtesy.
+- maintain a positive, inclusive, and harassment-free environment.
+- uphold confidentiality of company information at all times.
+
+ anti-discrimination  equal opportunity
+- no discrimination based on gender, caste, religion, age, disability, sexual orientation, or any other protected characteristic.
+- equal opportunity in recruitment, promotions, and training.
+
+ dress code
+- business casual attire from monday to thursday.
+- smart casuals or ethnic wear on fridays and special occasions.
+- avoid revealing, offensive, or inappropriate clothing.
+
+ substance abuse policy
+- possession, use, or distribution of drugs or alcohol on company premises is strictly prohibited.
+- violation may lead to immediate termination and legal action.
+
+ harassment  bullying prevention
+- zero tolerance for sexual harassment, workplace bullying, or any form of intimidation.
+- internal complaints committee icc established as per posh act.
+- complaints can be raised confidentially to hr or icc.
+
+ conflict resolution process
+- attempt informal resolution with the concerned party.
+- if unresolved, escalate to hr or grievance redressal officer.
+- formal complaints investigated impartially and resolved within 30 days.
+
+---
+
+ health  safety
+
+ workplace safety guidelines
+- comply with the occupational safety, health, and working conditions code, 2020.
+- mandatory safety training for all employees.
+- use personal protective equipment ppe where required.
+
+ accident  injury reporting
+- report all accidents, injuries, or near-misses to hr and safety officer immediately.
+- first aid kits and emergency contact numbers available at all locations.
+
+ mental health  well-being support
+- access to eap counselors and mental health resources.
+- regular wellness workshops and stress management sessions.
+
+ emergency procedures
+- evacuation plans displayed at all exits.
+- fire drills conducted quarterly.
+- emergency helpline numbers displayed prominently.
+
+---
+
+ compensation  payroll
+
+ salary structure
+ component  details 
+--------------------
+ basic salary  40-50% of ctc 
+ house rent allowance hra  40-50% of basic salary 
+ special allowance  variable, as per grade 
+ conveyance allowance  as per company policy 
+ bonus  minimum 8.33% of basic salary, as per law 
+ gratuity  as per payment of gratuity act 
+ provident fund  12% employer  employee contribution 
+ professional tax  as per state laws 
+ esi  for eligible employees 
+
+ payroll schedule
+- salary is processed and credited to bank accounts on the last working day of each month.
+- payslips are available on the hrms portal.
+
+ payroll deductions
+- statutory deductions: pf, esi, professional tax, income tax tds, labour welfare fund.
+- voluntary deductions: loan repayments, advances, etc.
+
+ payroll discrepancy handling
+- raise discrepancies to hr within 5 working days of salary credit.
+- issues resolved within 7 working days.
+
+ salary reviews  increases
+- annual performance-based increments.
+- market adjustments and promotions as per company policy.
+
+---
+
+ reimbursement policies
+
+ eligible expenses
+- travel: airtrainbus fare economy class, local conveyance cab, auto, mileage.
+- accommodation: hotel stay up to 3,000night actuals with bill.
+- meals: up to 500day on official travel.
+- office supplies: with prior manager approval.
+
+ claim process
+1. submit expense claims via hrms with original bills within 30 days of incurring the expense.
+2. claims reviewed and approved by reporting manager.
+3. reimbursement processed with the next payroll cycle.
+
+ required documentation
+- original billsinvoices.
+- travel ticketsboarding passes.
+- approval emails if pre-approval required.
+
+ real-world example
+if you travel to mumbai for a client meeting, book your ticket through the company portal, keep all receipts, and submit your claim within 30 days for reimbursement.
+
+---
+
+ training  development
+
+ training programs
+- induction training: mandatory for new hires.
+- technical training: regular upskilling in core technologiestools.
+- soft skills workshops: communication, leadership, time management.
+
+ skill development
+- access to online learning platforms coursera, udemy, etc..
+- sponsorship for industry certifications e.g., pmp, aws.
+
+ career path  growth opportunities
+- internal job postings for open positions.
+- mentorship and leadership development programs.
+
+ tuition  certification reimbursement
+- up to 50,000year for relevant courses, subject to manager and hr approval.
+- must serve 1 year post-reimbursement or repay the amount.
+
+---
+
+ performance  feedback
+
+ performance reviews
+- frequency: annual and mid-year reviews.
+- criteria: based on kpis, goals, competencies, and values.
+- process: self-assessment, manager feedback, calibration.
+
+ feedback  coaching
+- regular 1:1 meetings between employee and manager.
+- constructive feedback encouraged at all levels.
+
+ disciplinary actions for underperformance
+- verbalwritten warning.
+- performance improvement plan pip.
+- termination if no improvement.
+
+ recognition  rewards
+- star performer awards, spot bonuses, certificates of appreciation.
+- annual rewards for innovation, teamwork, and leadership.
+
+---
+
+ privacy  data security
+
+ employee data privacy policies
+- compliance with digital personal data protection act, 2023.
+- personal data collected only for legitimate hrlegal purposes.
+- access restricted to authorized personnel.
+
+ information security guidelines
+- use strong passwords and change them regularly.
+- do not share confidential companyclient data externally.
+- report data breaches to it security team immediately.
+
+ company commitment to data protection
+- regular security audits and employee training.
+- data stored on secure, encrypted servers.
+
+ handling sensitive information
+- mark all confidential documents as confidential.
+- shred or securely delete sensitive paperelectronic files when no longer needed.
+
+---
+
+ exit policy
+
+ resignation procedures
+- submit writtenemail resignation to manager and hr.
+- notice period as per appointment letter typically 30-90 days.
+- handover of duties and documentation required.
+
+ termination process
+- may occur due to misconduct, underperformance, redundancy, or business needs.
+- hr will provide written communication and explanation.
+
+ severance pay
+- provided as per statutory requirements and company policy.
+
+ return of company property
+- all assets laptop, id card, phone, etc. to be returned before last working day.
+
+ exit interviews
+- conductspice by hr to gather feedback and suggestions.
+
+ full  final settlement
+- processed within 30-60 days of exit, including leave encashment and statutory dues.
+
+---
+
+ faqs
+
+q: how do i apply for maternity leave  
+a: submit application on hrms with medical certificate at least 8 weeks before due date.
+
+q: what if i forget to mark attendance  
+a: inform hr within 24 hours; repeated lapses may lead to deduction or disciplinary action.
+
+q: how is overtime calculated  
+a: paid at double the regular wage for hours beyond statutory limits, subject to manager approval.
+
+q: can i work from home  
+a: up to 2 daysweek, subject to manager and business approval.
+
+---
+
+ miscellaneous
+
+ team outings  social activities
+- quarterly team outings, annual company retreat, festival celebrations.
+
+ work-from-home policy
+- up to 2 daysweek for eligible roles; must be approved by manager.
+- must be reachable and available during core work hours.
+
+ employee referral program
+- 10,000 reward for successful referrals paid after new hire completes 6 months.
+
+ dress code  office etiquette
+- maintain cleanliness of workspace.
+- use meeting rooms for callsdiscussions.
+- mobile phones on silent in work areas.
+
+---
+
+note: this handbook is a living document and may be updated periodically. for policy clarifications or state-specific rules, please consult hr or refer to the companys policy portal.
