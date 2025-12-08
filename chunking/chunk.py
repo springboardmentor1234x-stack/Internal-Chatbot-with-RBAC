@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-INPUT_ROOT = r"C:\Users\91707\OneDrive\Desktop\RBAC-Chatbot\Internal-Chatbot-with-RBAC\datasets\Fintech-data"
+INPUT_ROOT = r"C:\Users\91707\OneDrive\Desktop\RBAC-Chatbot\Internal-Chatbot-with-RBAC\datasets\Fintech-data-normalized"
 OUTPUT_CHUNKS_FILE = "chunks.json"
 OUTPUT_METADATA_FILE = "metadata.json"
 
