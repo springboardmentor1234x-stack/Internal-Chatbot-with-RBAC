@@ -1,0 +1,22 @@
+# Ignore virtual environment
+venv/
+ENV/
+env/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore environment variables
+.env
+
+# Ignore system or editor files
+.DS_Store
+*.log
+
+# Ignore VS Code settings
+.vscode/
+
+# Chroma vector database (binary files)
+chroma_db/
