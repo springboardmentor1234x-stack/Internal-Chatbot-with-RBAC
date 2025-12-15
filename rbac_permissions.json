@@ -134,7 +134,6 @@
       "CFO": "c_level",
       "CMO": "c_level",
       "C-Level Executive": "c_level",
-      "Department Heads": "department_manager",
       "Employees": "employee"
     },
   
