@@ -1,0 +1,155 @@
+{
+    "roles": {
+      "admin": {
+        "inherits": [],
+        "permissions": ["*"]
+      },
+  
+      "c_level": {
+        "inherits": [],
+        "permissions": [
+          "read:engineering",
+          "read:finance",
+          "read:marketing",
+          "read:hr",
+          "read:general"
+        ]
+      },
+  
+      "security_officer": {
+        "inherits": [],
+        "permissions": [
+          "read:engineering",
+          "read:finance",
+          "read:marketing",
+          "read:hr"
+        ]
+      },
+  
+      "compliance_officer": {
+        "inherits": [],
+        "permissions": [
+          "read:finance",
+          "read:hr"
+        ]
+      },
+  
+      "engineering_manager": {
+        "inherits": ["engineering_employee"],
+        "permissions": [
+          "write:engineering",
+          "delete:engineering"
+        ]
+      },
+  
+      "engineering_employee": {
+        "inherits": ["employee"],
+        "permissions": [
+          "read:engineering"
+        ]
+      },
+  
+      "finance_manager": {
+        "inherits": ["finance_employee"],
+        "permissions": [
+          "write:finance",
+          "delete:finance"
+        ]
+      },
+  
+      "finance_employee": {
+        "inherits": ["employee"],
+        "permissions": [
+          "read:finance"
+        ]
+      },
+  
+      "marketing_manager": {
+        "inherits": ["marketing_employee"],
+        "permissions": [
+          "write:marketing",
+          "delete:marketing"
+        ]
+      },
+  
+      "marketing_employee": {
+        "inherits": ["employee"],
+        "permissions": [
+          "read:marketing"
+        ]
+      },
+  
+      "hr_manager": {
+        "inherits": ["hr_employee"],
+        "permissions": [
+          "write:hr",
+          "delete:hr"
+        ]
+      },
+  
+      "hr_employee": {
+        "inherits": ["employee"],
+        "permissions": [
+          "read:hr"
+        ]
+      },
+  
+      "employee": {
+        "inherits": [],
+        "permissions": [
+          "read:general"
+        ]
+      },
+  
+      "intern": {
+        "inherits": ["employee"],
+        "permissions": []
+      }
+    },
+  
+    "role_aliases": {
+      "Engineering Lead": "engineering_manager",
+      "System Architect": "engineering_manager",
+      "Backend Developer": "engineering_employee",
+      "Frontend Developer": "engineering_employee",
+      "DevOps Engineer": "engineering_employee",
+  
+      "Finance Manager": "finance_manager",
+      "Accounts Team": "finance_employee",
+      "Risk Analyst": "finance_employee",
+      "Auditor": "compliance_officer",
+  
+      "Marketing Manager": "marketing_manager",
+      "SEO Team": "marketing_employee",
+      "Content Strategist": "marketing_employee",
+      "Growth Lead": "marketing_manager",
+  
+      "HR Manager": "hr_manager",
+      "Talent Acquisition": "hr_employee",
+      "Payroll Team": "hr_employee",
+  
+      "Security Team": "security_officer",
+  
+      "CTO": "c_level",
+      "CFO": "c_level",
+      "CMO": "c_level",
+      "C-Level Executive": "c_level",
+      "Department Heads": "department_manager",
+      "Employees": "employee"
+    },
+  
+    "resources": {
+      "engineering": ["engineering_master_doc.md"],
+      "finance": ["financial_summary.md", "quarterly_financial_report.md"],
+      "hr": ["hr_data.csv"],
+      "marketing": [
+        "marketing_report_2024.md",
+        "marketing_report_q1_2024.md",
+        "marketing_report_q2_2024.md",
+        "marketing_report_q3_2024.md",
+        "marketing_report_q4_2024.md"
+      ],
+      "general": ["employee_handbook.md"]
+    }
+  }
+  
