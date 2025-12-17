@@ -1,0 +1,32 @@
+{
+  "admin": [
+    "finance.read",
+    "finance.write",
+    "hr.read",
+    "hr.write",
+    "engineering.read",
+    "marketing.read",
+    "general.read"
+  ],
+  "finance_manager": [
+    "finance.read",
+    "finance.write",
+    "general.read"
+  ],
+  "hr_manager": [
+    "hr.read",
+    "hr.write",
+    "general.read"
+  ],
+  "engineering": [
+    "engineering.read",
+    "general.read"
+  ],
+  "marketing_manager": [
+    "marketing.read",
+    "general.read"
+  ],
+  "employee": [
+    "general.read"
+  ]
+}
