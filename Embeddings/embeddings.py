@@ -42,13 +42,17 @@ np.save(EMBEDDINGS_FILE, embeddings)
 
 # ==========================================================
 # 6. Create Corrected Embedding Index
-#    ENGINEERING_1 -> ENGINEERING_CHUNK_1
+#    Ensures format like: ENGINEERING_CHUNK_1
 # ==========================================================
 index_list = []
 
 for chunk in chunks:
-    department, number = chunk["chunk_id"].rsplit("_", 1)
-    index_list.append(f"{department}_CHUNK_{number}")
+    # If chunk_id already contains _CHUNK_, keep it
+    if "_CHUNK_" in chunk["chunk_id"]:
+        index_list.append(chunk["chunk_id"])
+    else:
+        department, number = chunk["chunk_id"].rsplit("_", 1)
+        index_list.append(f"{department}_CHUNK_{number}")
 
 # ==========================================================
 # 7. Save Index
@@ -59,6 +63,7 @@ with open(INDEX_FILE, "w", encoding="utf-8") as f:
 print("Embeddings saved →", EMBEDDINGS_FILE)
 print("Index saved      →", INDEX_FILE)
 print("Embedding generation completed successfully!")
+
 
 
 
