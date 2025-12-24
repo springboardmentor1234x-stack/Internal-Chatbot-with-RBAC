@@ -1,126 +1,116 @@
-import os
-from typing import List
-from operator import itemgetter
-from dotenv import load_dotenv
+import re
+from collections import defaultdict
 
-# LangChain Imports
-from langchain_community.document_loaders import UnstructuredMarkdownLoader, CSVLoader 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_community.vectorstores import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-# Load environment variables
-load_dotenv()
-
-# --- CONFIGURATION ---
-DATA_PATH = "./rag_data"
-CHROMA_PATH = "./data/chroma" 
-EMBEDDING_MODEL = "text-embedding-ada-002"
-LLM_MODEL = "gpt-3.5-turbo"
-LLM_TEMPERATURE = 0.1
-
-# Document-to-Role Mapping
-DOCUMENT_MAP = {
-    "quarterly_financial_report.md": ["Finance", "C-Level"],
-    "marketing_report_2024.md": ["Marketing", "C-Level"],
-    "marketing_report_q1_2024.md": ["Marketing", "C-Level"],
-    "marketing_report_q2_2024.md": ["Marketing", "C-Level"],
-    "marketing_report_q3_2024.md": ["Marketing", "C-Level"],
-    "market_report_q4_2024.md": ["Marketing", "C-Level"],
-    "hr_data.csv": ["HR", "C-Level"],
-    "employee_handbook.md": ["HR", "Employee", "C-Level", "Finance", "Marketing", "Engineering"], 
-    "engineering_master_doc.md": ["Engineering", "C-Level"],
-}
-
-# --- 1. SETUP FUNCTIONS ---
-
-def load_documents() -> List:
-    if not os.path.exists(DATA_PATH):
-        print(f"Error: Data directory not found at {DATA_PATH}.")
-        return []
-
-    all_documents = []
-    for filename, roles in DOCUMENT_MAP.items():
-        file_path = os.path.join(DATA_PATH, filename)
-        if not os.path.exists(file_path):
-            continue
-
-        loader = CSVLoader(file_path, encoding="utf-8") if filename.endswith(".csv") else UnstructuredMarkdownLoader(file_path)
-        docs = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        chunks = text_splitter.split_documents(docs)
-
-        for chunk in chunks:
-            chunk.metadata["allowed_roles"] = roles
-            chunk.metadata["source"] = filename
-            all_documents.append(chunk)
-            
-    return all_documents
-
-def create_vector_store():
-    documents = load_documents()
-    if not documents:
-        return
-    
-    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
-    if os.path.exists(CHROMA_PATH):
-        import shutil
-        shutil.rmtree(CHROMA_PATH)
-
-    db = Chroma.from_documents(documents, embeddings, persist_directory=CHROMA_PATH)
-    db.persist()
-    print("Vector store created.")
-
-# --- 2. RETRIEVAL & CHAIN LOGIC ---
-
-def get_rag_chain(user_role: str):
-    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
-    
-    # RBAC Filter: ensures the user can only see docs matching their role
-    chroma_filter = {"allowed_roles": {"$in": [user_role]}}
-    
-    retriever = db.as_retriever(search_kwargs={"k": 5, "filter": chroma_filter})
-    llm = ChatOpenAI(temperature=LLM_TEMPERATURE, model=LLM_MODEL)
-    
-    template = """
-    You are an internal chatbot for FinSolve Technologies. Use the following context to answer the question. 
-    Your current role is {user_role}. Cite sources as [Source: filename].
-    If the answer isn't in the context, say: "Information not available in authorized documents."
-
-    Context: {context}
-    Question: {question}
-    """
-    
-    prompt = ChatPromptTemplate.from_template(template)
-
-    def format_docs(docs):
-        return "\n\n".join([f"Source: {d.metadata.get('source')}\nContent: {d.page_content}" for d in docs])
-
-    chain = (
-        {
-            "context": itemgetter("question") | retriever | format_docs, 
-            "question": itemgetter("question"), 
-            "user_role": itemgetter("user_role")
+class FinSolveRAGPipeline:
+    def __init__(self, user_role):
+        self.user_role = user_role
+        # Step 1: RBAC Role Expansion (Inheritance)
+        # Roles inherit permissions from lower levels
+        self.role_hierarchy = {
+            "Intern": ["Public", "General_HR"],
+            "Financial_Analyst": ["Public", "General_HR", "Financial_Data"],
+            "HR_Manager": ["Public", "General_HR", "HR_Sensitive"],
+            "Engineering_Lead": ["Public", "General_HR", "Tech_Architecture"],
+            "Cross_Dept_Manager": ["Public", "General_HR", "HR_Sensitive", "Tech_Architecture", "Financial_Data"]
         }
-        | prompt | llm | StrOutputParser()
-    )
-    return chain
+        self.allowed_scopes = self.role_hierarchy.get(user_role, ["Public"])
 
-# --- 3. API WRAPPER FUNCTION ---
+    def normalize_and_expand(self, query):
+        """
+        Step 2: Query Normalization & Variance Generation.
+        Lowercases, strips, and generates multiple query perspectives.
+        """
+        normalized = query.lower().strip()
+        variances = [
+            normalized,
+            f"technical details regarding {normalized}",
+            f"policies and procedures for {normalized}",
+            f"implementation of {normalized}"
+        ]
+        return variances
 
-def run_rag_query(question: str, role: str):
-    """The main entry point for the FastAPI backend."""
-    if not os.path.exists(CHROMA_PATH):
-        return "System error: Vector database not found. Please run setup first."
-    
-    try:
-        chain = get_rag_chain(role)
-        return chain.invoke({"question": question, "user_role": role})
-    except Exception as e:
-        return f"Error processing query: {str(e)}"
+    def rbac_filter(self, candidates):
+        """Step 3: RBAC Filtering of Chunks based on user inheritance."""
+        filtered = []
+        for chunk in candidates:
+            # Check if chunk's required scope is in user's allowed scopes
+            if chunk['scope'] in self.allowed_scopes:
+                chunk['accessible'] = "GRANTED"
+                filtered.append(chunk)
+            else:
+                chunk['accessible'] = "DENIED"
+        return filtered
 
+    def deduplicate_and_merge(self, results_list, k_constant=60):
+        """Step 4: Reciprocal Rank Fusion (RRF) for merging results from multiple queries."""
+        rrf_scores = defaultdict(float)
+        chunk_metadata = {}
+
+        for query_results in results_list:
+            for rank, chunk in enumerate(query_results, start=1):
+                chunk_id = chunk['chunk_id']
+                # RRF Formula: 1 / (k + rank)
+                rrf_scores[chunk_id] += 1.0 / (k_constant + rank)
+                chunk_metadata[chunk_id] = chunk
+
+        # Sort by RRF score descending
+        sorted_ids = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+        return [chunk_metadata[cid] for cid, score in sorted_ids]
+
+    def run_pipeline(self, user_query, top_k=5, threshold=0.7):
+        """Main execution flow for the RAG Pipeline."""
+        print(f"\n--- Executing Pipeline for Role: {self.user_role} ---")
+        print(f"Query: '{user_query}'")
+
+        # 1. Normalization & Variance
+        queries = self.normalize_and_expand(user_query)
+
+        all_retrieved = []
+        for q in queries:
+            # 2. Candidate Retrieval (Simulated Vector Search)
+            raw_candidates = self.mock_retrieval(q)
+            # 3. RBAC Filtering
+            accessible_candidates = self.rbac_filter(raw_candidates)
+            all_retrieved.append(accessible_candidates)
+
+        # 4. Merging & Ranking (RRF)
+        merged_results = self.deduplicate_and_merge(all_retrieved)
+
+        # 5. Thresholding & Final Filter
+        # Only return items where Access is GRANTED and Score is above threshold
+        final_output = [
+            r for r in merged_results 
+            if r['score'] >= threshold and r['accessible'] == "GRANTED"
+        ]
+
+        return final_output[:top_k]
+
+    def mock_retrieval(self, query):
+        """Mock data representing chunks from Handbook and Engineering docs."""
+        return [
+            {"chunk_id": "HB-12", "doc_id": "employee_handbook.md", "scope": "General_HR", "score": 0.88},
+            {"chunk_id": "ENG-42", "doc_id": "engineering_master_doc.md", "scope": "Tech_Architecture", "score": 0.91},
+            {"chunk_id": "FIN-05", "doc_id": "quarterly_financial.md", "score": 0.85, "scope": "Financial_Data"},
+            {"chunk_id": "HR-99", "doc_id": "hr_data.csv", "scope": "HR_Sensitive", "score": 0.95}
+        ]
+
+# --- Testing the Pipeline ---
 if __name__ == "__main__":
-    create_vector_store()
+    test_cases = [
+        ("HR_Manager", "What is the exit policy?"),
+        ("Intern", "What are the server specs?"),
+        ("Financial_Analyst", "Q4 Revenue details"),
+        ("Engineering_Lead", "How do we handle OAuth?"),
+        ("Cross_Dept_Manager", "System architecture and payroll")
+    ]
+
+    for role, query in test_cases:
+        pipeline = FinSolveRAGPipeline(role)
+        results = pipeline.run_pipeline(query)
+
+        print(f"Inheritance Scopes: {pipeline.allowed_scopes}")
+        if not results:
+            print(" >> No accessible results found for this query/role.")
+        for res in results:
+            print(f" >> [ID: {res['chunk_id']}] Doc: {res['doc_id']} | Access: {res['accessible']} | Score: {res['score']}")
+        print("-" * 60)

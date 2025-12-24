@@ -1,0 +1,21 @@
+# Python dependencies for the RBAC RAG Chatbot
+# FastAPI Backend dependencies
+fastapi
+uvicorn
+pydantic
+python-multipart
+pyjwt
+passlib[bcrypt]
+python-dotenv
+# RAG/LangChain dependencies
+langchain
+langchain-community
+langchain-openai
+tiktoken
+pypdf
+chromadb
+# Data handling for CSV
+pandas
+# Streamlit Frontend dependencies
+streamlit
+requests
