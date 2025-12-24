@@ -15,7 +15,7 @@
           "read:general"
         ]
       },
-  
+
       "security_officer": {
         "inherits": [],
         "permissions": [
@@ -31,6 +31,14 @@
         "permissions": [
           "read:finance",
           "read:hr"
+        ]
+      },
+
+      "manager": {
+        "inherits": ["marketing_manager", "engineering_manager", "finance_manager", "hr_manager"],
+        "permissions": [
+          "write:general",
+          "delete:general"
         ]
       },
   
@@ -116,15 +124,17 @@
   
       "Finance Manager": "finance_manager",
       "Accounts Team": "finance_employee",
-      "Risk Analyst": "finance_employee",
+      "Finance Analyst": "finance_employee",
       "Auditor": "compliance_officer",
   
       "Marketing Manager": "marketing_manager",
+      "Marketing Analyst": "marketing_employee",
       "SEO Team": "marketing_employee",
       "Content Strategist": "marketing_employee",
       "Growth Lead": "marketing_manager",
   
       "HR Manager": "hr_manager",
+      "HR Executive": "hr_manager",
       "Talent Acquisition": "hr_employee",
       "Payroll Team": "hr_employee",
   

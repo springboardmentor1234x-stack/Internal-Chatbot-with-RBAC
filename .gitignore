@@ -1,3 +1,4 @@
 Fintech-data/
 venv/
 .env
+*.bin
