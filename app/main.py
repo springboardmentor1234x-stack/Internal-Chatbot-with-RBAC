@@ -1,4 +1,5 @@
 import uvicorn
+<<<<<<< HEAD
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
@@ -26,6 +27,15 @@ from auth_utils import (
 
 app = FastAPI(title="FinSolve Backend API")
 
+=======
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import router as chat_router
+
+app = FastAPI(title="FinSolve Backend API")
+
+# Fixes the "Cannot connect" error by allowing cross-port communication
+>>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,6 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+<<<<<<< HEAD
 # --- AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/login", tags=["Authentication"])
@@ -99,3 +110,15 @@ def health_check():
 if __name__ == "__main__":
     # Use "main:app" because we are running from inside the app directory
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+=======
+# Connects your endpoints defined in routes.py
+app.include_router(chat_router, prefix="/api/v1")
+
+@app.get("/")
+def health_check():
+    return {"status": "Online", "message": "FastAPI is running on port 8000"}
+
+if __name__ == "__main__":
+    # Standard FastAPI port is 8000
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+>>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab

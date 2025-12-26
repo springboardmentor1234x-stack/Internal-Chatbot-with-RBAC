@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 # Updated import: now that rag_pipeline is in the same 'app' folder
+=======
+from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic import BaseModel
+>>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
 from rag_pipeline import FinSolveRAGPipeline
 from .auth_utils import get_current_user_role
 
@@ -12,6 +17,7 @@ class QueryRequest(BaseModel):
 @router.post("/chat")
 async def chat_endpoint(request: QueryRequest, user_role: str = Depends(get_current_user_role)):
     try:
+<<<<<<< HEAD
         # 1. Initialize pipeline using the user's role
         # Ensure FinSolveRAGPipeline handles pathing correctly in its own __init__
         pipeline = FinSolveRAGPipeline(user_role)
@@ -38,3 +44,16 @@ async def chat_endpoint(request: QueryRequest, user_role: str = Depends(get_curr
         # 4. Log the error internally and return a clear message
         print(f"Error in /chat endpoint: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error: Check pipeline logs.")
+=======
+        # Initialize pipeline using the user's role
+        pipeline = FinSolveRAGPipeline(user_role)
+        results = pipeline.run_pipeline(request.query)
+        
+        if not results:
+            return {"answer": "I don't have access to that information based on your role.", "sources": []}
+            
+        answer = f"Found relevant information in {results[0]['doc_id']}."
+        return {"answer": answer, "sources": [res['doc_id'] for res in results]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+>>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
