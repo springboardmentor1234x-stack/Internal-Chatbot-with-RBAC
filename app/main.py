@@ -1,5 +1,4 @@
 import uvicorn
-<<<<<<< HEAD
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
@@ -7,13 +6,12 @@ import jwt
 import os
 import sys
 
-# 1. Standardize the path so Python knows where to look
-# This ensures that even if you run from the root, it finds the local files
+# 1. Standardize the path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# 2. Local Imports (Note: No 'app.' prefix since we are inside the app folder)
+# 2. Local Imports
 from routes import router as chat_router
 from database import get_user_from_db 
 from auth_utils import (
@@ -27,15 +25,7 @@ from auth_utils import (
 
 app = FastAPI(title="FinSolve Backend API")
 
-=======
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.routes import router as chat_router
-
-app = FastAPI(title="FinSolve Backend API")
-
 # Fixes the "Cannot connect" error by allowing cross-port communication
->>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,7 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-<<<<<<< HEAD
 # --- AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/login", tags=["Authentication"])
@@ -99,8 +88,7 @@ async def search_endpoint(user=Depends(require_permission("search"))):
 async def finance_endpoint(user=Depends(require_permission("view_reports"))):
     return {"message": "Confidential financial data accessed."}
 
-# --- EXISTING ROUTES ---
-
+# --- ROUTES ---
 app.include_router(chat_router, prefix="/api/v1")
 
 @app.get("/", tags=["Health"])
@@ -108,17 +96,6 @@ def health_check():
     return {"status": "Online", "message": "FinSolve API is running"}
 
 if __name__ == "__main__":
-    # Use "main:app" because we are running from inside the app directory
+    # If running from inside the app folder, use "main:app"
+    # If running from the root folder, use "app.main:app"
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-=======
-# Connects your endpoints defined in routes.py
-app.include_router(chat_router, prefix="/api/v1")
-
-@app.get("/")
-def health_check():
-    return {"status": "Online", "message": "FastAPI is running on port 8000"}
-
-if __name__ == "__main__":
-    # Standard FastAPI port is 8000
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
->>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab

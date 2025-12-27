@@ -1,13 +1,11 @@
-<<<<<<< HEAD
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-# Updated import: now that rag_pipeline is in the same 'app' folder
-=======
-from fastapi import APIRouter, Depends, HTTPException, Body
-from pydantic import BaseModel
->>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
-from rag_pipeline import FinSolveRAGPipeline
-from .auth_utils import get_current_user_role
+
+# 1. Corrected Imports based on your new structure
+# Using 'app.' prefix ensures the package is found correctly
+from app.rag_pipeline import FinSolveRAGPipeline
+from app.auth_utils import get_current_user  # Changed to get_current_user to access the whole payload
+from app.utils.functions import format_chat_response # Using your new functions.py
 
 router = APIRouter()
 
@@ -15,45 +13,45 @@ class QueryRequest(BaseModel):
     query: str
 
 @router.post("/chat")
-async def chat_endpoint(request: QueryRequest, user_role: str = Depends(get_current_user_role)):
+async def chat_endpoint(
+    request: QueryRequest, 
+    # We get the full user dict, then extract the role
+    current_user: dict = Depends(get_current_user)
+):
     try:
-<<<<<<< HEAD
-        # 1. Initialize pipeline using the user's role
-        # Ensure FinSolveRAGPipeline handles pathing correctly in its own __init__
+        user_role = current_user.get("role", "guest")
+        username = current_user.get("sub", "User")
+
+        # 2. Initialize pipeline using the user's role
+        # Ensure your rag_pipeline.py is updated to handle this
         pipeline = FinSolveRAGPipeline(user_role)
         results = pipeline.run_pipeline(request.query)
         
-        # 2. Handle empty results or access restrictions
+        # 3. Handle empty results or access restrictions
         if not results:
             return {
                 "answer": "I don't have access to that information based on your role.", 
                 "sources": []
             }
             
-        # 3. Construct the response
-        # Using .get() is safer to avoid KeyErrors if 'doc_id' is missing
-        top_doc = results[0].get('doc_id', 'Unknown Document')
-        answer = f"Found relevant information in {top_doc}."
+        # 4. Construct the response using your new utility function
+        sources = [res.get('doc_id') for res in results if 'doc_id' in res]
+        top_doc = sources[0] if sources else 'Unknown Document'
         
-        return {
-            "answer": answer, 
-            "sources": [res.get('doc_id') for res in results if 'doc_id' in res]
-        }
+        answer_text = f"Found relevant information in {top_doc} for your query."
+
+        # Using the helper from your app/utils/functions.py
+        return format_chat_response(
+            username=username,
+            role=user_role,
+            message=answer_text,
+            sources=sources
+        )
         
     except Exception as e:
-        # 4. Log the error internally and return a clear message
+        # 5. Detailed error logging
         print(f"Error in /chat endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error: Check pipeline logs.")
-=======
-        # Initialize pipeline using the user's role
-        pipeline = FinSolveRAGPipeline(user_role)
-        results = pipeline.run_pipeline(request.query)
-        
-        if not results:
-            return {"answer": "I don't have access to that information based on your role.", "sources": []}
-            
-        answer = f"Found relevant information in {results[0]['doc_id']}."
-        return {"answer": answer, "sources": [res['doc_id'] for res in results]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
->>>>>>> e9687b9d5c258ced9b544b6625ce2877d88a17ab
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Internal Server Error: {str(e)}"
+        )
