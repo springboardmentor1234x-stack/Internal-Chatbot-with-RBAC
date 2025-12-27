@@ -1,11 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from typing import List
 
-# 1. Corrected Imports based on your new structure
-# Using 'app.' prefix ensures the package is found correctly
-from app.rag_pipeline import FinSolveRAGPipeline
-from app.auth_utils import get_current_user  # Changed to get_current_user to access the whole payload
-from app.utils.functions import format_chat_response # Using your new functions.py
+# --- UPDATED IMPORTS ---
+# Using the '.' ensures Python looks in the current 'app' folder, 
+# which removes the yellow squiggly lines in VS Code.
+try:
+    from .rag_pipeline import FinSolveRAGPipeline
+    from .auth_utils import get_current_user 
+    from utils.functions import format_chat_response
+except ImportError:
+    # Fallback for different execution contexts
+    from rag_pipeline import FinSolveRAGPipeline
+    from auth_utils import get_current_user
+    from utils.functions import format_chat_response
 
 router = APIRouter()
 
@@ -15,41 +23,41 @@ class QueryRequest(BaseModel):
 @router.post("/chat")
 async def chat_endpoint(
     request: QueryRequest, 
-    # We get the full user dict, then extract the role
+    # This Depends(get_current_user) is what was causing your error.
+    # Ensure this function exists in auth_utils.py
     current_user: dict = Depends(get_current_user)
 ):
     try:
+        # 1. Role and Username Extraction
+        # Extracted from the JWT payload returned by get_current_user
         user_role = current_user.get("role", "guest")
-        username = current_user.get("sub", "User")
+        username = current_user.get("username", "User") 
 
-        # 2. Initialize pipeline using the user's role
-        # Ensure your rag_pipeline.py is updated to handle this
-        pipeline = FinSolveRAGPipeline(user_role)
+        # 2. RBAC-aware Pipeline
+        # We pass the role to the pipeline to filter documents
+        pipeline = FinSolveRAGPipeline(role=user_role)
         results = pipeline.run_pipeline(request.query)
         
-        # 3. Handle empty results or access restrictions
+        # 3. Handle Empty Results (Access Restriction)
         if not results:
             return {
-                "answer": "I don't have access to that information based on your role.", 
+                "answer": f"Access Denied: Your current role ({user_role}) does not have permission to view documents relevant to this query.", 
                 "sources": []
             }
             
-        # 4. Construct the response using your new utility function
+        # 4. Data Extraction for Response
         sources = [res.get('doc_id') for res in results if 'doc_id' in res]
-        top_doc = sources[0] if sources else 'Unknown Document'
         
-        answer_text = f"Found relevant information in {top_doc} for your query."
-
-        # Using the helper from your app/utils/functions.py
+        # 5. Final Formatted Response
+        # Uses the helper function from app/utils/functions.py
         return format_chat_response(
             username=username,
             role=user_role,
-            message=answer_text,
-            sources=sources
+            message="Search complete. Relevant data found.",
+            sources=list(set(sources)) # Remove duplicate filenames
         )
         
     except Exception as e:
-        # 5. Detailed error logging
         print(f"Error in /chat endpoint: {e}")
         raise HTTPException(
             status_code=500, 

@@ -6,14 +6,14 @@ import jwt
 import os
 import sys
 
-# 1. Standardize the path
+# 1. Standardize the path to ensure local imports work
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
 # 2. Local Imports
 from routes import router as chat_router
-from database import get_user_from_db 
+from database import get_user_from_db, PWD_CONTEXT 
 from auth_utils import (
     create_token, 
     require_permission,
@@ -25,10 +25,11 @@ from auth_utils import (
 
 app = FastAPI(title="FinSolve Backend API")
 
-# Fixes the "Cannot connect" error by allowing cross-port communication
+# 3. --- CORS MIDDLEWARE ---
+# This fixes the "Cannot connect to Backend" error in Streamlit
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allows all origins, including your Streamlit app
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,13 +38,14 @@ app.add_middleware(
 # --- AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/login", tags=["Authentication"])
-async def login(username: str):
+async def login(username: str, password: str):
     user = get_user_from_db(username)
     
-    if not user:
+    # Secure login check verifying both user existence and password hash
+    if not user or not PWD_CONTEXT.verify(password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid credentials"
+            detail="Invalid username or password"
         )
     
     access_token = create_token(
@@ -54,6 +56,7 @@ async def login(username: str):
         {"sub": user["username"]}, 
         timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     )
+    
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token, 
@@ -78,17 +81,7 @@ async def refresh(refresh_token: str):
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
-# --- RBAC TEST ENDPOINTS ---
-
-@app.get("/api/v1/search", tags=["RBAC Test"])
-async def search_endpoint(user=Depends(require_permission("search"))):
-    return {"message": f"Access Granted for {user['sub']} (Role: {user['role']})"}
-
-@app.get("/api/v1/finance/reports", tags=["RBAC Test"])
-async def finance_endpoint(user=Depends(require_permission("view_reports"))):
-    return {"message": "Confidential financial data accessed."}
-
-# --- ROUTES ---
+# --- CHAT ROUTES ---
 app.include_router(chat_router, prefix="/api/v1")
 
 @app.get("/", tags=["Health"])
@@ -96,6 +89,5 @@ def health_check():
     return {"status": "Online", "message": "FinSolve API is running"}
 
 if __name__ == "__main__":
-    # If running from inside the app folder, use "main:app"
-    # If running from the root folder, use "app.main:app"
+    # Ensure uvicorn runs the 'main' instance of 'app'
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

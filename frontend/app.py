@@ -2,10 +2,11 @@ import streamlit as st
 import requests
 
 # The URL where your FastAPI backend is running
-BACKEND_URL = "http://127.0.0.1:8000/api/v1"
+BACKEND_URL = "http://127.0.0.1:8000"
 
 def login():
-    st.title("🔐 Internal Knowledge Chatbot")
+    # --- UPDATED TITLE FOR LOGIN SCREEN ---
+    st.title("🤖 Company Internal Chatbot with RBAC") 
 
     with st.form("login_form"):
         username = st.text_input("Username")
@@ -14,16 +15,13 @@ def login():
 
         if submit:
             try:
-                # We authenticate against the FastAPI backend
                 response = requests.post(
                     f"{BACKEND_URL}/login", 
                     json={"username": username, "password": password}
                 )
                 
                 if response.status_code == 200:
-                    data = response.json()
                     st.session_state["authenticated"] = True
-                    # Store the username or role for the API calls
                     st.session_state["username"] = username 
                     st.rerun()
                 else:
@@ -33,7 +31,6 @@ def login():
 
 # --- MAIN APP LOGIC ---
 
-# Initialize authentication state
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
@@ -48,21 +45,20 @@ else:
         st.session_state["username"] = None
         st.rerun()
 
-    st.title("🤖 Internal Knowledge Chatbot")
+    # --- UPDATED TITLE FOR MAIN INTERFACE ---
+    st.title("🤖 Company Internal Chatbot with RBAC")
 
     # Chat input
     if prompt := st.chat_input("Ask a question about company documents..."):
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Call the FastAPI Backend Chat Endpoint
         with st.spinner("Searching internal documents..."):
             try:
-                # Note: In a real app, you'd send an Auth token here
                 response = requests.post(
                     f"{BACKEND_URL}/chat",
                     json={"query": prompt},
-                    headers={"X-User-Role": "C-Level"} # Example: manually passing role for testing
+                    headers={"X-User-Role": "C-Level"} 
                 )
 
                 if response.status_code == 200:
