@@ -2,3 +2,4 @@ Fintech-data/
 venv/
 .env
 *.bin
+__pycache__/
