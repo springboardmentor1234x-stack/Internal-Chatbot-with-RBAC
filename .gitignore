@@ -3,3 +3,5 @@ venv/
 .env
 *.bin
 __pycache__/
+logs/
+*.db
