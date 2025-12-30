@@ -1,89 +1,87 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
 
-app = FastAPI(
-    title="Fintech Internal RBAC Chatbot",
-    description="Role-Based Access Control for Fintech Data",
-    version="1.0.0"
+load_dotenv()
+api_key = os.getenv("GROQ_API_KEY")
+
+app = FastAPI()
+
+llm = ChatGroq(
+    model_name="llama-3.3-70b-versatile", 
+    temperature=0,
+    groq_api_key=api_key  
 )
 
-SECRET_KEY = "your_secret_key_here"
-ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
 PERMISSION_MAP = {
-    "admin": ["view_policy", "view_salary", "search", "manage_users"],
-    "finance_manager": ["view_policy", "view_salary", "search"],
-    "hr_manager": ["view_policy", "view_salary", "search"],
-    "intern": ["view_policy", "search"]
+    "admin": ["hr_data", "marketing_data", "general_data"],
+    "hr_manager": ["hr_data", "general_data"],
+    "marketing_manager": ["marketing_data", "general_data"],
+    "intern": ["marketing_data", "general_data"]
 }
 
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-def get_current_user_role(token: str = Depends(oauth2_scheme)):
+RAG_PROMPT = ChatPromptTemplate.from_template("""
+You are an expert Fintech Analyst. Use the provided context to answer the user's question accurately.
+
+Context:
+{context}
+
+Question: {question}
+
+Instructions:
+1. If the answer is in the context, provide a detailed response.
+2. If the context is related but doesn't have the specific answer, summarize what is available.
+3. Only if the context is completely irrelevant, say "I don't have enough information for your role."
+
+Answer:""")
+
+@app.get("/ask")
+async def ask_bot(role: str, question: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        role = payload.get("role")
-        if role is None:
-            raise HTTPException(status_code=401, detail="Invalid token: Role missing")
-        return role
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        role = role.lower()
+        if role not in PERMISSION_MAP:
+            raise HTTPException(status_code=403, detail="Invalid role")
 
-def require_permission(required_perm: str):
-    def decorator(role: str = Depends(get_current_user_role)):
-        user_perms = PERMISSION_MAP.get(role.lower(), [])
-        if required_perm not in user_perms:
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Access Denied: Missing {required_perm} permission"
-            )
-        return True
-    return decorator
-
-@app.get("/")
-def read_root():
-    return {"project": "Fintech RBAC Chatbot", "status": "Online"}
-
-@app.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    username = form_data.username.lower()
-    if "admin" in username:
-        role = "admin"
-    elif "finance" in username:
-        role = "finance_manager"
-    elif "hr" in username:
-        role = "hr_manager"
-    else:
-        role = "intern"
+        allowed_collections = PERMISSION_MAP[role]
+        context_docs = []
         
-    access_token = create_access_token(data={"sub": form_data.username, "role": role})
-    return {"access_token": access_token, "token_type": "bearer", "role": role}
+        for collection in allowed_collections:
+            try:
+                vector_db = Chroma(
+                    persist_directory="vector_db/", 
+                    embedding_function=embeddings, 
+                    collection_name=collection
+                )
+                docs = vector_db.similarity_search(question, k=2)
+                context_docs.extend(docs)
+            except Exception:
+                continue
 
-@app.get("/search")
-async def search_documents(authorized: bool = Depends(require_permission("search"))):
-    return {"message": "Success! You have permission to search documents."}
+        if not context_docs:
+            return {"answer": "I don't have enough information for your role.", "sources": []}
 
-@app.get("/salary-data")
-async def view_salary(authorized: bool = Depends(require_permission("view_salary"))):
-    return {"message": "Confidential financial/salary data accessed."}
+        combined_context = "\n".join([doc.page_content for doc in context_docs])
+        sources = list(set([doc.metadata.get("source", "Unknown") for doc in context_docs]))
 
-@app.get("/system-settings")
-async def admin_only_endpoint(authorized: bool = Depends(require_permission("manage_users"))):
-    return {"message": "Welcome Admin. You have full system access."}
+        formatted_prompt = RAG_PROMPT.format(context=combined_context, question=question)
+        response = llm.invoke(formatted_prompt)
 
-@app.post("/refresh")
-async def refresh(refresh_token: str):
-    try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        new_access_token = create_access_token(data={"sub": username, "role": "intern"}) 
-        return {"access_token": new_access_token, "token_type": "bearer"}
-    except:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        return {
+            "question": question, 
+            "role": role, 
+            "answer": response.content,
+            "sources": sources
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
