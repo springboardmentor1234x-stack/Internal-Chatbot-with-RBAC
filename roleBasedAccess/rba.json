@@ -1,0 +1,79 @@
+{
+  "roles": {
+    "employee": {
+      "inherits": [],
+      "permissions": [
+        "read_general_data"
+      ]
+    },
+
+    "intern": {
+      "inherits": ["employee"],
+      "permissions": [
+        "read_own_data",
+        "submit_tasks",
+        "view_training_materials"
+      ]
+    },
+
+    "hr_executive": {
+      "inherits": ["employee"],
+      "permissions": [
+        "update_employee_records",
+        "assist_hr_manager",
+        "schedule_interviews"
+      ]
+    },
+
+    "finance_analyst": {
+      "inherits": ["employee"],
+      "permissions": [
+        "read_financial_reports",
+        "generate_analysis",
+        "create_financial_models"
+      ]
+    },
+
+    "hr_manager": {
+      "inherits": ["employee"],
+      "permissions": [
+        "read_employee_data",
+        "manage_recruitment",
+        "update_hr_policies",
+        "approve_leaves",
+        "conduct_appraisals"
+      ]
+    },
+
+    "finance_manager": {
+      "inherits": ["employee"],
+      "permissions": [
+        "read_financial_reports",
+        "approve_expenses",
+        "manage_budget",
+        "generate_financial_summary"
+      ]
+    },
+
+    "manager": {
+      "inherits": ["employee"],
+      "permissions": [
+        "view_all_reports",
+        "approve_team_requests",
+        "assign_tasks",
+        "edit_team_members"
+      ]
+    },
+
+    "admin": {
+      "inherits": [
+        "manager",
+        "hr_manager",
+        "finance_manager"
+      ],
+      "permissions": [
+        "*"
+      ]
+    }
+  }
+}

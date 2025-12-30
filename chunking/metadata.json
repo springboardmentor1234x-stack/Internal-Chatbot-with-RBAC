@@ -7,13 +7,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -25,13 +21,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -43,13 +35,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -61,13 +49,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -79,13 +63,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -97,13 +77,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -115,13 +91,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -133,13 +105,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -151,13 +119,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -169,13 +133,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -187,13 +147,9 @@
     "approx_token_count": 236,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Engineering Lead",
-      "Backend Developer",
-      "Frontend Developer",
-      "DevOps Engineer",
-      "System Architect",
-      "Security Team",
-      "C-Level Executive"
+      "admin",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -205,12 +161,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -222,12 +175,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -239,12 +189,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -256,12 +203,9 @@
     "approx_token_count": 82,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -273,12 +217,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -290,12 +231,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -307,12 +245,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -324,12 +259,9 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -341,12 +273,9 @@
     "approx_token_count": 315,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Finance Manager",
-      "Accounts Team",
-      "Auditor",
-      "Risk Analyst",
-      "CFO",
-      "C-Level Executive"
+      "admin",
+      "finance_manager",
+      "manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -358,9 +287,13 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -372,9 +305,13 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -386,9 +323,13 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -400,9 +341,13 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -414,9 +359,13 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -428,9 +377,13 @@
     "approx_token_count": 344,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Employees",
-      "Department Heads",
-      "C-Level Executive"
+      "employees",
+      "admin",
+      "manager",
+      "hr_manager",
+      "finance_manager",
+      "marketing_manager",
+      "intern"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -442,11 +395,8 @@
     "approx_token_count": 308,
     "security_level": "Confidential",
     "allowed_roles": [
-      "HR Manager",
-      "Talent Acquisition",
-      "Compliance Officer",
-      "Payroll Team",
-      "C-Level Executive"
+      "admin",
+      "hr_manager"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -458,12 +408,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -475,12 +423,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -492,12 +438,10 @@
     "approx_token_count": 341,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.480773Z"
   },
@@ -509,12 +453,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.490633Z"
   },
@@ -526,12 +468,10 @@
     "approx_token_count": 262,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.490633Z"
   },
@@ -543,12 +483,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.490633Z"
   },
@@ -560,12 +498,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.490633Z"
   },
@@ -577,12 +513,10 @@
     "approx_token_count": 282,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.490633Z"
   },
@@ -594,12 +528,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.491568Z"
   },
@@ -611,12 +543,10 @@
     "approx_token_count": 265,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.491568Z"
   },
@@ -628,12 +558,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.491568Z"
   },
@@ -645,12 +573,10 @@
     "approx_token_count": 350,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.491568Z"
   },
@@ -662,12 +588,10 @@
     "approx_token_count": 317,
     "security_level": "Confidential",
     "allowed_roles": [
-      "Marketing Manager",
-      "SEO Team",
-      "Content Strategist",
-      "Growth Lead",
-      "CMO",
-      "C-Level Executive"
+      "admin",
+      "marketing_manager",
+      "manager",
+      "employee"
     ],
     "created_at": "2025-12-08T17:45:33.491568Z"
   }
