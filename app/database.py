@@ -1,31 +1,101 @@
 import os
 import sqlite3
 from passlib.context import CryptContext
+from typing import Optional, Dict
 
 # --- Configuration ---
 # Password hashing context
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Database Pathing
-# This ensures project.db is found inside the 'app' folder
 DB_PATH = os.path.join(os.path.dirname(__file__), "project.db")
 
-# --- Mock Database for Testing ---
-# All users here use the password: password123
-FAKE_USERS_DB = {
-    "admin": {
-        "username": "admin", 
-        "role": "Admin", 
-        "password_hash": "$2b$12$0kL3K8J0j0k7yF0c9c7k4.H2.D5.G3.Y6.Z8.A0.B3.C5.E6.F9.G4"
-    },
-    "finance_user": {
-        "username": "finance_user", 
-        "role": "Finance", 
-        "password_hash": "$2b$12$0kL3K8J0j0k7yF0c9c7k4.H2.D5.G3.Y6.Z8.A0.B3.C5.E6.F9.G4"
-    },
-}
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    return PWD_CONTEXT.hash(password)
 
-def get_user_from_db(username: str):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash."""
+    return PWD_CONTEXT.verify(plain_password, hashed_password)
+
+def init_database():
+    """Initialize the database with proper schema."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # Create users table with proper schema
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            role TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create default users if they don't exist
+    default_users = [
+        ("admin", "Admin", "password123"),
+        ("finance_user", "Finance", "password123"),
+        ("marketing_user", "Marketing", "password123"),
+        ("hr_user", "HR", "password123"),
+        ("engineering_user", "Engineering", "password123"),
+        ("clevel_user", "C-Level", "password123"),
+        ("employee_user", "Employee", "password123"),
+        ("intern_user", "Intern", "password123")
+    ]
+    
+    for username, role, password in default_users:
+        cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
+        if not cursor.fetchone():
+            password_hash = hash_password(password)
+            cursor.execute(
+                "INSERT INTO users (username, role, password_hash) VALUES (?, ?, ?)",
+                (username, role, password_hash)
+            )
+    
+    conn.commit()
+    conn.close()
+
+def get_user_from_db(username: str) -> Optional[Dict]:
+    """
+    Finds a user by username from the database.
+    Returns user dict or None if not found.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT username, role, password_hash FROM users WHERE username = ?", 
+            (username,)
+        )
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                "username": result[0],
+                "role": result[1],
+                "password_hash": result[2]
+            }
+        return None
+    except Exception as e:
+        print(f"Database error: {e}")
+        return None
+
+def authenticate_user(username: str, password: str) -> Optional[Dict]:
+    """
+    Authenticate a user with username and password.
+    Returns user dict if valid, None otherwise.
+    """
+    user = get_user_from_db(username)
+    if not user:
+        return None
+    
+    if verify_password(password, user["password_hash"]):
+        return user
+    return None
     """
     Finds a user by username. 
     Checks the Mock DB first, then falls back to SQLite.

@@ -1,0 +1,112 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "python",
+        "python.terminal.activateEnvironment": true,
+        "python.analysis.typeCheckingMode": "basic",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "files.associations": {
+            "*.env": "dotenv"
+        },
+        "terminal.integrated.cwd": "${workspaceFolder}",
+        "python.envFile": "${workspaceFolder}/.env",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.debugpy",
+            "ms-python.pylance",
+            "ms-python.flake8",
+            "ms-python.black-formatter",
+            "ms-vscode.vscode-json",
+            "redhat.vscode-yaml",
+            "ms-vscode.vscode-markdown"
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "🚀 Debug Backend",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/app/main.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}"
+                }
+            },
+            {
+                "name": "🧪 Test Authentication",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/test_auth.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}"
+            },
+            {
+                "name": "⚙️ Setup System",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/setup.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}"
+            }
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "🚀 Start Backend",
+                "type": "shell",
+                "command": "python",
+                "args": ["app/main.py"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "new"
+                },
+                "isBackground": true
+            },
+            {
+                "label": "🎨 Start Frontend",
+                "type": "shell",
+                "command": "streamlit",
+                "args": ["run", "frontend/app.py"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "new"
+                },
+                "isBackground": true
+            },
+            {
+                "label": "🧪 Run Tests",
+                "type": "shell",
+                "command": "python",
+                "args": ["test_auth.py"],
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "shared"
+                }
+            }
+        ]
+    }
+}

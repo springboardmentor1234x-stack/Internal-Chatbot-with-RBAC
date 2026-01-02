@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
-import jwt
 import os
 import sys
 
@@ -13,20 +13,20 @@ if current_dir not in sys.path:
 
 # 2. Local Imports
 from routes import router as chat_router
-from database import get_user_from_db, PWD_CONTEXT 
+from database import authenticate_user, init_database
 from auth_utils import (
     create_token, 
-    require_permission,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
-    SECRET_KEY,
-    ALGORITHM
+    verify_token
 )
 
-app = FastAPI(title="FinSolve Backend API")
+# Initialize database on startup
+init_database()
+
+app = FastAPI(title="FinSolve Internal Chatbot API")
 
 # 3. --- CORS MIDDLEWARE ---
-# This fixes the "Cannot connect to Backend" error in Streamlit
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins, including your Streamlit app
@@ -38,14 +38,15 @@ app.add_middleware(
 # --- AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/login", tags=["Authentication"])
-async def login(username: str, password: str):
-    user = get_user_from_db(username)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Login endpoint that returns JWT token."""
+    user = authenticate_user(form_data.username, form_data.password)
     
-    # Secure login check verifying both user existence and password hash
-    if not user or not PWD_CONTEXT.verify(password, user["password_hash"]):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid username or password"
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
     access_token = create_token(
@@ -60,15 +61,21 @@ async def login(username: str, password: str):
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token, 
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user": {
+            "username": user["username"],
+            "role": user["role"]
+        }
     }
 
 @app.post("/auth/refresh", tags=["Authentication"])
 async def refresh(refresh_token: str):
+    """Refresh access token using refresh token."""
     try:
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
+        payload = verify_token(refresh_token)
+        username = payload.get("username")
         
+        from database import get_user_from_db
         user = get_user_from_db(username)
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -77,8 +84,8 @@ async def refresh(refresh_token: str):
             {"sub": user["username"], "role": user["role"]}, 
             timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
-        return {"access_token": new_access_token}
-    except jwt.JWTError:
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except HTTPException:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
 # --- CHAT ROUTES ---
@@ -86,8 +93,17 @@ app.include_router(chat_router, prefix="/api/v1")
 
 @app.get("/", tags=["Health"])
 def health_check():
-    return {"status": "Online", "message": "FinSolve API is running"}
+    return {"status": "Online", "message": "FinSolve Internal Chatbot API is running"}
+
+@app.get("/api/v1/setup-vector-store", tags=["Setup"])
+def setup_vector_store():
+    """Initialize the vector store with documents."""
+    try:
+        from rag_pipeline import rag_pipeline
+        rag_pipeline.setup_vector_store()
+        return {"status": "success", "message": "Vector store setup completed"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error setting up vector store: {str(e)}")
 
 if __name__ == "__main__":
-    # Ensure uvicorn runs the 'main' instance of 'app'
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
