@@ -1,6 +1,11 @@
-# Company Internal Chatbot with Role-Based Access Control (RBAC)
+# 🤖 Company Internal Chatbot with Role-Based Access Control (RBAC)
 
 A secure internal chatbot system that processes natural language queries and retrieves department-specific company information using Retrieval-Augmented Generation (RAG). The system authenticates users, assigns roles, and provides role-based access to company documents stored in a vector database.
+
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 🚀 Features
 
@@ -27,12 +32,11 @@ Frontend (Streamlit) → FastAPI Backend → RAG Pipeline → Vector Database (C
 
 ## ⚡ Quick Start
 
-### 1. Clone and Setup
+### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
-cd internalchatbot
-python setup.py
+git clone https://github.com/yourusername/finsolve-internal-chatbot.git
+cd finsolve-internal-chatbot
 ```
 
 ### 2. Install Dependencies
@@ -41,31 +45,32 @@ python setup.py
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
+### 3. Setup System
 
-Edit `.env` file and add your OpenAI API key:
+```bash
+python setup.py
+```
+
+### 4. Configure Environment (Optional)
+
+Create `.env` file and add your OpenAI API key:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-### 4. Start the Application
+### 5. Run Application
 
-**Terminal 1 - Backend:**
 ```bash
-python app/main.py
+# Single command to start both backend and frontend
+python run.py
 ```
 
-**Terminal 2 - Frontend:**
-```bash
-streamlit run frontend/app.py
-```
-
-### 5. Access the Application
+### 6. Access Application
 
 - **Frontend**: http://localhost:8501
 - **Backend API**: http://127.0.0.1:8000
-- **API Docs**: http://127.0.0.1:8000/docs
+- **API Documentation**: http://127.0.0.1:8000/docs
 
 ## 👤 Test Accounts
 
@@ -85,87 +90,69 @@ All test accounts use password: `password123`
 ## 📁 Project Structure
 
 ```
-internalchatbot/
-├── app/
-│   ├── main.py              # FastAPI application
-│   ├── routes.py            # API endpoints
-│   ├── auth_utils.py        # Authentication utilities
-│   ├── database.py          # Database operations
-│   ├── rag_pipeline.py      # RAG implementation
+finsolve-internal-chatbot/
+├── app/                    # Backend application
+│   ├── main.py            # FastAPI application
+│   ├── routes.py          # API endpoints
+│   ├── auth_utils.py      # Authentication utilities
+│   ├── database.py        # Database operations
+│   ├── rag_pipeline.py    # RAG implementation
 │   └── utils/
-│       └── functions.py     # Helper functions
-├── frontend/
-│   └── app.py              # Streamlit interface
-├── data/
-│   ├── raw/                # Source documents
-│   └── chroma/             # Vector database
-├── .env                    # Environment variables
-├── requirements.txt        # Python dependencies
-├── setup.py               # Setup script
-└── README.md              # This file
+│       └── functions.py   # Helper functions
+├── frontend/              # Streamlit interface
+│   └── app.py
+├── data/                  # Data storage
+│   ├── raw/              # Source documents
+│   └── chroma/           # Vector database
+├── scripts/              # Utility scripts
+│   ├── run_app.py        # Alternative run script
+│   ├── test_auth.py      # Authentication tests
+│   └── ...
+├── docs/                 # Documentation
+│   ├── VS_CODE_GUIDE.md  # VS Code setup guide
+│   └── CORRECTIONS_SUMMARY.md
+├── .env                  # Environment variables
+├── requirements.txt      # Python dependencies
+├── setup.py             # Setup script
+├── run.py               # Main entry point
+└── README.md            # This file
 ```
 
-## 🔧 Configuration
+## 🔧 Development
 
-### Environment Variables (.env)
+### Running Individual Components
 
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# JWT Configuration
-SECRET_KEY=your_super_secret_jwt_key_change_in_production_12345
-
-# Database Configuration
-DATABASE_URL=sqlite:///./project.db
+**Backend only:**
+```bash
+python app/main.py
 ```
 
-### Role-Document Mapping
+**Frontend only:**
+```bash
+streamlit run frontend/app.py
+```
 
-Documents are automatically assigned to roles based on filename:
+### Testing
 
-- `quarterly_financial_report.md` → Finance, C-Level
-- `market_report_*.md` → Marketing, C-Level
-- `engineering_master_doc.md` → Engineering, C-Level
-- `employee_handbook.md` → All roles
-- `hr_data.csv` → HR, C-Level
+```bash
+# Test authentication
+python scripts/test_auth.py
 
-## 🔍 API Endpoints
-
-### Authentication
-- `POST /auth/login` - User login
-- `POST /auth/refresh` - Refresh token
-
-### Chat
-- `POST /api/v1/chat` - Send chat query (requires authentication)
-- `GET /api/v1/user/profile` - Get user profile
-
-### Setup
-- `GET /api/v1/setup-vector-store` - Initialize vector store
-
-## 🛠️ Development
+# Test full system
+python scripts/test_system.py
+```
 
 ### Adding New Documents
 
 1. Place documents in `data/raw/` directory
 2. Update `DOCUMENT_MAP` in `app/rag_pipeline.py`
-3. Restart the application or call `/api/v1/setup-vector-store`
+3. Restart application or call `/api/v1/setup-vector-store`
 
 ### Adding New Roles
 
 1. Update `ROLE_PERMISSIONS` in `app/auth_utils.py`
 2. Add role to `init_database()` in `app/database.py`
 3. Update document mappings as needed
-
-### Running Tests
-
-```bash
-# Install test dependencies
-pip install pytest pytest-asyncio httpx
-
-# Run tests
-pytest tests/
-```
 
 ## 🔒 Security Features
 
@@ -175,31 +162,39 @@ pytest tests/
 - **CORS Protection**: Configured for secure cross-origin requests
 - **Input Validation**: Pydantic models for request validation
 
+## 🐳 Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+```
+
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-**1. "Cannot connect to backend"**
-- Ensure FastAPI is running on http://127.0.0.1:8000
-- Check CORS configuration in `app/main.py`
+**Backend won't start:**
+- Check Python version (3.8+ required)
+- Install dependencies: `pip install -r requirements.txt`
+- Run setup: `python setup.py`
 
-**2. "Vector store not found"**
-- Run `python setup.py` to initialize
-- Or call `GET /api/v1/setup-vector-store`
+**Frontend won't start:**
+- Install Streamlit: `pip install streamlit`
+- Check port availability (8501)
 
-**3. "OpenAI API error"**
-- Add valid `OPENAI_API_KEY` to `.env` file
-- System works without OpenAI but with limited responses
-
-**4. "Authentication failed"**
-- Use correct test account credentials
+**Authentication fails:**
+- Use correct credentials (see test accounts above)
 - Check JWT token expiration (30 minutes default)
 
-### Logs and Debugging
-
-- Backend logs appear in terminal running `python app/main.py`
-- Enable debug mode by setting `DEBUG=True` in `.env`
-- Check browser console for frontend errors
+**No search results:**
+- Add OpenAI API key to `.env` file
+- Initialize vector store: `python setup.py`
 
 ## 📈 Performance
 
@@ -208,56 +203,32 @@ pytest tests/
 - **Document Limit**: Tested with 100+ documents
 - **Vector Search**: Sub-second similarity search
 
-## 🔄 Deployment
-
-### Production Considerations
-
-1. **Security**:
-   - Change `SECRET_KEY` in production
-   - Use environment-specific `.env` files
-   - Enable HTTPS
-
-2. **Database**:
-   - Consider PostgreSQL for production
-   - Implement database migrations
-
-3. **Scaling**:
-   - Use Redis for session storage
-   - Deploy with Docker/Kubernetes
-   - Add load balancing
-
-### Docker Deployment
-
-```dockerfile
-# Dockerfile example
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["python", "app/main.py"]
-```
-
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
 For support and questions:
-- Check the troubleshooting section above
-- Review API documentation at http://127.0.0.1:8000/docs
+- Check the [troubleshooting section](#-troubleshooting)
+- Review [VS Code setup guide](docs/VS_CODE_GUIDE.md)
 - Create an issue in the repository
+
+## 🙏 Acknowledgments
+
+- Built with [FastAPI](https://fastapi.tiangolo.com/)
+- Frontend powered by [Streamlit](https://streamlit.io/)
+- RAG implementation using [LangChain](https://langchain.com/)
+- Vector database by [Chroma](https://www.trychroma.com/)
 
 ---
 
-**Built with ❤️ using FastAPI, Streamlit, and LangChain**
+**Built with ❤️ for secure internal knowledge management**
