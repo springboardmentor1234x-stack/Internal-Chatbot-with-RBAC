@@ -15,12 +15,16 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+
 def create_token(data: dict, expires_delta: timedelta = None):
     """Generates the JWT token for the user."""
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def verify_token(token: str):
     """Verifies and decodes JWT token."""
@@ -33,6 +37,7 @@ def verify_token(token: str):
         return {"username": username, "role": role}
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     """Dependency to get current user from token."""
@@ -51,6 +56,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except jwt.PyJWTError:
         raise credentials_exception
 
+
 # Role-based permissions mapping
 ROLE_PERMISSIONS = {
     "Admin": ["read:all", "write:all"],
@@ -60,22 +66,26 @@ ROLE_PERMISSIONS = {
     "HR": ["read:hr", "read:general"],
     "Engineering": ["read:engineering", "read:general"],
     "Employee": ["read:general"],
-    "Intern": ["read:general"]
+    "Intern": ["read:general"],
 }
+
 
 def check_permission(user_role: str, required_permission: str) -> bool:
     """Check if user role has required permission."""
     user_permissions = ROLE_PERMISSIONS.get(user_role, [])
     return required_permission in user_permissions or "read:all" in user_permissions
 
+
 def require_permission(required_permission: str):
     """Decorator to require specific permission for endpoints."""
+
     def permission_checker(current_user: dict = Depends(get_current_user)):
         user_role = current_user.get("role")
         if not check_permission(user_role, required_permission):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied: {required_permission} permission required"
+                detail=f"Access denied: {required_permission} permission required",
             )
         return current_user
+
     return permission_checker
