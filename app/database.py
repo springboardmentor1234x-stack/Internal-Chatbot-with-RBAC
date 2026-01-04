@@ -15,13 +15,33 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "project.db")
 FAKE_USERS_DB = {
     "admin": {
         "username": "admin", 
-        "role": "Admin", 
-        "password_hash": "$2b$12$0kL3K8J0j0k7yF0c9c7k4.H2.D5.G3.Y6.Z8.A0.B3.C5.E6.F9.G4"
+        "role": "C-Level", 
+        "password_hash": PWD_CONTEXT.hash("password123")
     },
     "finance_user": {
         "username": "finance_user", 
         "role": "Finance", 
-        "password_hash": "$2b$12$0kL3K8J0j0k7yF0c9c7k4.H2.D5.G3.Y6.Z8.A0.B3.C5.E6.F9.G4"
+        "password_hash": PWD_CONTEXT.hash("password123")
+    },
+    "marketing_user": {
+        "username": "marketing_user", 
+        "role": "Marketing", 
+        "password_hash": PWD_CONTEXT.hash("password123")
+    },
+    "hr_user": {
+        "username": "hr_user", 
+        "role": "HR", 
+        "password_hash": PWD_CONTEXT.hash("password123")
+    },
+    "engineering_user": {
+        "username": "engineering_user", 
+        "role": "Engineering", 
+        "password_hash": PWD_CONTEXT.hash("password123")
+    },
+    "employee": {
+        "username": "employee", 
+        "role": "Employee", 
+        "password_hash": PWD_CONTEXT.hash("password123")
     },
 }
 

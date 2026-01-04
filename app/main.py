@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
 import jwt
@@ -35,14 +36,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 # --- AUTHENTICATION ENDPOINTS ---
 
 @app.post("/auth/login", tags=["Authentication"])
-async def login(username: str, password: str):
-    user = get_user_from_db(username)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = get_user_from_db(form_data.username)
     
     # Secure login check verifying both user existence and password hash
-    if not user or not PWD_CONTEXT.verify(password, user["password_hash"]):
+    if not user or not PWD_CONTEXT.verify(form_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid username or password"

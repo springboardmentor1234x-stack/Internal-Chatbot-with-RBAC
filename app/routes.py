@@ -1,65 +1,95 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Any
+from datetime import datetime
 
 # --- UPDATED IMPORTS ---
-# Using the '.' ensures Python looks in the current 'app' folder, 
-# which removes the yellow squiggly lines in VS Code.
 try:
-    from .rag_pipeline import FinSolveRAGPipeline
-    from .auth_utils import get_current_user 
-    from utils.functions import format_chat_response
+    from .rag_pipeline_simple import rag_pipeline
+    from .auth_utils import get_current_user, check_permission
 except ImportError:
     # Fallback for different execution contexts
-    from rag_pipeline import FinSolveRAGPipeline
-    from auth_utils import get_current_user
-    from utils.functions import format_chat_response
+    from rag_pipeline_simple import rag_pipeline
+    from auth_utils import get_current_user, check_permission
 
 router = APIRouter()
+
+def format_chat_response(username: str, role: str, message: str, sources: List[str]) -> Dict[str, Any]:
+    """Format chat response with user info and sources."""
+    return {
+        "user": {
+            "username": username,
+            "role": role
+        },
+        "response": message,
+        "sources": sources,
+        "timestamp": datetime.now().isoformat(),
+        "token_count": len(message.split())  # Simple word count
+    }
+
 
 class QueryRequest(BaseModel):
     query: str
 
+
 @router.post("/chat")
 async def chat_endpoint(
-    request: QueryRequest, 
-    # This Depends(get_current_user) is what was causing your error.
-    # Ensure this function exists in auth_utils.py
-    current_user: dict = Depends(get_current_user)
+    request: QueryRequest, current_user: dict = Depends(get_current_user)
 ):
+    """
+    Chat endpoint with role-based access control.
+    Users can only access documents their role permits.
+    """
     try:
-        # 1. Role and Username Extraction
-        # Extracted from the JWT payload returned by get_current_user
-        user_role = current_user.get("role", "guest")
-        username = current_user.get("username", "User") 
+        # 1. Extract user information from JWT token
+        user_role = current_user.get("role", "Employee")
+        username = current_user.get("username", "User")
 
-        # 2. RBAC-aware Pipeline
-        # We pass the role to the pipeline to filter documents
-        pipeline = FinSolveRAGPipeline(role=user_role)
-        results = pipeline.run_pipeline(request.query)
-        
-        # 3. Handle Empty Results (Access Restriction)
-        if not results:
-            return {
-                "answer": f"Access Denied: Your current role ({user_role}) does not have permission to view documents relevant to this query.", 
-                "sources": []
-            }
-            
-        # 4. Data Extraction for Response
-        sources = [res.get('doc_id') for res in results if 'doc_id' in res]
-        
-        # 5. Final Formatted Response
-        # Uses the helper function from app/utils/functions.py
+        # 2. Check if user has permission to search
+        if not check_permission(user_role, "read:general"):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access denied: Role '{user_role}' does not have search permissions",
+            )
+
+        # 3. Run simple RAG pipeline with role-based filtering
+        rag_result = rag_pipeline.run_pipeline(request.query, user_role)
+
+        # 4. Handle errors from RAG pipeline
+        if rag_result.get("error"):
+            if "No accessible documents found" in rag_result.get("error", ""):
+                return format_chat_response(
+                    username=username,
+                    role=user_role,
+                    message=f"No information found that you have access to. Your role ({user_role}) may not have permission to view documents related to this query.",
+                    sources=[],
+                )
+            else:
+                raise HTTPException(status_code=500, detail=rag_result["error"])
+
+        # 5. Return successful response
         return format_chat_response(
             username=username,
             role=user_role,
-            message="Search complete. Relevant data found.",
-            sources=list(set(sources)) # Remove duplicate filenames
+            message=rag_result["response"],
+            sources=rag_result["sources"],
         )
-        
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
         print(f"Error in /chat endpoint: {e}")
         raise HTTPException(
-            status_code=500, 
-            detail=f"Internal Server Error: {str(e)}"
+            status_code=500, detail=f"Internal Server Error: {str(e)}"
         )
+
+
+@router.get("/user/profile")
+async def get_user_profile(current_user: dict = Depends(get_current_user)):
+    """Get current user profile information."""
+    return {
+        "username": current_user.get("username"),
+        "role": current_user.get("role"),
+        "permissions": current_user.get("permissions", []),
+    }
