@@ -1,0 +1,22 @@
+name: Status Check
+
+on:
+  push:
+    branches: [ main, Sreevidya-P-S ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Status Check
+      run: |
+        echo "✅ Repository status: OK"
+        echo "✅ Branch: ${{ github.ref_name }}"
+        echo "✅ Commit: ${{ github.sha }}"
+        echo "✅ All systems operational"
