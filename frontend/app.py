@@ -156,6 +156,16 @@ def main_chat_interface():
             st.markdown(message["content"])
             if message.get("sources"):
                 st.caption(f"📄 Sources: {', '.join(message['sources'])}")
+            if message.get("accuracy"):
+                accuracy = message["accuracy"]
+                if accuracy >= 90:
+                    st.caption(f"🎯 Accuracy: {accuracy:.1f}%")
+                elif accuracy >= 80:
+                    st.caption(f"✅ Accuracy: {accuracy:.1f}%")
+                elif accuracy >= 70:
+                    st.caption(f"⚠️ Accuracy: {accuracy:.1f}%")
+                else:
+                    st.caption(f"❌ Accuracy: {accuracy:.1f}%")
 
     # Get user role for document access control
     user_role = "Employee"  # Default
@@ -232,6 +242,19 @@ def main_chat_interface():
                         sources = data.get("sources", [])
 
                         st.markdown(bot_message)
+                        
+                        # Display accuracy score if available
+                        accuracy = data.get("accuracy_score", 0)
+                        if accuracy > 0:
+                            if accuracy >= 90:
+                                st.success(f"🎯 Accuracy: {accuracy:.1f}% (Excellent)")
+                            elif accuracy >= 80:
+                                st.info(f"✅ Accuracy: {accuracy:.1f}% (Good)")
+                            elif accuracy >= 70:
+                                st.warning(f"⚠️ Accuracy: {accuracy:.1f}% (Fair)")
+                            else:
+                                st.error(f"❌ Accuracy: {accuracy:.1f}% (Needs Improvement)")
+                        
                         if sources:
                             st.caption("📄 **Sources:**")
                             for i, source in enumerate(sources, 1):
@@ -240,12 +263,25 @@ def main_chat_interface():
                                 "💡 **Tip:** Use the 'Available Documents' section above to view full documents!"
                             )
 
+                        # Add performance metrics if available
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            if data.get("query_category"):
+                                st.caption(f"🔍 Category: {data['query_category'].title()}")
+                        with col2:
+                            if data.get("total_chunks_analyzed"):
+                                st.caption(f"📊 Chunks: {data['total_chunks_analyzed']}")
+                        with col3:
+                            if accuracy > 0:
+                                st.caption(f"📈 Score: {accuracy:.1f}%")
+
                         # Add bot response to chat history
                         st.session_state.messages.append(
                             {
                                 "role": "assistant",
                                 "content": bot_message,
                                 "sources": sources,
+                                "accuracy": accuracy
                             }
                         )
                     elif response.status_code == 401:
