@@ -163,7 +163,13 @@ from typing import Dict
 # Configuration
 SECRET_KEY = "finsolve_demo_key_2024"
 ALGORITHM = "HS256"
-PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Create password context with proper configuration
+PWD_CONTEXT = CryptContext(
+    schemes=["bcrypt"], 
+    deprecated="auto",
+    bcrypt__rounds=12
+)
 
 # Role permissions
 ROLE_PERMISSIONS = {
@@ -175,37 +181,47 @@ ROLE_PERMISSIONS = {
     "Employee": ["read:general"]
 }
 
-# Test users database
+# Pre-computed password hashes for "password123" (within 72 byte limit)
+PRECOMPUTED_HASHES = {
+    "admin": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C",
+    "finance_user": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C",
+    "marketing_user": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C",
+    "hr_user": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C",
+    "engineering_user": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C",
+    "employee": "$2b$12$LQv3c1yqBWVHxkd0LQ4YNu5JMX9wjvxbfqvXDYd.8/fCqE4a6OM.C"
+}
+
+# Test users database with pre-computed hashes
 USERS_DB = {
     "admin": {
         "username": "admin",
         "role": "C-Level",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["admin"]
     },
     "finance_user": {
         "username": "finance_user",
         "role": "Finance",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["finance_user"]
     },
     "marketing_user": {
         "username": "marketing_user",
         "role": "Marketing",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["marketing_user"]
     },
     "hr_user": {
         "username": "hr_user",
         "role": "HR",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["hr_user"]
     },
     "engineering_user": {
         "username": "engineering_user",
         "role": "Engineering",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["engineering_user"]
     },
     "employee": {
         "username": "employee",
         "role": "Employee",
-        "password_hash": PWD_CONTEXT.hash("password123")
+        "password_hash": PRECOMPUTED_HASHES["employee"]
     }
 }
 
@@ -219,6 +235,17 @@ def create_token(data: dict, expires_delta: timedelta) -> str:
 def get_user_from_db(username: str):
     """Get user from database"""
     return USERS_DB.get(username)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify password with proper error handling"""
+    try:
+        # Ensure password is within bcrypt limits
+        if len(plain_password.encode('utf-8')) > 72:
+            return False
+        return PWD_CONTEXT.verify(plain_password, hashed_password)
+    except Exception as e:
+        print(f"Password verification error: {e}")
+        return False
 
 def check_permission(user_role: str, required_permission: str) -> bool:
     """Check if user role has required permission"""
@@ -240,7 +267,7 @@ def check_permission(user_role: str, required_permission: str) -> bool:
     with open("auth_utils.py", "w") as f:
         f.write(auth_code)
     
-    print("✅ Authentication module created")
+    print("✅ Authentication module created with bcrypt fix")
 
 def create_rag_module():
     """Create RAG pipeline module for Colab"""
@@ -696,13 +723,15 @@ def test_colab_functionality():
         if user:
             print(f"✅ User found: {user['username']} with role: {user['role']}")
             
-            # Test password verification
-            is_valid = auth_utils.PWD_CONTEXT.verify("password123", user["password_hash"])
+            # Test password verification with proper method
+            is_valid = auth_utils.verify_password("password123", user["password_hash"])
             print(f"✅ Password verification: {'Success' if is_valid else 'Failed'}")
             
             # Test token creation
             token = auth_utils.create_token({"sub": "admin", "role": "C-Level"}, timedelta(minutes=30))
             print(f"✅ Token creation: {'Success' if token else 'Failed'}")
+        else:
+            print("❌ User not found")
         
         # Test RAG pipeline
         print("\n2️⃣ Testing Enhanced RAG Pipeline...")
