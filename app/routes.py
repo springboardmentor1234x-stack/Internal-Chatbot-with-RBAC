@@ -5,11 +5,11 @@ from datetime import datetime
 
 # --- UPDATED IMPORTS ---
 try:
-    from .rag_pipeline_simple import rag_pipeline
+    from .rag_pipeline_enhanced import rag_pipeline
     from .auth_utils import get_current_user, check_permission
 except ImportError:
     # Fallback for different execution contexts
-    from rag_pipeline_simple import rag_pipeline
+    from rag_pipeline_enhanced import rag_pipeline
     from auth_utils import get_current_user, check_permission
 
 router = APIRouter()
