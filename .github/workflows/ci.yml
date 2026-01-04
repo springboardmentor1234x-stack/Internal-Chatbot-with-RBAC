@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, Sreevidya-P-S ]
+    branches: [ Sreevidya-P-S ]  # Only run on your branch
   pull_request:
-    branches: [ main ]
+    branches: [ main ]  # Only run on PRs to main
 
 jobs:
   basic-check:
