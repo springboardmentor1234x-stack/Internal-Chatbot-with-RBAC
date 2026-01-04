@@ -12,12 +12,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # 1. Load the quarterly financial report
-with open("/content/drive/MyDrive/quarterly_financial_report.md", "r", encoding="utf-8") as f:
+with open(
+    "/content/drive/MyDrive/quarterly_financial_report.md", "r", encoding="utf-8"
+) as f:
     full_text = f.read()
 
 # 2. Create 10 text chunks (simple split by blank lines)
 raw_chunks = full_text.split("\n\n")
-chunks = raw_chunks[:10]   # mini dataset of 10 chunks
+chunks = raw_chunks[:10]  # mini dataset of 10 chunks
 
 print(f"Number of chunks: {len(chunks)}")
 for i, c in enumerate(chunks):
@@ -28,6 +30,7 @@ vectorizer = TfidfVectorizer()
 embeddings = vectorizer.fit_transform(chunks).toarray()
 
 print("Embeddings shape:", embeddings.shape)  # (10, vocab_size)
+
 
 def knn_search(query, embeddings, k):
     """
@@ -49,11 +52,12 @@ def knn_search(query, embeddings, k):
     # Return list of (index, similarity)
     return [(int(i), float(sims[i])) for i in idx_sorted]
 
+
 # 4. Define queries
 queries = [
     "Q1 revenue and net income",
     "cash flow from operations",
-    "marketing spend and vendor costs"
+    "marketing spend and vendor costs",
 ]
 
 # 5. Evaluate for different K values

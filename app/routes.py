@@ -14,17 +14,17 @@ except ImportError:
 
 router = APIRouter()
 
-def format_chat_response(username: str, role: str, message: str, sources: List[str]) -> Dict[str, Any]:
+
+def format_chat_response(
+    username: str, role: str, message: str, sources: List[str]
+) -> Dict[str, Any]:
     """Format chat response with user info and sources."""
     return {
-        "user": {
-            "username": username,
-            "role": role
-        },
+        "user": {"username": username, "role": role},
         "response": message,
         "sources": sources,
         "timestamp": datetime.now().isoformat(),
-        "token_count": len(message.split())  # Simple word count
+        "token_count": len(message.split()),  # Simple word count
     }
 
 
@@ -80,9 +80,7 @@ async def chat_endpoint(
         raise
     except Exception as e:
         print(f"Error in /chat endpoint: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Internal Server Error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
 @router.get("/user/profile")

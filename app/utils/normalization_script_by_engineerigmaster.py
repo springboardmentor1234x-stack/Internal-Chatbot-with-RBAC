@@ -13,6 +13,7 @@ from typing import List, Tuple
 # This script performs Min-Max Scaling on numerical data and Case Normalization
 # on text data, then saves the results to a separate output file.
 
+
 def min_max_normalize(data: List[float]) -> List[float]:
     """
     Normalizes a list of numerical data using Min-Max Scaling (scales to [0, 1]).
@@ -32,21 +33,23 @@ def min_max_normalize(data: List[float]) -> List[float]:
     normalized_array = (data_array - data_min) / (data_max - data_min)
     return normalized_array.tolist()
 
-def text_case_normalize(data: List[str], target_case: str = 'lower') -> List[str]:
+
+def text_case_normalize(data: List[str], target_case: str = "lower") -> List[str]:
     """
     Normalizes text data by converting all strings to a specified case.
     """
     normalized_texts = []
     case = target_case.lower()
     for text in data:
-        if case == 'lower':
+        if case == "lower":
             normalized_texts.append(text.lower())
-        elif case == 'upper':
+        elif case == "upper":
             normalized_texts.append(text.upper())
         else:
             # Default to lower
             normalized_texts.append(text.lower())
     return normalized_texts
+
 
 def process_and_get_output() -> str:
     """
@@ -64,8 +67,8 @@ def process_and_get_output() -> str:
 
     # --- 2. Text Data Normalization ---
     text_data = ["FinSolve Pro", "finsolve pro", "FINSOLVE Standard", "Basic Account"]
-    normalized_lower = text_case_normalize(text_data, 'lower')
-    normalized_upper = text_case_normalize(text_data, 'upper')
+    normalized_lower = text_case_normalize(text_data, "lower")
+    normalized_upper = text_case_normalize(text_data, "upper")
 
     output_lines.append("--- 2. Text Data Normalization (Case Conversion) ---")
     output_lines.append(f"Original Text Data: {text_data}")
@@ -74,7 +77,8 @@ def process_and_get_output() -> str:
 
     return "\n".join(output_lines)
 
-def save_output_to_file(filename: str = 'cleaned_data_output.txt'):
+
+def save_output_to_file(filename: str = "cleaned_data_output.txt"):
     """
     Generates the output string and writes it to the specified file.
     """
@@ -84,8 +88,11 @@ def save_output_to_file(filename: str = 'cleaned_data_output.txt'):
     # with open(filename, 'w') as f:
     #     f.write(output_content)
 
-    print(f"\nSuccessfully generated content for {filename}. (File I/O is simulated in this environment.)")
+    print(
+        f"\nSuccessfully generated content for {filename}. (File I/O is simulated in this environment.)"
+    )
     return output_content
+
 
 if __name__ == "__main__":
     final_output = save_output_to_file()

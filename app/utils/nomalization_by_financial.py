@@ -15,10 +15,10 @@ from sklearn.preprocessing import MinMaxScaler
 # to extract structured data from a markdown/text file.
 # For this script, we simulate the structured output of a report.
 financial_data = [
-    {'Quarter': 'Q1-2025', 'Revenue': 150000000.00, 'Net_Income': 15000000.00},
-    {'Quarter': 'Q4-2024', 'Revenue': 135000000.00, 'Net_Income': 12000000.00},
-    {'Quarter': 'Q3-2024', 'Revenue': 120000000.00, 'Net_Income': 10000000.00},
-    {'Quarter': 'Q2-2024', 'Revenue': 110000000.00, 'Net_Income': 9500000.00}
+    {"Quarter": "Q1-2025", "Revenue": 150000000.00, "Net_Income": 15000000.00},
+    {"Quarter": "Q4-2024", "Revenue": 135000000.00, "Net_Income": 12000000.00},
+    {"Quarter": "Q3-2024", "Revenue": 120000000.00, "Net_Income": 10000000.00},
+    {"Quarter": "Q2-2024", "Revenue": 110000000.00, "Net_Income": 9500000.00},
 ]
 
 df = pd.DataFrame(financial_data)
@@ -34,25 +34,25 @@ print("-" * 35)
 scaler = MinMaxScaler()
 
 # Select the 'Revenue' column for normalization
-revenue_data = df[['Revenue']]
+revenue_data = df[["Revenue"]]
 
 # Fit the scaler to the data and transform it
-df['Revenue_Normalized'] = scaler.fit_transform(revenue_data)
+df["Revenue_Normalized"] = scaler.fit_transform(revenue_data)
 
 # --- 3. Verification ---
 print("--- Data After Normalization (Min-Max Scaling on Revenue) ---")
-print(df[['Quarter', 'Revenue', 'Revenue_Normalized']])
+print(df[["Quarter", "Revenue", "Revenue_Normalized"]])
 print(f"\nMin Normalized Revenue: {df['Revenue_Normalized'].min():.2f}")
 print(f"Max Normalized Revenue: {df['Revenue_Normalized'].max():.2f}")
 
 import pandas as pd
 import json
 
-document_content = None # Initialize document_content to None
+document_content = None  # Initialize document_content to None
 
 # --- 1. Read the document content ---
 try:
-    with open('quarterly_financial_report.md', 'r') as f:
+    with open("quarterly_financial_report.md", "r") as f:
         document_content = f.read()
 except FileNotFoundError:
     print("Error: quarterly_financial_report.md not found.")
@@ -63,10 +63,10 @@ except FileNotFoundError:
 if document_content:
     # --- 2. Define the Chunking Strategy (Splitting by '## ') ---
     # Splitting by '\n## ' creates chunks based on major markdown headings.
-    chunks_raw = document_content.split('\n## ')
+    chunks_raw = document_content.split("\n## ")
 
     # We restore the '## ' prefix to all sectional chunks for complete text content
-    chunks = [chunks_raw[0]] + ['## ' + chunk for chunk in chunks_raw[1:]]
+    chunks = [chunks_raw[0]] + ["## " + chunk for chunk in chunks_raw[1:]]
 
     # --- 3. Generate Metadata for the first three Chunks ---
     metadata_records = {}
@@ -76,8 +76,8 @@ if document_content:
         chunk_content = chunks[i].strip()
 
         # Extract the section title
-        if chunk_content.startswith('## '):
-            title = chunk_content.split('\n')[0].strip('## ').strip()
+        if chunk_content.startswith("## "):
+            title = chunk_content.split("\n")[0].strip("## ").strip()
         else:
             title = "Document Preamble/Title"
 
@@ -88,13 +88,17 @@ if document_content:
             "chunk_type": "Markdown Section",
             "section_title": title,
             "chunk_length_chars": len(chunk_content),
-            "start_of_chunk_content": chunk_content[:50].replace('\n', ' ') + "...", # First 50 chars for preview
+            "start_of_chunk_content": chunk_content[:50].replace("\n", " ")
+            + "...",  # First 50 chars for preview
         }
 
         # Store the metadata
         metadata_records[f"Chunk {i + 1}"] = metadata
 else:
-    print("Skipping chunking and metadata generation because the document was not found.")
+    print(
+        "Skipping chunking and metadata generation because the document was not found."
+    )
 
 from google.colab import drive
-drive.mount('/content/drive')
+
+drive.mount("/content/drive")

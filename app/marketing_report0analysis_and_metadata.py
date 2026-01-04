@@ -48,6 +48,7 @@ Appendices:
 Detailed performance charts and marketing analytics reports are included in the appendices, which provide insights into conversion rates, ROI analysis, and market segmentation.
 """
 
+
 def chunk_document_by_header(document_text):
     """
     Splits the document into chunks based on the markdown header lines (e.g., '---').
@@ -55,22 +56,34 @@ def chunk_document_by_header(document_text):
     """
     # Regex to find all sections split by the markdown separator line '---'
     # We will split on a newline followed by any title and a line of '---'
-    sections = re.split(r'\n([A-Za-z\s&-]+):\n-{10,}\n', document_text, flags=re.MULTILINE | re.IGNORECASE)
+    sections = re.split(
+        r"\n([A-Za-z\s&-]+):\n-{10,}\n",
+        document_text,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
 
     chunks = {}
 
     # The first element is the content before the first recognized section title
-    chunks['Executive Summary'] = sections[0].replace('# Marketing Report for FinSolve Technologies Inc. - 2024\n\nExecutive Summary:', '').strip()
+    chunks["Executive Summary"] = (
+        sections[0]
+        .replace(
+            "# Marketing Report for FinSolve Technologies Inc. - 2024\n\nExecutive Summary:",
+            "",
+        )
+        .strip()
+    )
 
     # Subsequent elements come in pairs: (Title, Content)
     for i in range(1, len(sections), 2):
         if i + 1 < len(sections):
             title = sections[i].strip()
-            content = sections[i+1].strip()
+            content = sections[i + 1].strip()
             chunks[title] = content
 
     print(f"--- Document split into {len(chunks)} logical chunks ---")
     return chunks
+
 
 def generate_executive_insight(chunk_title, chunk_content):
     """
@@ -107,12 +120,13 @@ def generate_executive_insight(chunk_title, chunk_content):
 
     return insight.strip()
 
+
 def create_metadata(source_file, chunk_title, generated_content, index):
     """
     Generates metadata for the newly created insight.
     """
     # Create a unique ID for the generated artifact
-    safe_title = re.sub(r'[^a-z0-9]', '_', chunk_title.lower()).replace('__', '_')
+    safe_title = re.sub(r"[^a-z0-9]", "_", chunk_title.lower()).replace("__", "_")
     artifact_id = f"exec_insight_{index}_{safe_title}"
 
     metadata = {
@@ -128,6 +142,7 @@ def create_metadata(source_file, chunk_title, generated_content, index):
     }
     return metadata
 
+
 def main():
     source_file_name = "marketing_report_2024.md"
 
@@ -138,7 +153,7 @@ def main():
     selected_chunks_titles = [
         "Year-Over-Year (YoY) Performance",
         "Key Metrics and ROI Analysis",
-        "Recommendations for Improvement"
+        "Recommendations for Improvement",
     ]
 
     generated_artifacts = []
@@ -156,11 +171,13 @@ def main():
             # Create metadata
             metadata = create_metadata(source_file_name, title, new_content, i + 1)
 
-            generated_artifacts.append({
-                "source_title": title,
-                "generated_insight": new_content,
-                "metadata": metadata
-            })
+            generated_artifacts.append(
+                {
+                    "source_title": title,
+                    "generated_insight": new_content,
+                    "metadata": metadata,
+                }
+            )
 
             # Print a quick preview of the generated artifact
             print(f"\n[Generated Artifact {i + 1}]")
@@ -168,25 +185,30 @@ def main():
             print(f"ID: {metadata['artifact_id']}")
             print(f"Core Finding Snippet: {new_content.splitlines()[3].strip()}...")
         else:
-            print(f"\n[Warning] Could not find chunk for title: {title}. Check the document headers.")
+            print(
+                f"\n[Warning] Could not find chunk for title: {title}. Check the document headers."
+            )
 
     # 3. Output the final metadata list
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("FINAL METADATA OUTPUT (for the three generated Executive Insights)")
-    print("="*70)
+    print("=" * 70)
 
     # Pretty-print the metadata for the three artifacts
     for artifact in generated_artifacts:
         print(f"\n--- Metadata for Source: {artifact['source_title']} ---")
         # Use json.dumps for clean, readable output
-        print(json.dumps(artifact['metadata'], indent=4))
+        print(json.dumps(artifact["metadata"], indent=4))
 
     # Optional: Display one full generated chunk content
     if generated_artifacts:
-        print("\n" + "="*70)
-        print(f"FULL EXECUTIVE INSIGHT EXAMPLE ({generated_artifacts[1]['source_title']})")
-        print("="*70)
-        print(generated_artifacts[1]['generated_insight'])
+        print("\n" + "=" * 70)
+        print(
+            f"FULL EXECUTIVE INSIGHT EXAMPLE ({generated_artifacts[1]['source_title']})"
+        )
+        print("=" * 70)
+        print(generated_artifacts[1]["generated_insight"])
+
 
 if __name__ == "__main__":
     main()

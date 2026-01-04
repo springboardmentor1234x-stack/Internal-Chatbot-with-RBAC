@@ -15,6 +15,7 @@ from typing import List, Dict, Any
 # 1. Min-Max Scaling for numerical data.
 # 2. Case Normalization for text data.
 
+
 def min_max_normalize(data: List[float]) -> List[float]:
     """
     Normalizes a list of numerical data using Min-Max Scaling.
@@ -38,15 +39,16 @@ def min_max_normalize(data: List[float]) -> List[float]:
     normalized_array = (data_array - data_min) / (data_max - data_min)
     return normalized_array.tolist()
 
-def text_case_normalize(data: List[str], target_case: str = 'lower') -> List[str]:
+
+def text_case_normalize(data: List[str], target_case: str = "lower") -> List[str]:
     """
     Normalizes text data by converting all strings to a specified case (default: lowercase).
     """
     normalized_texts = []
-    if target_case.lower() == 'lower':
+    if target_case.lower() == "lower":
         for text in data:
             normalized_texts.append(text.lower())
-    elif target_case.lower() == 'upper':
+    elif target_case.lower() == "upper":
         for text in data:
             normalized_texts.append(text.upper())
     else:
@@ -54,6 +56,7 @@ def text_case_normalize(data: List[str], target_case: str = 'lower') -> List[str
         for text in data:
             normalized_texts.append(text.lower())
     return normalized_texts
+
 
 def demonstrate_normalization():
     """
@@ -68,18 +71,18 @@ def demonstrate_normalization():
     normalized_numbers = min_max_normalize(numerical_data)
     print(f"Normalized (0 to 1):     {normalized_numbers}\n")
 
-
     print("--- 2. Text Data Normalization (Case Conversion) ---")
 
     # Sample data: product names with inconsistent casing
     text_data = ["FinSolve Pro", "finsolve pro", "FINSOLVE Standard", "Basic Account"]
     print(f"Original Text Data: {text_data}")
 
-    normalized_lower = text_case_normalize(text_data, 'lower')
+    normalized_lower = text_case_normalize(text_data, "lower")
     print(f"Normalized (Lowercase):  {normalized_lower}")
 
-    normalized_upper = text_case_normalize(text_data, 'upper')
+    normalized_upper = text_case_normalize(text_data, "upper")
     print(f"Normalized (Uppercase):  {normalized_upper}")
+
 
 if __name__ == "__main__":
     demonstrate_normalization()

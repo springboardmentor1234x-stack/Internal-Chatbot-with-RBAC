@@ -12,14 +12,14 @@ from sklearn.preprocessing import MinMaxScaler
 
 # --- 1. Load the Data ---
 # Assuming the file 'hr_data.csv' is in the current directory
-df = pd.read_csv('/content/drive/MyDrive/hr_data.csv')
+df = pd.read_csv("/content/drive/MyDrive/hr_data.csv")
 print("Original DataFrame Info:")
 df.info()
 print("-" * 30)
 
 # --- 2. Data Type Normalization/Cleaning ---
 # Convert date columns to datetime objects
-date_columns = ['date_of_birth', 'date_of_joining', 'last_review_date']
+date_columns = ["date_of_birth", "date_of_joining", "last_review_date"]
 for col in date_columns:
     df[col] = pd.to_datetime(df[col])
 print("After Date Conversion (Info):")
@@ -28,7 +28,7 @@ print("-" * 30)
 
 # --- 3. Feature Scaling (Min-Max Normalization) ---
 # Select the 'salary' column for normalization
-salary_data = df[['salary']]
+salary_data = df[["salary"]]
 
 # Initialize the MinMaxScaler
 # Min-Max scaling transforms data to a given range, typically [0, 1].
@@ -36,12 +36,12 @@ salary_data = df[['salary']]
 scaler = MinMaxScaler()
 
 # Fit the scaler to the salary data and transform the data
-df['salary_normalized'] = scaler.fit_transform(salary_data)
+df["salary_normalized"] = scaler.fit_transform(salary_data)
 
 # --- 4. Verification ---
 print("Head of DataFrame after Normalization:")
 # Display the original salary and the new normalized column
-print(df[['salary', 'salary_normalized']].head())
+print(df[["salary", "salary_normalized"]].head())
 print(f"\nMin of Normalized Salary: {df['salary_normalized'].min():.2f}")
 print(f"Max of Normalized Salary: {df['salary_normalized'].max():.2f}")
 
@@ -49,10 +49,10 @@ import pandas as pd
 import json
 
 # --- 1. Load the Data ---
-df = pd.read_csv('/content/drive/MyDrive/hr_data.csv')
+df = pd.read_csv("/content/drive/MyDrive/hr_data.csv")
 
 # --- 2. Define the Chunking Strategy (Grouping by 'department') ---
-chunk_groups = df.groupby('department')
+chunk_groups = df.groupby("department")
 
 # Dictionary to hold the generated metadata
 metadata_records = {}
@@ -66,7 +66,7 @@ for department_name, chunk_data in chunk_groups:
 
     # Calculate required metrics for metadata
     record_count = len(chunk_data)
-    average_salary = chunk_data['salary'].mean()
+    average_salary = chunk_data["salary"].mean()
 
     # --- 4. Define the Metadata Structure ---
     metadata = {
@@ -76,7 +76,7 @@ for department_name, chunk_data in chunk_groups:
         "department_name": department_name,
         "record_count": record_count,
         "average_salary_usd": round(average_salary, 2),
-        "columns_in_chunk": list(chunk_data.columns)
+        "columns_in_chunk": list(chunk_data.columns),
     }
 
     # Store the metadata
@@ -107,8 +107,8 @@ for department_name, chunk_data in chunk_groups:
             "leaves_taken",
             "attendance_pct",
             "performance_rating",
-            "last_review_date"
-        ]
+            "last_review_date",
+        ],
     },
     "Chunk 2": {
         "chunk_id": "chunk_2",
@@ -132,8 +132,8 @@ for department_name, chunk_data in chunk_groups:
             "leaves_taken",
             "attendance_pct",
             "performance_rating",
-            "last_review_date"
-        ]
+            "last_review_date",
+        ],
     },
     "Chunk 3": {
         "chunk_id": "chunk_3",
@@ -157,7 +157,7 @@ for department_name, chunk_data in chunk_groups:
             "leaves_taken",
             "attendance_pct",
             "performance_rating",
-            "last_review_date"
-        ]
-    }
+            "last_review_date",
+        ],
+    },
 }

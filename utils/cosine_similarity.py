@@ -12,15 +12,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 print("Loading model 'all-MiniLM-L6-v2'...")
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 sentences = [
     "The cat sat on the mat.",
     "A feline rested upon the floor covering.",
     "The dog chased the squirrel up a tree.",
-    "Programming is a fascinating field."
+    "Programming is a fascinating field.",
 ]
-print(f"\nInput Sentences:\n1. '{sentences[0]}'\n2. '{sentences[1]}'\n3. '{sentences[2]}'\n4. '{sentences[3]}'")
+print(
+    f"\nInput Sentences:\n1. '{sentences[0]}'\n2. '{sentences[1]}'\n3. '{sentences[2]}'\n4. '{sentences[3]}'"
+)
 
 print("\nCreating embeddings...")
 embeddings = model.encode(sentences)
@@ -34,11 +36,17 @@ s1_embedding = embeddings[0].reshape(1, -1)
 similarities = cosine_similarity(s1_embedding, embeddings)[0]
 
 print("\n--- Cosine Similarity Results (S1 vs All) ---")
-print(f"S1 ('{sentences[0]}') vs S1 (Self):    {similarities[0]:.4f} (Expected: 1.0000)")
+print(
+    f"S1 ('{sentences[0]}') vs S1 (Self):    {similarities[0]:.4f} (Expected: 1.0000)"
+)
 print(f"S1 vs S2 (Similar):       {similarities[1]:.4f} (Expected: High ~0.6-0.8)")
 print(f"S1 vs S3 (Dissimilar):    {similarities[2]:.4f} (Expected: Low ~0.2-0.4)")
 print(f"S1 vs S4 (Unrelated):     {similarities[3]:.4f} (Expected: Very Low ~0.0-0.2)")
 
 print("\n--- Interpretation ---")
-print("High Cosine Similarity (close to 1) means the sentences are **semantically similar**.")
-print("Low Cosine Similarity (close to 0) means the sentences are **semantically different**.")
+print(
+    "High Cosine Similarity (close to 1) means the sentences are **semantically similar**."
+)
+print(
+    "Low Cosine Similarity (close to 0) means the sentences are **semantically different**."
+)
