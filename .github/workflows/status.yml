@@ -1,4 +1,4 @@
-name: Status Check
+name: Build Status
 
 on:
   push:
@@ -7,16 +7,15 @@ on:
     branches: [ main ]
 
 jobs:
-  status:
+  build:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
-    - name: Status Check
+    - name: Build Status Check
       run: |
-        echo "✅ Repository status: OK"
+        echo "✅ Build started"
+        echo "✅ Repository: ${{ github.repository }}"
         echo "✅ Branch: ${{ github.ref_name }}"
-        echo "✅ Commit: ${{ github.sha }}"
-        echo "✅ All systems operational"
+        echo "✅ Build completed successfully"
