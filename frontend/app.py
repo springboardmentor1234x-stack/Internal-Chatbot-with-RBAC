@@ -1,9 +1,54 @@
 import streamlit as st
 import requests
 import os
+import time
+from datetime import datetime, timedelta
 
 # The URL where your FastAPI backend is running
 BACKEND_URL = "http://127.0.0.1:8000"
+
+# Session state initialization
+def initialize_session_state():
+    """Initialize all session state variables with default values"""
+    default_states = {
+        "authenticated": False,
+        "username": "",
+        "access_token": "",
+        "user_role": "Employee",
+        "messages": [],
+        "chat_session_id": None,
+        "login_time": None,
+        "last_activity": None,
+        "processing": False,
+        "error_count": 0,
+        "total_queries": 0,
+        "session_accuracy": [],
+        "theme_preference": "light"
+    }
+    
+    for key, default_value in default_states.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
+
+def update_activity():
+    """Update last activity timestamp"""
+    st.session_state.last_activity = datetime.now()
+
+def is_session_expired():
+    """Check if session has expired (30 minutes of inactivity)"""
+    if not st.session_state.get("last_activity"):
+        return False
+    
+    expiry_time = st.session_state.last_activity + timedelta(minutes=30)
+    return datetime.now() > expiry_time
+
+def clear_session():
+    """Clear all session state data"""
+    keys_to_keep = ["theme_preference"]  # Keep user preferences
+    for key in list(st.session_state.keys()):
+        if key not in keys_to_keep:
+            del st.session_state[key]
+    initialize_session_state()
 
 
 def view_document(filename):
@@ -49,9 +94,14 @@ def check_user_access(filename, user_role):
 
 
 def login():
-    """Login interface"""
+    """Enhanced login interface with session management"""
     st.title("🔐 FinSolve Internal Chatbot - Login")
     st.markdown("**Role-Based Access Control (RBAC) System**")
+
+    # Check for session expiry message
+    if st.session_state.get("session_expired"):
+        st.warning("⏰ Your session has expired. Please login again.")
+        st.session_state.session_expired = False
 
     # Show available test accounts (collapsed by default for security)
     with st.expander("🔧 Demo Test Accounts", expanded=False):
@@ -73,128 +123,243 @@ def login():
         )
 
     with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("🚀 Login")
+        username = st.text_input("Username", placeholder="Enter your username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            submit = st.form_submit_button("🚀 Login", use_container_width=True)
+        with col2:
+            if st.form_submit_button("🔄 Clear", use_container_width=True):
+                st.rerun()
 
         if submit:
             if not username or not password:
                 st.error("Please enter both username and password")
                 return
 
-            try:
-                # Updated to match the FastAPI endpoint
-                response = requests.post(
-                    f"{BACKEND_URL}/auth/login",
-                    data={"username": username, "password": password},
-                )
+            # Show login spinner
+            with st.spinner("🔐 Authenticating..."):
+                try:
+                    # Updated to match the FastAPI endpoint
+                    response = requests.post(
+                        f"{BACKEND_URL}/auth/login",
+                        data={"username": username, "password": password},
+                        timeout=10
+                    )
 
-                if response.status_code == 200:
-                    data = response.json()
-                    st.session_state["authenticated"] = True
-                    st.session_state["username"] = username
-                    st.session_state["access_token"] = data["access_token"]
-                    st.success("✅ Login successful!")
-                    st.rerun()
-                else:
-                    error_detail = response.json().get("detail", "Login failed")
-                    st.error(f"❌ {error_detail}")
-            except requests.exceptions.ConnectionError:
-                st.error(
-                    "🔌 Cannot connect to backend. Make sure FastAPI is running on http://127.0.0.1:8000"
-                )
-            except Exception as e:
-                st.error(f"❌ Login error: {str(e)}")
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Set session state
+                        st.session_state.authenticated = True
+                        st.session_state.username = username
+                        st.session_state.access_token = data["access_token"]
+                        st.session_state.login_time = datetime.now()
+                        st.session_state.last_activity = datetime.now()
+                        st.session_state.chat_session_id = f"{username}_{int(time.time())}"
+                        st.session_state.error_count = 0
+                        
+                        st.success("✅ Login successful!")
+                        time.sleep(1)  # Brief pause for user feedback
+                        st.rerun()
+                    else:
+                        error_detail = response.json().get("detail", "Login failed")
+                        st.error(f"❌ {error_detail}")
+                        st.session_state.error_count = st.session_state.get("error_count", 0) + 1
+                        
+                except requests.exceptions.Timeout:
+                    st.error("⏰ Login request timed out. Please try again.")
+                except requests.exceptions.ConnectionError:
+                    st.error(
+                        "🔌 Cannot connect to backend. Make sure FastAPI is running on http://127.0.0.1:8000"
+                    )
+                except Exception as e:
+                    st.error(f"❌ Login error: {str(e)}")
+                    st.session_state.error_count = st.session_state.get("error_count", 0) + 1
+
+    # Show connection status
+    with st.expander("🔧 System Status", expanded=False):
+        try:
+            health_response = requests.get(f"{BACKEND_URL}/health", timeout=5)
+            if health_response.status_code == 200:
+                st.success("✅ Backend server is running")
+            else:
+                st.warning("⚠️ Backend server responding with errors")
+        except:
+            st.error("❌ Backend server is not accessible")
+            st.info("💡 Make sure to run: `python run.py`")
 
 
 def main_chat_interface():
-    """Main chat interface for authenticated users"""
-    # Sidebar with user info
+    """Enhanced main chat interface with session management and clear chat functionality"""
+    
+    # Check session expiry
+    if is_session_expired():
+        st.session_state.session_expired = True
+        clear_session()
+        st.rerun()
+    
+    # Update activity
+    update_activity()
+    
+    # Sidebar with enhanced user info and controls
     with st.sidebar:
         st.title("👤 User Profile")
         st.write(f"**Username:** {st.session_state.get('username', 'Unknown')}")
+        
+        # Session info
+        if st.session_state.get("login_time"):
+            login_duration = datetime.now() - st.session_state.login_time
+            st.write(f"**Session:** {str(login_duration).split('.')[0]}")
 
         # Get user profile from backend
+        user_role = "Employee"  # Default
         try:
             headers = {
                 "Authorization": f"Bearer {st.session_state.get('access_token')}"
             }
             profile_response = requests.get(
-                f"{BACKEND_URL}/api/v1/user/profile", headers=headers
+                f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5
             )
             if profile_response.status_code == 200:
                 profile = profile_response.json()
-                st.write(f"**Role:** {profile.get('role', 'Unknown')}")
-                st.write(
-                    f"**Permissions:** {len(profile.get('permissions', []))} permissions"
-                )
+                user_role = profile.get('role', 'Employee')
+                st.session_state.user_role = user_role
+                st.write(f"**Role:** {user_role}")
+                st.write(f"**Permissions:** {len(profile.get('permissions', []))} permissions")
             else:
                 st.write("**Role:** Unable to fetch")
         except:
             st.write("**Role:** Connection error")
 
+        # Chat statistics
         st.divider()
-        if st.button("🚪 Logout"):
-            # Clear session state
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
+        st.subheader("📊 Chat Statistics")
+        st.write(f"**Total Queries:** {st.session_state.get('total_queries', 0)}")
+        st.write(f"**Messages:** {len(st.session_state.get('messages', []))}")
+        
+        # Average accuracy
+        if st.session_state.get('session_accuracy'):
+            avg_accuracy = sum(st.session_state.session_accuracy) / len(st.session_state.session_accuracy)
+            st.write(f"**Avg Accuracy:** {avg_accuracy:.1f}%")
+        
+        # Chat controls
+        st.divider()
+        st.subheader("🎛️ Chat Controls")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🗑️ Clear Chat", use_container_width=True, help="Clear all chat messages"):
+                st.session_state.messages = []
+                st.session_state.session_accuracy = []
+                st.success("✅ Chat cleared!")
+                time.sleep(1)
+                st.rerun()
+        
+        with col2:
+            if st.button("🔄 Refresh", use_container_width=True, help="Refresh the interface"):
+                st.rerun()
+        
+        # Export chat option
+        if st.session_state.get('messages'):
+            if st.button("📥 Export Chat", use_container_width=True):
+                chat_export = []
+                for msg in st.session_state.messages:
+                    chat_export.append({
+                        "role": msg["role"],
+                        "content": msg["content"],
+                        "timestamp": datetime.now().isoformat(),
+                        "sources": msg.get("sources", []),
+                        "accuracy": msg.get("accuracy", 0)
+                    })
+                
+                st.download_button(
+                    label="💾 Download Chat History",
+                    data=str(chat_export),
+                    file_name=f"chat_history_{st.session_state.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                    mime="text/plain",
+                    use_container_width=True
+                )
+
+        st.divider()
+        if st.button("🚪 Logout", use_container_width=True):
+            clear_session()
+            st.success("✅ Logged out successfully!")
+            time.sleep(1)
             st.rerun()
 
     # Main chat interface
     st.title("🤖 FinSolve Internal Chatbot")
-    st.markdown(
-        "**Ask questions about company documents based on your role permissions**"
-    )
+    
+    # Status bar
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    with col1:
+        st.markdown(f"**Welcome, {st.session_state.get('username', 'User')}!** Ask questions about company documents")
+    with col2:
+        if st.session_state.get('processing'):
+            st.markdown("🔄 **Processing...**")
+        else:
+            st.markdown("✅ **Ready**")
+    with col3:
+        st.markdown(f"**Role:** {st.session_state.get('user_role', 'Employee')}")
+    with col4:
+        message_count = len(st.session_state.get('messages', []))
+        st.markdown(f"**Messages:** {message_count}")
 
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    # Display chat messages with enhanced formatting
+    chat_container = st.container()
+    with chat_container:
+        for i, message in enumerate(st.session_state.messages):
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+                
+                # Enhanced message metadata
+                if message["role"] == "assistant":
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if message.get("sources"):
+                            st.caption(f"📄 Sources: {len(message['sources'])} documents")
+                    
+                    with col2:
+                        if message.get("accuracy"):
+                            accuracy = message["accuracy"]
+                            if accuracy >= 90:
+                                st.caption(f"🎯 Accuracy: {accuracy:.1f}%")
+                            elif accuracy >= 80:
+                                st.caption(f"✅ Accuracy: {accuracy:.1f}%")
+                            elif accuracy >= 70:
+                                st.caption(f"⚠️ Accuracy: {accuracy:.1f}%")
+                            else:
+                                st.caption(f"❌ Accuracy: {accuracy:.1f}%")
+                    
+                    with col3:
+                        st.caption(f"🕒 Message #{i+1}")
+                    
+                    # Detailed sources in expander
+                    if message.get("sources"):
+                        with st.expander("📋 View Sources", expanded=False):
+                            for j, source in enumerate(message["sources"], 1):
+                                st.write(f"{j}. {source}")
 
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if message.get("sources"):
-                st.caption(f"📄 Sources: {', '.join(message['sources'])}")
-            if message.get("accuracy"):
-                accuracy = message["accuracy"]
-                if accuracy >= 90:
-                    st.caption(f"🎯 Accuracy: {accuracy:.1f}%")
-                elif accuracy >= 80:
-                    st.caption(f"✅ Accuracy: {accuracy:.1f}%")
-                elif accuracy >= 70:
-                    st.caption(f"⚠️ Accuracy: {accuracy:.1f}%")
-                else:
-                    st.caption(f"❌ Accuracy: {accuracy:.1f}%")
-
-    # Get user role for document access control
-    user_role = "Employee"  # Default
-    try:
-        headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
-        profile_response = requests.get(
-            f"{BACKEND_URL}/api/v1/user/profile", headers=headers
-        )
-        if profile_response.status_code == 200:
-            profile = profile_response.json()
-            user_role = profile.get("role", "Employee")
-    except:
-        pass
-
-    # Document viewer section
-    with st.expander("📄 Available Documents (Click to View)"):
+    # Document viewer section (enhanced)
+    with st.expander("📄 Available Documents (Click to View)", expanded=False):
+        st.info("💡 **Tip:** Click on any document you have access to for detailed viewing")
+        
         col1, col2 = st.columns(2)
 
         with col1:
             st.subheader("📊 Financial Documents")
             if check_user_access("quarterly_financial_report.md", user_role):
-                if st.button("📈 Quarterly Financial Report"):
+                if st.button("📈 Quarterly Financial Report", key="fin_report"):
                     view_document("quarterly_financial_report.md")
             else:
                 st.write("🔒 Access Denied - Finance role required")
 
             st.subheader("👥 HR Documents")
             if check_user_access("employee_handbook.md", user_role):
-                if st.button("📋 Employee Handbook"):
+                if st.button("📋 Employee Handbook", key="hr_handbook"):
                     view_document("employee_handbook.md")
             else:
                 st.write("🔒 Access Denied - HR role required")
@@ -202,118 +367,212 @@ def main_chat_interface():
         with col2:
             st.subheader("📈 Marketing Documents")
             if check_user_access("market_report_q4_2024.md", user_role):
-                if st.button("📊 Q4 2024 Market Report"):
+                if st.button("📊 Q4 2024 Market Report", key="marketing_report"):
                     view_document("market_report_q4_2024.md")
             else:
                 st.write("🔒 Access Denied - Marketing role required")
 
             st.subheader("⚙️ Engineering Documents")
             if check_user_access("engineering_master_doc.md", user_role):
-                if st.button("🔧 Engineering Master Doc"):
+                if st.button("🔧 Engineering Master Doc", key="eng_doc"):
                     view_document("engineering_master_doc.md")
             else:
                 st.write("🔒 Access Denied - Engineering role required")
 
-    # Chat input
-    if prompt := st.chat_input("Ask about company documents..."):
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    # Enhanced chat input with processing state
+    if not st.session_state.get('processing', False):
+        if prompt := st.chat_input("Ask about company documents...", disabled=st.session_state.get('processing', False)):
+            # Set processing state
+            st.session_state.processing = True
+            st.session_state.total_queries = st.session_state.get('total_queries', 0) + 1
+            
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
 
-        # Display user message
-        with st.chat_message("user"):
-            st.markdown(prompt)
+            # Display user message
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-        # Get bot response
-        with st.chat_message("assistant"):
-            with st.spinner("🔍 Searching documents..."):
-                try:
-                    headers = {
-                        "Authorization": f"Bearer {st.session_state.get('access_token')}"
-                    }
-                    response = requests.post(
-                        f"{BACKEND_URL}/api/v1/chat",
-                        json={"query": prompt},
-                        headers=headers,
-                    )
-
-                    if response.status_code == 200:
-                        data = response.json()
-                        bot_message = data.get("response", "No response received")
-                        sources = data.get("sources", [])
-
-                        st.markdown(bot_message)
+            # Get bot response with enhanced spinner and error handling
+            with st.chat_message("assistant"):
+                # Multiple spinner messages for better UX
+                spinner_messages = [
+                    "🔍 Searching documents...",
+                    "🧠 Processing with AI...",
+                    "📊 Calculating accuracy...",
+                    "✨ Generating response..."
+                ]
+                
+                current_spinner = spinner_messages[0]
+                
+                with st.spinner(current_spinner):
+                    try:
+                        headers = {
+                            "Authorization": f"Bearer {st.session_state.get('access_token')}"
+                        }
                         
-                        # Display accuracy score if available
-                        accuracy = data.get("accuracy_score", 0)
-                        if accuracy > 0:
-                            if accuracy >= 90:
-                                st.success(f"🎯 Accuracy: {accuracy:.1f}% (Excellent)")
-                            elif accuracy >= 80:
-                                st.info(f"✅ Accuracy: {accuracy:.1f}% (Good)")
-                            elif accuracy >= 70:
-                                st.warning(f"⚠️ Accuracy: {accuracy:.1f}% (Fair)")
-                            else:
-                                st.error(f"❌ Accuracy: {accuracy:.1f}% (Needs Improvement)")
+                        # Update spinner message
+                        st.session_state.current_spinner = spinner_messages[1]
                         
-                        if sources:
-                            st.caption("📄 **Sources:**")
-                            for i, source in enumerate(sources, 1):
-                                st.caption(f"   {i}. {source}")
-                            st.info(
-                                "💡 **Tip:** Use the 'Available Documents' section above to view full documents!"
-                            )
+                        response = requests.post(
+                            f"{BACKEND_URL}/api/v1/chat",
+                            json={"query": prompt},
+                            headers=headers,
+                            timeout=30
+                        )
 
-                        # Add performance metrics if available
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            if data.get("query_category"):
-                                st.caption(f"🔍 Category: {data['query_category'].title()}")
-                        with col2:
-                            if data.get("total_chunks_analyzed"):
-                                st.caption(f"📊 Chunks: {data['total_chunks_analyzed']}")
-                        with col3:
+                        if response.status_code == 200:
+                            data = response.json()
+                            bot_message = data.get("response", "No response received")
+                            sources = data.get("sources", [])
+                            accuracy = data.get("accuracy_score", 0)
+
+                            # Display response
+                            st.markdown(bot_message)
+                            
+                            # Enhanced accuracy display with color coding
                             if accuracy > 0:
-                                st.caption(f"📈 Score: {accuracy:.1f}%")
+                                # Add to session accuracy tracking
+                                if 'session_accuracy' not in st.session_state:
+                                    st.session_state.session_accuracy = []
+                                st.session_state.session_accuracy.append(accuracy)
+                                
+                                # Color-coded accuracy display
+                                if accuracy >= 90:
+                                    st.success(f"🎯 **Excellent Accuracy:** {accuracy:.1f}%")
+                                elif accuracy >= 80:
+                                    st.info(f"✅ **Good Accuracy:** {accuracy:.1f}%")
+                                elif accuracy >= 70:
+                                    st.warning(f"⚠️ **Fair Accuracy:** {accuracy:.1f}%")
+                                else:
+                                    st.error(f"❌ **Low Accuracy:** {accuracy:.1f}% - Consider rephrasing your question")
+                            
+                            # Enhanced source display
+                            if sources:
+                                st.success(f"📄 **Found {len(sources)} relevant sources**")
+                                with st.expander("📋 View All Sources", expanded=False):
+                                    for i, source in enumerate(sources, 1):
+                                        st.write(f"**{i}.** {source}")
+                                st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
 
-                        # Add bot response to chat history
-                        st.session_state.messages.append(
-                            {
+                            # Performance metrics in a nice layout
+                            if data.get("query_category") or data.get("total_chunks_analyzed"):
+                                st.divider()
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    if data.get("query_category"):
+                                        st.metric("🔍 Category", data["query_category"].title())
+                                with col2:
+                                    if data.get("total_chunks_analyzed"):
+                                        st.metric("📊 Chunks Analyzed", data["total_chunks_analyzed"])
+                                with col3:
+                                    if accuracy > 0:
+                                        st.metric("📈 Accuracy Score", f"{accuracy:.1f}%")
+
+                            # Add bot response to chat history
+                            st.session_state.messages.append({
                                 "role": "assistant",
                                 "content": bot_message,
                                 "sources": sources,
-                                "accuracy": accuracy
-                            }
-                        )
-                    elif response.status_code == 401:
-                        st.error("🔐 Session expired. Please login again.")
-                        # Clear session and force re-login
-                        for key in list(st.session_state.keys()):
-                            del st.session_state[key]
-                        st.rerun()
-                    elif response.status_code == 403:
-                        st.error(
-                            "🚫 Access denied. You don't have permission for this request."
-                        )
-                    else:
-                        error_detail = response.json().get("detail", "Unknown error")
-                        st.error(f"❌ Error {response.status_code}: {error_detail}")
+                                "accuracy": accuracy,
+                                "timestamp": datetime.now().isoformat(),
+                                "query_category": data.get("query_category", ""),
+                                "chunks_analyzed": data.get("total_chunks_analyzed", 0)
+                            })
+                            
+                        elif response.status_code == 401:
+                            st.error("🔐 Session expired. Please login again.")
+                            st.session_state.session_expired = True
+                            clear_session()
+                            time.sleep(2)
+                            st.rerun()
+                        elif response.status_code == 403:
+                            st.error("🚫 Access denied. You don't have permission for this request.")
+                        else:
+                            error_detail = response.json().get("detail", "Unknown error")
+                            st.error(f"❌ Error {response.status_code}: {error_detail}")
 
-                except requests.exceptions.ConnectionError:
-                    st.error(
-                        "🔌 Cannot connect to backend. Make sure FastAPI is running."
-                    )
-                except Exception as e:
-                    st.error(f"❌ Request failed: {str(e)}")
+                    except requests.exceptions.Timeout:
+                        st.error("⏰ Request timed out. The server might be busy. Please try again.")
+                    except requests.exceptions.ConnectionError:
+                        st.error("🔌 Cannot connect to backend. Make sure FastAPI is running.")
+                        st.info("💡 **Troubleshooting:** Run `python run.py` in your terminal")
+                    except Exception as e:
+                        st.error(f"❌ Request failed: {str(e)}")
+                        st.info("🔄 Please try refreshing the page or logging in again")
+                    
+                    finally:
+                        # Reset processing state
+                        st.session_state.processing = False
+                        st.rerun()
+    else:
+        st.info("🔄 Processing your previous message... Please wait.")
+        
+    # Auto-scroll to bottom (JavaScript injection)
+    st.markdown("""
+    <script>
+    var element = window.parent.document.querySelector('.main');
+    element.scrollTop = element.scrollHeight;
+    </script>
+    """, unsafe_allow_html=True)
 
 
 # --- MAIN APP LOGIC ---
 def main():
+    """Enhanced main application with comprehensive session management"""
+    
+    # Configure Streamlit page
+    st.set_page_config(
+        page_title="FinSolve Internal Chatbot",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
     # Initialize session state
-    if "authenticated" not in st.session_state:
-        st.session_state["authenticated"] = False
-
-    # Route to appropriate interface
-    if not st.session_state["authenticated"]:
+    initialize_session_state()
+    
+    # Custom CSS for better UI
+    st.markdown("""
+    <style>
+    .main > div {
+        padding-top: 2rem;
+    }
+    .stButton > button {
+        width: 100%;
+    }
+    .chat-message {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .user-message {
+        background-color: #e3f2fd;
+    }
+    .assistant-message {
+        background-color: #f3e5f5;
+    }
+    .accuracy-excellent {
+        color: #4caf50;
+        font-weight: bold;
+    }
+    .accuracy-good {
+        color: #2196f3;
+        font-weight: bold;
+    }
+    .accuracy-fair {
+        color: #ff9800;
+        font-weight: bold;
+    }
+    .accuracy-poor {
+        color: #f44336;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Check authentication and route to appropriate interface
+    if not st.session_state.get("authenticated", False):
         login()
     else:
         main_chat_interface()

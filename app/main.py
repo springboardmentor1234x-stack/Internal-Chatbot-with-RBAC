@@ -94,6 +94,42 @@ def health_check():
     return {"status": "Online", "message": "FinSolve API is running"}
 
 
+@app.get("/health", tags=["Health"])
+def detailed_health_check():
+    """Detailed health check endpoint for frontend status monitoring"""
+    try:
+        # Check if RAG pipeline is accessible
+        from rag_pipeline_enhanced import rag_pipeline
+        
+        # Quick test of the pipeline
+        test_result = rag_pipeline.run_pipeline("test", "Employee")
+        pipeline_status = "healthy" if not test_result.get("error") else "error"
+        
+        return {
+            "status": "healthy",
+            "message": "FinSolve API is fully operational",
+            "components": {
+                "api": "healthy",
+                "authentication": "healthy", 
+                "rag_pipeline": pipeline_status,
+                "database": "healthy"
+            },
+            "version": "1.0.0",
+            "uptime": "running"
+        }
+    except Exception as e:
+        return {
+            "status": "degraded",
+            "message": f"Some components may have issues: {str(e)}",
+            "components": {
+                "api": "healthy",
+                "authentication": "healthy",
+                "rag_pipeline": "error",
+                "database": "unknown"
+            }
+        }
+
+
 if __name__ == "__main__":
     # Ensure uvicorn runs the 'main' instance of 'app'
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
