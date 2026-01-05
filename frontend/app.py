@@ -460,23 +460,23 @@ def main_chat_interface():
                                 else:
                                     st.error(f"❌ **Low Accuracy:** {accuracy:.1f}% - Consider rephrasing your question")
                             
-                    # Enhanced source display with citations
-                    if sources:
-                        st.success(f"📄 **Found {len(sources)} relevant sources**")
-                        
-                        # Check if citations are available
-                        citations = data.get("citations", [])
-                        
-                        with st.expander("📋 View All Sources & Citations", expanded=False):
-                            for i, source in enumerate(sources, 1):
-                                st.write(f"**{i}.** {source}")
+                            # Enhanced source display with citations
+                            if sources:
+                                st.success(f"📄 **Found {len(sources)} relevant sources**")
                                 
-                                # Display citation if available
-                                if citations and i <= len(citations):
-                                    st.caption(f"📖 Citation: {citations[i-1]}")
-                                    st.markdown("---")
-                        
-                        st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
+                                # Check if citations are available
+                                citations = data.get("citations", [])
+                                
+                                with st.expander("📋 View All Sources & Citations", expanded=False):
+                                    for i, source in enumerate(sources, 1):
+                                        st.write(f"**{i}.** {source}")
+                                        
+                                        # Display citation if available
+                                        if citations and i <= len(citations):
+                                            st.caption(f"📖 Citation: {citations[i-1]}")
+                                            st.markdown("---")
+                                
+                                st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
 
                             # Performance metrics in a nice layout
                             if data.get("query_category") or data.get("total_chunks_analyzed"):
