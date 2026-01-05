@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Dict, Any, Optional
 from sentence_transformers import SentenceTransformer
-from backend.services.audit_logger import AuditLogger
+from services.audit_logger import AuditLogger
 
 class VectorRetriever:
     """Vector-based document retrieval using ChromaDB"""

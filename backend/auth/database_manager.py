@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from config import Config
 
-from auth_handler import AuthHandler
+from .auth_handler import AuthHandler
 
 class DatabaseManager:
     """SQLite database manager for user storage"""

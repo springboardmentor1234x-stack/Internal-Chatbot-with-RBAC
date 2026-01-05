@@ -3,7 +3,7 @@ from typing import List, Set, Dict, Any
 class RBACEngine:
     """Role-Based Access Control Engine for document filtering"""
     
-    def __init__(self, user_roles: List[str], rbac_config: Dict[str, Any], audit_logger: AuditLogger = None):
+    def __init__(self, user_roles: List[str], rbac_config: Dict[str, Any], audit_logger):
         self.user_roles = [r.strip() for r in user_roles]
         self.rbac_config = rbac_config
         self.audit_logger = audit_logger
@@ -36,7 +36,6 @@ class RBACEngine:
             canonical_roles.update(
                 self._get_inherited_roles(canonical, visited=set())
             )
-        
         self._canonical_roles_cache = canonical_roles
         return canonical_roles
 
@@ -57,7 +56,6 @@ class RBACEngine:
             inherited.update(
                 self._get_inherited_roles(parent_role, visited)
             )
-        
         return inherited
     
     def get_effective_permissions(self) -> Set[str]:

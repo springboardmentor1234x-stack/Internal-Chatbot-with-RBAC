@@ -41,9 +41,7 @@ auth_handler = AuthHandler()
 db_manager = DatabaseManager()
 audit_logger = AuditLogger()
 
-# Global RAG pipeline instance (to be set during startup)
-rag_pipeline = None
-
+rag_pipeline = None  # Will be initialized on startup
 
 # ==================== STARTUP & HEALTH ====================
 
@@ -53,7 +51,10 @@ async def startup_event():
     db_manager.initialize_database()
     db_manager.seed_users()
     audit_logger.log_info("API server started")
-    bootstrap_application(audit_logger)
+
+    global rag_pipeline
+    rag_pipeline = bootstrap_application(audit_logger)
+    audit_logger.log_info("Complete RAG pipeline initialized in FastAPI")
 
 @app.get("/", response_model=SystemStatus)
 async def root():
@@ -238,7 +239,8 @@ async def get_current_user_info(
         from rbac.RBACEngine import RBACEngine
         temp_rbac = RBACEngine(
             user_roles=[current_user["role"]],
-            rbac_config=rag_pipeline.rbac.rbac_config
+            rbac_config=rag_pipeline.rbac.rbac_config,
+            audit_logger=audit_logger
         )
         accessible_departments = temp_rbac.get_accessible_departments()
     
@@ -352,7 +354,8 @@ async def retrieval_only(
         
         user_rbac = RBACEngine(
             user_roles=[current_user["role"]],
-            rbac_config=rag_pipeline.rbac.rbac_config
+            rbac_config=rag_pipeline.rbac.rbac_config,
+            audit_logger=audit_logger
         )
         
         # Temporarily replace pipeline RBAC
@@ -410,7 +413,8 @@ async def get_pipeline_stats(
     from rbac.RBACEngine import RBACEngine
     user_rbac = RBACEngine(
         user_roles=[current_user["role"]],
-        rbac_config=rag_pipeline.rbac.rbac_config
+        rbac_config=rag_pipeline.rbac.rbac_config,
+        audit_logger=audit_logger
     )
     
     stats = rag_pipeline.get_pipeline_stats()
@@ -572,16 +576,6 @@ async def get_user_activity(
     
     activity = audit_logger.get_user_activity(username, limit)
     return activity
-
-
-# ==================== PIPELINE INITIALIZATION ====================
-
-def initialize_rag_pipeline(pipeline):
-    """Initialize the global RAG pipeline"""
-    global rag_pipeline
-    rag_pipeline = pipeline
-    audit_logger.log_info("Complete RAG pipeline initialized in FastAPI")
-
 
 if __name__ == "__main__":
     import uvicorn

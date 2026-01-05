@@ -19,9 +19,10 @@ class AuditLogger:
         
         # Initialize log files
         if enable_file:
-            self.AUTH_LOG_FILE.touch(exist_ok=True)
-            self.ACCESS_LOG_FILE.touch(exist_ok=True)
-            self.RAG_LOG_FILE.touch(exist_ok=True)
+            for log_file in [self.AUTH_LOG_FILE, self.ACCESS_LOG_FILE, self.RAG_LOG_FILE]:
+                Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+                if not Path(log_file).exists():
+                    Path(log_file).touch()
         
         # Setup console logger
         if enable_console:

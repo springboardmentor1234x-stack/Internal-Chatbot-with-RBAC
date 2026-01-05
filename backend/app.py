@@ -9,7 +9,6 @@ import json
 from config import Config
 
 # RAG Pipeline Components
-from services.audit_logger import AuditLogger
 from services.QueryNormalizer import QueryNormalizer
 from rbac.RBACEngine import RBACEngine
 from rbac.VectorRetriever import VectorRetriever
@@ -17,9 +16,6 @@ from services.ReRanker import ReRanker
 from rag.llm_service import LLMService
 from rag.prompt_builder import PromptBuilder
 from rag.RAGPipeline import CompleteRAGPipeline
-
-# FastAPI Application
-from main import initialize_rag_pipeline
 
 
 def create_complete_rag_pipeline(
@@ -133,6 +129,4 @@ def bootstrap_application(audit_logger):
         abbreviations,
         audit_logger
     )
-
-    initialize_rag_pipeline(rag_pipeline)
-    audit_logger.log_info("RAG pipeline successfully injected into FastAPI app")
+    return rag_pipeline    

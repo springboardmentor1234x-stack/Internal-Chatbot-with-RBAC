@@ -45,31 +45,31 @@ class Config:
             {
                 "username": "intern_user",
                 "password": "intern123",
-                "role": "intern"
+                "role": "Intern"
             },
             {
                 "username": "finance_user",
                 "password": "finance123",
-                "role": "finance_analyst"
+                "role": "Finance Analyst"
             },
             {
                 "username": "hr_user",
                 "password": "hr123",
-                "role": "hr_manager"
+                "role": "HR Manager"
             },
             {
                 "username": "engineering_user",
                 "password": "eng123",
-                "role": "engineering_lead"
+                "role": "Engineering Lead"
             },
             {
                 "username": "manager_user",
                 "password": "manager123",
-                "role": "manager"
+                "role": "Manager"
             },
             {
                 "username": "admin_user",
                 "password": "admin123",
-                "role": "admin"
+                "role": "Admin"
             }
         ]

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from services.audit_logger import AuditLogger
-from llm_service import LLMService
-from prompt_builder import PromptBuilder
+from rag.llm_service import LLMService
+from rag.prompt_builder import PromptBuilder
 
 class CompleteRAGPipeline:
     """

@@ -2,17 +2,17 @@ import jwt
 import bcrypt
 from datetime import datetime, timedelta
 from typing import Dict, Optional
-from config import config
+from config import Config
 
 class AuthHandler:
     """JWT-based authentication handler with secure token management"""
     
-    SECRET_KEY = config.JWT_SECRET_KEY
-    ALGORITHM = config.ALGORITHM
+    SECRET_KEY = Config.JWT_SECRET_KEY
+    ALGORITHM = Config.ALGORITHM
     
     # Token expiry times
-    ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
-    REFRESH_TOKEN_EXPIRE_DAYS = config.REFRESH_TOKEN_EXPIRE_DAYS
+    ACCESS_TOKEN_EXPIRE_MINUTES = Config.ACCESS_TOKEN_EXPIRE_MINUTES
+    REFRESH_TOKEN_EXPIRE_DAYS = Config.REFRESH_TOKEN_EXPIRE_DAYS
         
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt"""
