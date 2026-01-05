@@ -3,6 +3,7 @@ import re
 from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 from collections import Counter
+from datetime import datetime
 
 load_dotenv()
 
@@ -10,12 +11,40 @@ load_dotenv()
 RAW_DATA_PATH = "./data/raw"
 CHROMA_PATH = "./data/chroma"
 
-# Enhanced Document-to-Role Mapping
+# Enhanced Document-to-Role Mapping with Citation Metadata
 DOCUMENT_MAP = {
-    "quarterly_financial_report.md": ["Finance", "C-Level"],
-    "market_report_q4_2024.md": ["Marketing", "C-Level"],
-    "employee_handbook.md": ["HR", "Employee", "C-Level", "Finance", "Marketing", "Engineering"],
-    "engineering_master_doc.md": ["Engineering", "C-Level"],
+    "quarterly_financial_report.md": {
+        "roles": ["Finance", "C-Level"],
+        "title": "Quarterly Financial Report - FinSolve Technologies Inc. 2024",
+        "author": "FinSolve Finance Department",
+        "date": "2024-12-31",
+        "type": "Financial Report",
+        "classification": "Internal"
+    },
+    "market_report_q4_2024.md": {
+        "roles": ["Marketing", "C-Level"],
+        "title": "Q4 2024 Marketing Performance Report",
+        "author": "FinSolve Marketing Department",
+        "date": "2024-12-31",
+        "type": "Marketing Report",
+        "classification": "Internal"
+    },
+    "employee_handbook.md": {
+        "roles": ["HR", "Employee", "C-Level", "Finance", "Marketing", "Engineering"],
+        "title": "Employee Handbook - FinSolve Technologies",
+        "author": "FinSolve HR Department",
+        "date": "2024-01-01",
+        "type": "Policy Document",
+        "classification": "Internal"
+    },
+    "engineering_master_doc.md": {
+        "roles": ["Engineering", "C-Level"],
+        "title": "Engineering Master Documentation",
+        "author": "FinSolve Engineering Department",
+        "date": "2024-06-15",
+        "type": "Technical Documentation",
+        "classification": "Internal"
+    },
 }
 
 # Advanced keyword mapping for high accuracy
@@ -52,12 +81,14 @@ class EnhancedRAGPipeline:
         self.documents = {}
         self.processed_documents = {}
         self.semantic_index = {}
+        self.citation_index = {}  # New: Citation tracking
         self.load_documents()
         self.preprocess_documents()
         self.build_semantic_index()
+        self.build_citation_index()
 
     def load_documents(self):
-        """Load documents from the data directory."""
+        """Load documents from the data directory with citation metadata."""
         if not os.path.exists(RAW_DATA_PATH):
             print(f"Data path {RAW_DATA_PATH} does not exist.")
             return
@@ -69,14 +100,66 @@ class EnhancedRAGPipeline:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
 
-                    allowed_roles = DOCUMENT_MAP.get(filename, ["Employee"])
+                    # Get document metadata for citations
+                    doc_metadata = DOCUMENT_MAP.get(filename, {
+                        "roles": ["Employee"],
+                        "title": filename.replace("_", " ").replace(".md", "").title(),
+                        "author": "FinSolve Technologies",
+                        "date": datetime.now().strftime("%Y-%m-%d"),
+                        "type": "Document",
+                        "classification": "Internal"
+                    })
+                    
+                    allowed_roles = doc_metadata["roles"]
                     self.documents[filename] = {
                         "content": content,
-                        "allowed_roles": allowed_roles
+                        "allowed_roles": allowed_roles,
+                        "metadata": doc_metadata
                     }
                     print(f"Loaded: {filename}")
                 except Exception as e:
                     print(f"Error loading {filename}: {e}")
+
+    def build_citation_index(self):
+        """Build citation index for proper source attribution."""
+        for filename, doc_data in self.processed_documents.items():
+            content = doc_data["original_content"]
+            metadata = doc_data.get("metadata", {})
+            
+            # Calculate approximate page numbers (assuming ~500 words per page)
+            words = content.split()
+            total_pages = max(1, len(words) // 500)
+            
+            # Index sections with page numbers
+            sections = doc_data["sections"]
+            section_citations = {}
+            
+            current_page = 1
+            words_processed = 0
+            
+            for section_name, section_content in sections.items():
+                section_words = len(section_content.split())
+                start_page = max(1, words_processed // 500 + 1)
+                end_page = max(start_page, (words_processed + section_words) // 500 + 1)
+                
+                section_citations[section_name] = {
+                    "start_page": start_page,
+                    "end_page": end_page,
+                    "word_count": section_words,
+                    "document": filename,
+                    "title": metadata.get("title", filename),
+                    "author": metadata.get("author", "Unknown"),
+                    "date": metadata.get("date", "Unknown"),
+                    "type": metadata.get("type", "Document")
+                }
+                
+                words_processed += section_words
+            
+            self.citation_index[filename] = {
+                "total_pages": total_pages,
+                "sections": section_citations,
+                "metadata": metadata
+            }
 
     def preprocess_documents(self):
         """Enhanced preprocessing for maximum accuracy."""
@@ -101,7 +184,8 @@ class EnhancedRAGPipeline:
                 "entities": entities,
                 "chunks": chunks,
                 "keyword_scores": keyword_scores,
-                "allowed_roles": doc_data["allowed_roles"]
+                "allowed_roles": doc_data["allowed_roles"],
+                "metadata": doc_data.get("metadata", {})
             }
 
     def _extract_sections(self, content: str) -> Dict[str, str]:
@@ -402,12 +486,24 @@ class EnhancedRAGPipeline:
             # Calculate accuracy score
             accuracy_score = self._calculate_response_accuracy(query, results)
             
-            # Extract sources
+            # Extract sources and generate citations
             sources = [result["source"] for result in results]
+            citations = []
             
+            # Generate citations for each source
+            for result in results[:3]:  # Top 3 results
+                section_name = self._identify_section_from_content(
+                    result["all_chunks"][0]["content"] if result["all_chunks"] else result["content"], 
+                    result["source"]
+                )
+                citation = self._generate_citation(result["source"], section_name)
+                citation_formatted = self._format_citation_apa(citation)
+                citations.append(citation_formatted)
+
             return {
                 "response": response,
                 "sources": sources,
+                "citations": citations,
                 "accuracy_score": accuracy_score,
                 "query_category": self._categorize_query(query),
                 "total_chunks_analyzed": sum(len(r["all_chunks"]) for r in results),
@@ -424,27 +520,36 @@ class EnhancedRAGPipeline:
             }
 
     def _generate_enhanced_response(self, query: str, results: List[Dict], user_role: str) -> str:
-        """Generate high-accuracy response with context and evidence."""
+        """Generate high-accuracy response with context, evidence, and proper citations."""
         if not results:
             return "No relevant information found."
         
         # Analyze query intent
         query_category = self._categorize_query(query)
         
-        # Build comprehensive response
+        # Build comprehensive response with citations
         response_parts = []
+        citations = []
         
         # Introduction with context
         response_parts.append(f"Based on your role ({user_role}) and access to {query_category} information, here's what I found:")
         response_parts.append("")
         
-        # Main content from top results
+        # Main content from top results with citations
         for i, result in enumerate(results[:3], 1):
             source_name = result["source"].replace("_", " ").replace(".md", "").title()
             
             # Use the best chunk content
             best_chunk = result["all_chunks"][0] if result["all_chunks"] else {"content": result["content"]}
             content = best_chunk["content"]
+            
+            # Determine section name from content
+            section_name = self._identify_section_from_content(content, result["source"])
+            
+            # Generate citation
+            citation = self._generate_citation(result["source"], section_name, content)
+            citation_apa = self._format_citation_apa(citation)
+            citations.append(citation_apa)
             
             # Extract most relevant sentences
             relevant_sentences = self._extract_relevant_sentences(content, query)
@@ -458,6 +563,9 @@ class EnhancedRAGPipeline:
                 # Fallback to content preview
                 content_preview = content[:300] + "..." if len(content) > 300 else content
                 response_parts.append(f"• {content_preview}")
+            
+            # Add inline citation
+            response_parts.append(f"  *Source: [{i}] {citation.get('author', 'Unknown')} ({citation.get('date', 'n.d.')}), {citation.get('pages', 'p. 1')}*")
             
             # Add entities if relevant
             entities = result.get("entities", {})
@@ -476,7 +584,36 @@ class EnhancedRAGPipeline:
         if len(results) > 3:
             response_parts.append(f"*Note: {len(results) - 3} additional relevant documents were found but not included in this summary.*")
         
+        # Add formal citations section
+        if citations:
+            response_parts.append("")
+            response_parts.append("**References:**")
+            for i, citation in enumerate(citations, 1):
+                response_parts.append(f"[{i}] {citation}")
+        
         return "\n".join(response_parts)
+
+    def _identify_section_from_content(self, content: str, filename: str) -> str:
+        """Identify which section the content belongs to."""
+        if filename not in self.processed_documents:
+            return None
+        
+        sections = self.processed_documents[filename]["sections"]
+        
+        # Find the section that contains the most words from the content
+        content_words = set(content.lower().split())
+        best_section = None
+        best_overlap = 0
+        
+        for section_name, section_content in sections.items():
+            section_words = set(section_content.lower().split())
+            overlap = len(content_words.intersection(section_words))
+            
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_section = section_name
+        
+        return best_section
 
     def _extract_relevant_sentences(self, content: str, query: str) -> List[str]:
         """Extract the most relevant sentences from content."""
@@ -560,8 +697,109 @@ class EnhancedRAGPipeline:
         
         return (diversity_score + quantity_score) / 2
 
+    def _generate_citation(self, filename: str, section_name: str = None, content_snippet: str = None) -> Dict[str, str]:
+        """Generate proper citation for a document section."""
+        citation_data = self.citation_index.get(filename, {})
+        metadata = citation_data.get("metadata", {})
+        
+        # Base citation information
+        citation = {
+            "document": filename,
+            "title": metadata.get("title", filename.replace("_", " ").replace(".md", "").title()),
+            "author": metadata.get("author", "FinSolve Technologies"),
+            "date": metadata.get("date", "2024"),
+            "type": metadata.get("type", "Document"),
+            "classification": metadata.get("classification", "Internal")
+        }
+        
+        # Add section-specific information
+        if section_name and section_name in citation_data.get("sections", {}):
+            section_info = citation_data["sections"][section_name]
+            citation.update({
+                "section": section_name.replace("_", " ").title(),
+                "page_start": section_info["start_page"],
+                "page_end": section_info["end_page"],
+                "pages": f"pp. {section_info['start_page']}-{section_info['end_page']}" if section_info['start_page'] != section_info['end_page'] else f"p. {section_info['start_page']}"
+            })
+        else:
+            # Estimate page number from content position
+            total_pages = citation_data.get("total_pages", 1)
+            citation.update({
+                "pages": f"pp. 1-{total_pages}" if total_pages > 1 else "p. 1"
+            })
+        
+        return citation
+
+    def _format_citation_apa(self, citation: Dict[str, str]) -> str:
+        """Format citation in APA style."""
+        author = citation.get("author", "Unknown")
+        date = citation.get("date", "n.d.")
+        title = citation.get("title", "Untitled")
+        pages = citation.get("pages", "")
+        section = citation.get("section", "")
+        
+        # Basic APA format: Author (Date). Title. [Document type]. Pages.
+        formatted = f"{author} ({date}). {title}"
+        
+        if section:
+            formatted += f", {section}"
+        
+        formatted += f". [{citation.get('type', 'Document')}]"
+        
+        if pages:
+            formatted += f" {pages}"
+        
+        formatted += "."
+        
+        return formatted
+
+    def _format_citation_mla(self, citation: Dict[str, str]) -> str:
+        """Format citation in MLA style."""
+        author = citation.get("author", "Unknown")
+        title = citation.get("title", "Untitled")
+        date = citation.get("date", "n.d.")
+        pages = citation.get("pages", "")
+        section = citation.get("section", "")
+        
+        # Basic MLA format: Author. "Title." Date. Pages.
+        formatted = f'{author}. "{title}."'
+        
+        if section:
+            formatted += f' {section}.'
+        
+        formatted += f" {date}"
+        
+        if pages:
+            formatted += f", {pages}"
+        
+        formatted += "."
+        
+        return formatted
+
+    def _format_citation_chicago(self, citation: Dict[str, str]) -> str:
+        """Format citation in Chicago style."""
+        author = citation.get("author", "Unknown")
+        title = citation.get("title", "Untitled")
+        date = citation.get("date", "n.d.")
+        pages = citation.get("pages", "")
+        section = citation.get("section", "")
+        
+        # Chicago format: Author. "Title." Section. Date. Pages.
+        formatted = f'{author}. "{title}."'
+        
+        if section:
+            formatted += f' {section}.'
+        
+        formatted += f" {date}"
+        
+        if pages:
+            formatted += f", {pages}"
+        
+        formatted += "."
+        
+        return formatted
+
     def _calculate_confidence_level(self, results: List[Dict]) -> int:
-        """Calculate confidence level for display."""
         if not results:
             return 0
         

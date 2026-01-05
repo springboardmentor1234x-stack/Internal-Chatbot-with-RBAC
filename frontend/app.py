@@ -337,11 +337,19 @@ def main_chat_interface():
                     with col3:
                         st.caption(f"🕒 Message #{i+1}")
                     
-                    # Detailed sources in expander
+                    # Detailed sources and citations in expander
                     if message.get("sources"):
-                        with st.expander("📋 View Sources", expanded=False):
-                            for j, source in enumerate(message["sources"], 1):
-                                st.write(f"{j}. {source}")
+                        with st.expander("📋 View Sources & Citations", expanded=False):
+                            sources = message.get("sources", [])
+                            citations = message.get("citations", [])
+                            
+                            for j, source in enumerate(sources, 1):
+                                st.write(f"**{j}.** {source}")
+                                
+                                # Display citation if available
+                                if citations and j <= len(citations):
+                                    st.caption(f"📖 **Citation:** {citations[j-1]}")
+                                    st.markdown("---")
 
     # Document viewer section (enhanced)
     with st.expander("📄 Available Documents (Click to View)", expanded=False):
@@ -387,7 +395,12 @@ def main_chat_interface():
             st.session_state.total_queries = st.session_state.get('total_queries', 0) + 1
             
             # Add user message to chat history
-            st.session_state.messages.append({"role": "user", "content": prompt})
+            st.session_state.messages.append({
+                "role": "user", 
+                "content": prompt,
+                "sources": [],
+                "citations": []
+            })
 
             # Display user message
             with st.chat_message("user"):
@@ -447,13 +460,23 @@ def main_chat_interface():
                                 else:
                                     st.error(f"❌ **Low Accuracy:** {accuracy:.1f}% - Consider rephrasing your question")
                             
-                            # Enhanced source display
-                            if sources:
-                                st.success(f"📄 **Found {len(sources)} relevant sources**")
-                                with st.expander("📋 View All Sources", expanded=False):
-                                    for i, source in enumerate(sources, 1):
-                                        st.write(f"**{i}.** {source}")
-                                st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
+                    # Enhanced source display with citations
+                    if sources:
+                        st.success(f"📄 **Found {len(sources)} relevant sources**")
+                        
+                        # Check if citations are available
+                        citations = data.get("citations", [])
+                        
+                        with st.expander("📋 View All Sources & Citations", expanded=False):
+                            for i, source in enumerate(sources, 1):
+                                st.write(f"**{i}.** {source}")
+                                
+                                # Display citation if available
+                                if citations and i <= len(citations):
+                                    st.caption(f"📖 Citation: {citations[i-1]}")
+                                    st.markdown("---")
+                        
+                        st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
 
                             # Performance metrics in a nice layout
                             if data.get("query_category") or data.get("total_chunks_analyzed"):
@@ -469,11 +492,12 @@ def main_chat_interface():
                                     if accuracy > 0:
                                         st.metric("📈 Accuracy Score", f"{accuracy:.1f}%")
 
-                            # Add bot response to chat history
+                            # Add bot response to chat history with citations
                             st.session_state.messages.append({
                                 "role": "assistant",
                                 "content": bot_message,
                                 "sources": sources,
+                                "citations": data.get("citations", []),
                                 "accuracy": accuracy,
                                 "timestamp": datetime.now().isoformat(),
                                 "query_category": data.get("query_category", ""),

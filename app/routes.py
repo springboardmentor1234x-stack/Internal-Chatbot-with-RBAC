@@ -16,16 +16,21 @@ router = APIRouter()
 
 
 def format_chat_response(
-    username: str, role: str, message: str, sources: List[str]
+    username: str, role: str, message: str, sources: List[str], citations: List[str] = None
 ) -> Dict[str, Any]:
-    """Format chat response with user info and sources."""
-    return {
+    """Format chat response with user info, sources, and citations."""
+    response = {
         "user": {"username": username, "role": role},
         "response": message,
         "sources": sources,
         "timestamp": datetime.now().isoformat(),
         "token_count": len(message.split()),  # Simple word count
     }
+    
+    if citations:
+        response["citations"] = citations
+    
+    return response
 
 
 class QueryRequest(BaseModel):
@@ -67,12 +72,14 @@ async def chat_endpoint(
             else:
                 raise HTTPException(status_code=500, detail=rag_result["error"])
 
-        # 5. Return successful response
+        # 5. Return successful response with citations
+        citations = rag_result.get("citations", [])
         return format_chat_response(
             username=username,
             role=user_role,
             message=rag_result["response"],
             sources=rag_result["sources"],
+            citations=citations
         )
 
     except HTTPException:
