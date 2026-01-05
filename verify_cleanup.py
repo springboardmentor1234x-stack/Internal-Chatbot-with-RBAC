@@ -65,9 +65,9 @@ def test_imports():
         from app.routes import router
         print("✅ Routes imports successfully")
         
-        # Test colab demo
-        import colab_simple_test
-        print("✅ Colab demo imports successfully")
+        # Test database
+        from app.database import get_user_from_db
+        print("✅ Database imports successfully")
         
         return True
     except ImportError as e:
