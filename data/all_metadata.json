@@ -1,0 +1,743 @@
+[
+    {
+        "chunk_id": "ENGINEERING_CHUNK_1",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_2",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_3",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 3,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_4",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 4,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_5",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 5,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_6",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 6,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_7",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 7,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_8",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 8,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_9",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 9,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_10",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 10,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_11",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 11,
+        "approx_token_count": 323,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "ENGINEERING_CHUNK_12",
+        "source_document": "engineering_master_doc.md",
+        "department": "Engineering",
+        "chunk_index": 12,
+        "approx_token_count": 23,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Engineering Lead",
+            "Backend Developer",
+            "Frontend Developer",
+            "DevOps Engineer",
+            "System Architect",
+            "Security Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_13",
+        "source_document": "financial_summary.md",
+        "department": "Finance",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_14",
+        "source_document": "financial_summary.md",
+        "department": "Finance",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_15",
+        "source_document": "financial_summary.md",
+        "department": "Finance",
+        "chunk_index": 3,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_16",
+        "source_document": "financial_summary.md",
+        "department": "Finance",
+        "chunk_index": 4,
+        "approx_token_count": 77,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_17",
+        "source_document": "quarterly_financial_report.md",
+        "department": "Finance",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_18",
+        "source_document": "quarterly_financial_report.md",
+        "department": "Finance",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_19",
+        "source_document": "quarterly_financial_report.md",
+        "department": "Finance",
+        "chunk_index": 3,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_20",
+        "source_document": "quarterly_financial_report.md",
+        "department": "Finance",
+        "chunk_index": 4,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "FINANCE_CHUNK_21",
+        "source_document": "quarterly_financial_report.md",
+        "department": "Finance",
+        "chunk_index": 5,
+        "approx_token_count": 269,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Finance Manager",
+            "Accounts Team",
+            "Auditor",
+            "Finance Analyst",
+            "CFO"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_22",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_23",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_24",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 3,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_25",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 4,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_26",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 5,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "GENERAL_CHUNK_27",
+        "source_document": "employee_handbook.md",
+        "department": "General",
+        "chunk_index": 6,
+        "approx_token_count": 285,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Employees",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_28",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_29",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_30",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 3,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_31",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 4,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_32",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 5,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "HR_CHUNK_33",
+        "source_document": "hr_data.csv",
+        "department": "Hr",
+        "chunk_index": 6,
+        "approx_token_count": 222,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "HR Manager",
+            "Talent Acquisition",
+            "Compliance Officer",
+            "Payroll Team",
+            "C-Level Executive"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_34",
+        "source_document": "marketing_report_2024.md",
+        "department": "Marketing",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_35",
+        "source_document": "marketing_report_2024.md",
+        "department": "Marketing",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_36",
+        "source_document": "marketing_report_2024.md",
+        "department": "Marketing",
+        "chunk_index": 3,
+        "approx_token_count": 345,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_37",
+        "source_document": "marketing_report_2024.md",
+        "department": "Marketing",
+        "chunk_index": 4,
+        "approx_token_count": 45,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_38",
+        "source_document": "marketing_report_q1_2024.md",
+        "department": "Marketing",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_39",
+        "source_document": "marketing_report_q1_2024.md",
+        "department": "Marketing",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_40",
+        "source_document": "marketing_report_q1_2024.md",
+        "department": "Marketing",
+        "chunk_index": 3,
+        "approx_token_count": 235,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_41",
+        "source_document": "marketing_report_q2_2024.md",
+        "department": "Marketing",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_42",
+        "source_document": "marketing_report_q2_2024.md",
+        "department": "Marketing",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_43",
+        "source_document": "marketing_report_q2_2024.md",
+        "department": "Marketing",
+        "chunk_index": 3,
+        "approx_token_count": 252,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_44",
+        "source_document": "marketing_report_q3_2024.md",
+        "department": "Marketing",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_45",
+        "source_document": "marketing_report_q3_2024.md",
+        "department": "Marketing",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_46",
+        "source_document": "marketing_report_q3_2024.md",
+        "department": "Marketing",
+        "chunk_index": 3,
+        "approx_token_count": 227,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_47",
+        "source_document": "marketing_report_q4_2024.md",
+        "department": "Marketing",
+        "chunk_index": 1,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_48",
+        "source_document": "marketing_report_q4_2024.md",
+        "department": "Marketing",
+        "chunk_index": 2,
+        "approx_token_count": 350,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    },
+    {
+        "chunk_id": "MARKETING_CHUNK_49",
+        "source_document": "marketing_report_q4_2024.md",
+        "department": "Marketing",
+        "chunk_index": 3,
+        "approx_token_count": 296,
+        "security_level": "Confidential",
+        "allowed_roles": [
+            "Marketing Manager",
+            "SEO Team",
+            "Content Strategist",
+            "Growth Lead",
+            "CMO"
+        ]
+    }
+]

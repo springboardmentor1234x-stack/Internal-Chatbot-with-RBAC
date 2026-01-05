@@ -1,7 +1,11 @@
 Fintech-data/
+Fintech-data-normalized/
 venv/
-.env
-*.bin
-__pycache__/
+tests/
 logs/
 *.db
+.env
+*.bin
+*.sqlite3
+__pycache__/
+*.pyc
