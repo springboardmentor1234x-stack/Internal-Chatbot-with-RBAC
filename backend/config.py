@@ -10,10 +10,8 @@ class Config:
     ACCESS_TOKEN_EXPIRE_MINUTES = 15
     REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-    HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-
     # Database
-    DATABASE_URL = "sqlite:///./database/users.db"
+    DATABASE_URL = os.getenv("DATABASE_URL")
     
     # Vector DB
     VECTOR_DB_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/vector_db"
@@ -27,8 +25,9 @@ class Config:
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     
     # LLM Settings (Using HuggingFace free API)
-    LLM_PROVIDER = "huggingface" 
-    HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.3" #"google/flan-t5-base"
+    LLM_PROVIDER = "ollama" 
+    OLLAMA_API_URL = os.getenv("OLLAMA_API_URL")
+    OLLAMA_MODEL = "mistral"
     
     # RAG Settings
     TOP_K_RETRIEVAL = 5

@@ -1,5 +1,4 @@
 import requests
-from transformers import pipeline
 from typing import Dict, Any
 from services.audit_logger import AuditLogger
 from config import Config
@@ -9,8 +8,8 @@ class LLMService:
     
     def __init__(self, audit_logger: AuditLogger = None):
         self.provider = Config.LLM_PROVIDER
-        self.hf_token = Config.HF_API_TOKEN
-        self.hf_model = Config.HF_MODEL
+        self.api_url = Config.OLLAMA_API_URL
+        self.ollama_model = Config.OLLAMA_MODEL
         self.audit_logger = audit_logger or AuditLogger()
         self._local_pipeline = None
 
@@ -27,126 +26,81 @@ class LLMService:
         Returns:
             Dict with response, model info, or error
         """
-        if self.hf_model == "google/flan-t5-base":
-            return self._generate_flan_t5(prompt, max_tokens)
-        elif self.hf_model == "mistralai/Mistral-7B-Instruct-v0.3":
-            return self._generate_mistral(prompt, max_tokens)
+        if self.provider == "ollama":
+            return self._generate_mistral_ollama(prompt, max_tokens)
         else:
             self.audit_logger.log_error("LLM Provider Error", f"Unknown provider: {self.provider}")
             return {
                 "error": "Unknown LLM provider",
                 "response": "LLM service is not properly configured."
             }
-        
-    def _generate_flan_t5(self, prompt: str, max_tokens: int) -> Dict[str, Any]:
-        """Generate using local FLAN-T5-base (NO API CALLS)"""
-        try:
-            if self._local_pipeline is None:
-                self.audit_logger.log_info(
-                    f"Loading local model: {self.hf_model}"
-                )
-                self._local_pipeline = pipeline(
-                    task="text2text-generation",
-                    model=self.hf_model,
-                    max_new_tokens=max_tokens
-                )
+    def _generate_mistral_ollama(self, prompt: str, max_tokens: int) -> Dict[str, Any]:
+        """
+        Generate response using self-hosted Mistral via Ollama.
+        Requires: ollama running locally.
+        """
 
-            result = self._local_pipeline(prompt)
-            generated_text = result[0]["generated_text"]
+        try:
+            response = requests.post(
+                self.api_url,
+                json={
+                    "model": self.ollama_model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": min(max_tokens, 256),
+                        "temperature": 0.3
+                    }
+                },
+                timeout=120
+            )
+
+            if response.status_code != 200:
+                self.audit_logger.log_error(
+                    "Ollama API Error",
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                return {
+                    "error": f"Ollama HTTP {response.status_code}",
+                    "response": "Local Mistral service returned an error."
+                }
+
+            data = response.json()
+            generated_text = data.get("response", "")
 
             self.audit_logger.log_info(
-                f"FLAN-T5 response generated: {len(generated_text)} chars"
+                f"Mistral (Ollama) response generated ({len(generated_text)} chars)"
             )
 
             return {
                 "response": generated_text.strip(),
-                "model": self.hf_model,
-                "provider": "huggingface"
+                "model": "mistral (ollama)",
+                "provider": "ollama"
             }
 
-        except Exception as e:
-            self.audit_logger.log_error("FLAN-T5 Exception", str(e))
-            return {
-                "error": str(e),
-                "response": "Sorry, I encountered an error while generating a response."
-            }
-    
-    def _generate_mistral(self, prompt: str, max_tokens: int) -> Dict[str, Any]:
-        """Generate using Hugging Face Mistral API"""
-        if not self.hf_token:
+        except requests.exceptions.ConnectionError:
             self.audit_logger.log_error(
-                "Mistral Error", "HF API token not configured"
+                "Ollama Connection Error",
+                "Ollama server not reachable"
             )
             return {
-                "error": "HF API token not configured",
-                "response": "Please configure HF_API_TOKEN environment variable."
+                "error": "Ollama not running",
+                "response": "Local Mistral server is not running."
             }
-
-        api_url = f"https://api-inference.huggingface.co/models/{self.hf_model}"
-        headers = {"Authorization": f"Bearer {self.hf_token}"}
-
-        payload = {
-            "inputs": prompt,
-            "parameters": {
-                "max_new_tokens": max_tokens,
-                "temperature": 0.3,
-                "top_p": 0.9,
-                "do_sample": False,
-                "return_full_text": False
-            }
-        }
-
-        try:
-            response = requests.post(
-                api_url,
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-
-                if isinstance(result, list) and result:
-                    generated_text = result[0].get("generated_text", "")
-                else:
-                    generated_text = ""
-
-                self.audit_logger.log_info(
-                    f"Mistral response generated: {len(generated_text)} chars"
-                )
-
-                return {
-                    "response": generated_text.strip(),
-                    "model": self.hf_model,
-                    "provider": self.provider
-                }
-
-            elif response.status_code == 503:
-                self.audit_logger.log_warning("Mistral model loading")
-                return {
-                    "error": "Model is loading",
-                    "response": "The model is currently loading. Please try again."
-                }
-
-            else:
-                error_msg = f"API error: {response.status_code}"
-                self.audit_logger.log_error("Mistral API Error", error_msg)
-                return {
-                    "error": error_msg,
-                    "response": "Sorry, I'm having trouble generating a response."
-                }
 
         except requests.exceptions.Timeout:
-            self.audit_logger.log_error("Mistral Timeout", "Request timed out")
+            self.audit_logger.log_error(
+                "Ollama Timeout",
+                "Request timed out"
+            )
             return {
                 "error": "Request timeout",
-                "response": "The request took too long. Please try again."
+                "response": "Local Mistral generation timed out."
             }
 
         except Exception as e:
-            self.audit_logger.log_error("Mistral Exception", str(e))
+            self.audit_logger.log_error("Ollama Exception", str(e))
             return {
                 "error": str(e),
-                "response": "Sorry, I encountered an error with Mistral API."
+                "response": "Local Mistral generation failed."
             }
