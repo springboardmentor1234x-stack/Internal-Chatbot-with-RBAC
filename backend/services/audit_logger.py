@@ -44,7 +44,7 @@ class AuditLogger:
             handler = logging.StreamHandler()
             handler.setLevel(log_level)
             formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                "%(name)s: %(asctime)s [%(levelname)s] - %(message)s",
                 datefmt="%Y-%m-%d %H:%M:%S"
             )
             handler.setFormatter(formatter)

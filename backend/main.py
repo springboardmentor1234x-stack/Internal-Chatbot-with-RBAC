@@ -21,7 +21,7 @@ from auth.auth_handler import AuthHandler
 from auth.database_manager import DatabaseManager
 from services.audit_logger import AuditLogger
 from rbac.rbac_middleware import get_current_user
-from app import bootstrap_application
+from create_rag import bootstrap_application
 
 # Initialize components
 app = FastAPI(
