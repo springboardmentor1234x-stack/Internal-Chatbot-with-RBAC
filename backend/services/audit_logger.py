@@ -196,9 +196,11 @@ class AuditLogger:
         if self.enable_console:
             self.logger.info(message)
 
-    def log_component_init(self, component: str):
-        if self.enable_console:
-            self.logger.info(f"✓ {component} initialized")
+    def log_component_init(self, component_name: str, details: str = ""): 
+        """Log component initialization""" 
+        if self.enable_console: 
+            detail_str = f" ({details})" if details else "" 
+            self.logger.info(f"✓ {component_name} initialized{detail_str}")
 
     # ==================== LOG RETRIEVAL ====================
 

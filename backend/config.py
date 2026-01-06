@@ -14,12 +14,12 @@ class Config:
     DATABASE_URL = os.getenv("DATABASE_URL")
     
     # Vector DB
-    VECTOR_DB_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/vector_db"
-    EMBEDDINGS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/chunk_embeddings.npy"
-    CHUNKS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/all_chunks.json"
-    METADATA_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/all_metadata.json"
-    ABBREVIATIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/ABBREVIATIONS.json"
-    RBAC_PERMISSIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/data/rbac_permissions.json"
+    VECTOR_DB_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/vector_db"
+    EMBEDDINGS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/chunk_embeddings.npy"
+    CHUNKS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/all_chunks.json"
+    METADATA_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/all_metadata.json"
+    ABBREVIATIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/ABBREVIATIONS.json"
+    RBAC_PERMISSIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/rbac_permissions.json"
     
     # Embedding Model
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -35,9 +35,9 @@ class Config:
     MAX_CONTEXT_LENGTH = 2000
     
     # Audit Logging
-    AUTH_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/logs/auth_audit.log"
-    ACCESS_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/logs/access_audit.log"
-    RAG_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC-Project/logs/rag_audit.log"
+    AUTH_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/auth_audit.log"
+    ACCESS_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/access_audit.log"
+    RAG_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/rag_audit.log"
 
     DEFALUT_USERS = [
             {
