@@ -39,8 +39,23 @@ def is_session_expired():
     if not st.session_state.get("last_activity"):
         return False
     
+    # Check for session expiry (30 minutes of inactivity)
     expiry_time = st.session_state.last_activity + timedelta(minutes=30)
-    return datetime.now() > expiry_time
+    is_expired = datetime.now() > expiry_time
+    
+    # Also check if authentication token is still valid
+    if st.session_state.get("authenticated") and st.session_state.get("access_token"):
+        try:
+            headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+            response = requests.get(f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5)
+            if response.status_code == 401:
+                # Token is invalid/expired
+                return True
+        except:
+            # Network error, assume session is still valid for now
+            pass
+    
+    return is_expired
 
 def clear_session():
     """Clear all session state data"""
@@ -151,7 +166,7 @@ def login():
                     if response.status_code == 200:
                         data = response.json()
                         
-                        # Set session state
+                        # Set session state with role fetched from backend
                         st.session_state.authenticated = True
                         st.session_state.username = username
                         st.session_state.access_token = data["access_token"]
@@ -159,6 +174,21 @@ def login():
                         st.session_state.last_activity = datetime.now()
                         st.session_state.chat_session_id = f"{username}_{int(time.time())}"
                         st.session_state.error_count = 0
+                        
+                        # Fetch and store user role as read-only immediately after login
+                        try:
+                            headers = {"Authorization": f"Bearer {data['access_token']}"}
+                            profile_response = requests.get(
+                                f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5
+                            )
+                            if profile_response.status_code == 200:
+                                profile = profile_response.json()
+                                # Store role as read-only in session state
+                                st.session_state.user_role = profile.get('role', 'Employee')
+                            else:
+                                st.session_state.user_role = 'Employee'  # Default fallback
+                        except:
+                            st.session_state.user_role = 'Employee'  # Default fallback
                         
                         st.success("✅ Login successful!")
                         time.sleep(1)  # Brief pause for user feedback
@@ -192,15 +222,17 @@ def login():
 
 
 def main_chat_interface():
-    """Enhanced main chat interface with session management and clear chat functionality"""
+    """Enhanced main chat interface with session expiry and read-only role management"""
     
-    # Check session expiry
+    # Check session expiry first
     if is_session_expired():
+        st.warning("⏰ Your session has expired due to inactivity. Please login again.")
         st.session_state.session_expired = True
         clear_session()
+        time.sleep(2)  # Brief pause to show the message
         st.rerun()
     
-    # Update activity
+    # Update activity timestamp on every interaction
     update_activity()
     
     # Sidebar with enhanced user info and controls
@@ -213,8 +245,9 @@ def main_chat_interface():
             login_duration = datetime.now() - st.session_state.login_time
             st.write(f"**Session:** {str(login_duration).split('.')[0]}")
 
-        # Get user profile from backend
-        user_role = "Employee"  # Default
+        # Get user profile from backend and store role as read-only
+        user_role = st.session_state.get('user_role', 'Employee')  # Use cached role first
+        
         try:
             headers = {
                 "Authorization": f"Bearer {st.session_state.get('access_token')}"
@@ -224,14 +257,51 @@ def main_chat_interface():
             )
             if profile_response.status_code == 200:
                 profile = profile_response.json()
-                user_role = profile.get('role', 'Employee')
-                st.session_state.user_role = user_role
-                st.write(f"**Role:** {user_role}")
+                # Store role as read-only in session state (only update if different)
+                fetched_role = profile.get('role', 'Employee')
+                if st.session_state.get('user_role') != fetched_role:
+                    st.session_state.user_role = fetched_role
+                user_role = fetched_role
+                
+                st.write(f"**Role:** {user_role} (Read-only)")
                 st.write(f"**Permissions:** {len(profile.get('permissions', []))} permissions")
+                
+                # Show session expiry countdown
+                if st.session_state.get("last_activity"):
+                    time_remaining = timedelta(minutes=30) - (datetime.now() - st.session_state.last_activity)
+                    if time_remaining.total_seconds() > 0:
+                        minutes_left = int(time_remaining.total_seconds() // 60)
+                        st.write(f"**Session Expires:** {minutes_left} min")
+                        
+                        # Warning when less than 5 minutes left
+                        if minutes_left <= 5:
+                            st.warning(f"⏰ Session expires in {minutes_left} minutes!")
+                    else:
+                        st.error("⏰ Session expired!")
+                        
+            elif profile_response.status_code == 401:
+                st.error("🔐 Session expired - Please login again")
+                st.session_state.session_expired = True
+                clear_session()
+                st.rerun()
             else:
                 st.write("**Role:** Unable to fetch")
+                # Use cached role if available
+                if st.session_state.get('user_role'):
+                    st.write(f"**Cached Role:** {st.session_state.user_role} (Read-only)")
+                    user_role = st.session_state.user_role
+        except requests.exceptions.Timeout:
+            st.write("**Role:** Request timeout")
+            # Use cached role if available
+            if st.session_state.get('user_role'):
+                st.write(f"**Cached Role:** {st.session_state.user_role} (Read-only)")
+                user_role = st.session_state.user_role
         except:
             st.write("**Role:** Connection error")
+            # Use cached role if available
+            if st.session_state.get('user_role'):
+                st.write(f"**Cached Role:** {st.session_state.user_role} (Read-only)")
+                user_role = st.session_state.user_role
 
         # Chat statistics
         st.divider()
@@ -292,7 +362,19 @@ def main_chat_interface():
     # Main chat interface
     st.title("🤖 FinSolve Internal Chatbot")
     
-    # Status bar
+    # Session expiry warning banner
+    if st.session_state.get("last_activity"):
+        time_remaining = timedelta(minutes=30) - (datetime.now() - st.session_state.last_activity)
+        if time_remaining.total_seconds() > 0:
+            minutes_left = int(time_remaining.total_seconds() // 60)
+            if minutes_left <= 5:
+                st.error(f"⏰ **Session Warning:** Your session will expire in {minutes_left} minutes. Please save any important information!")
+            elif minutes_left <= 10:
+                st.warning(f"⏰ **Session Notice:** Your session will expire in {minutes_left} minutes.")
+        else:
+            st.error("⏰ **Session Expired:** Please refresh the page to login again.")
+    
+    # Status bar with session expiry indicator
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
     with col1:
         st.markdown(f"**Welcome, {st.session_state.get('username', 'User')}!** Ask questions about company documents")
@@ -302,10 +384,21 @@ def main_chat_interface():
         else:
             st.markdown("✅ **Ready**")
     with col3:
-        st.markdown(f"**Role:** {st.session_state.get('user_role', 'Employee')}")
+        # Display read-only role from session state
+        cached_role = st.session_state.get('user_role', 'Employee')
+        st.markdown(f"**Role:** {cached_role}")
     with col4:
-        message_count = len(st.session_state.get('messages', []))
-        st.markdown(f"**Messages:** {message_count}")
+        # Session expiry indicator
+        if st.session_state.get("last_activity"):
+            time_remaining = timedelta(minutes=30) - (datetime.now() - st.session_state.last_activity)
+            if time_remaining.total_seconds() > 0:
+                minutes_left = int(time_remaining.total_seconds() // 60)
+                if minutes_left <= 5:
+                    st.markdown(f"⏰ **{minutes_left}min left**")
+                else:
+                    st.markdown(f"🕒 **{minutes_left}min**")
+            else:
+                st.markdown("⏰ **Expired**")
 
     # Display chat messages with enhanced formatting
     chat_container = st.container()
@@ -351,21 +444,23 @@ def main_chat_interface():
                                     st.caption(f"📖 **Citation:** {citations[j-1]}")
                                     st.markdown("---")
 
-    # Document viewer section (enhanced)
+    # Document viewer section (enhanced) - using read-only role from session state
+    user_role = st.session_state.get('user_role', 'Employee')  # Get read-only role from session state
+    
     with st.expander("📄 Available Documents (Click to View)", expanded=False):
         st.info("💡 **Tip:** Click on any document you have access to for detailed viewing")
         
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("📊 Financial Documents")
+            st.subheader("� FinaQncial Documents")
             if check_user_access("quarterly_financial_report.md", user_role):
                 if st.button("📈 Quarterly Financial Report", key="fin_report"):
                     view_document("quarterly_financial_report.md")
             else:
-                st.write("🔒 Access Denied - Finance role required")
+                st.write("�  Access Denied - Finance role required")
 
-            st.subheader("👥 HR Documents")
+            st.subheader("� HR  Documents")
             if check_user_access("employee_handbook.md", user_role):
                 if st.button("📋 Employee Handbook", key="hr_handbook"):
                     view_document("employee_handbook.md")
