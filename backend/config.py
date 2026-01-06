@@ -11,7 +11,6 @@ class Config:
     REFRESH_TOKEN_EXPIRE_DAYS = 7
 
     HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
     # Database
     DATABASE_URL = "sqlite:///./database/users.db"
@@ -28,8 +27,8 @@ class Config:
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     
     # LLM Settings (Using HuggingFace free API)
-    LLM_PROVIDER = "huggingface"  # or "openai"
-    HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
+    LLM_PROVIDER = "huggingface" 
+    HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.3" #"google/flan-t5-base"
     
     # RAG Settings
     TOP_K_RETRIEVAL = 5

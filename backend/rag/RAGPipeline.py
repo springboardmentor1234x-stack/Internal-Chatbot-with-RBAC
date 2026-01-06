@@ -216,13 +216,12 @@ class CompleteRAGPipeline:
             content = chunk.get("content", "")
             
             # Truncate long content
-            excerpt = content[:200] + "..." if len(content) > 200 else content
+            excerpt = content[:100] + "..." if len(content) > 100 else content
             
             sources.append({
                 "chunk_id": chunk.get("id", "unknown"),
                 "document": metadata.get("source_document", "Unknown"),
                 "department": metadata.get("department", "Unknown"),
-                "page": metadata.get("page", "N/A"),
                 "similarity": round(chunk.get("similarity", 0.0), 3),
                 "excerpt": excerpt
             })

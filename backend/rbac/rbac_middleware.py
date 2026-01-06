@@ -4,6 +4,9 @@ from typing import Callable, Dict
 
 from auth.auth_handler import AuthHandler
 from services.audit_logger import AuditLogger
+from auth.token_blacklist import TokenBlacklist
+
+token_blacklist = TokenBlacklist()
 
 # Initialize dependencies
 security = HTTPBearer()
@@ -40,6 +43,12 @@ class RBACMiddleware:
         
         token = credentials.credentials
         
+        if token_blacklist.is_blacklisted(token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been invalidated"
+            )
+
         try:
             user_info = self.auth_handler.get_current_user(token)
             if not user_info:
