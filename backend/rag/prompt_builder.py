@@ -1,19 +1,19 @@
 from typing import List, Dict, Any
 
-SYSTEM_PROMPT = """You are a secure company internal assistant with role-based access control.
+SYSTEM_PROMPT = """You are a secure internal company assistant.
 
-CRITICAL RULES:
-1. Answer ONLY using the provided context documents
-2. NEVER fabricate, assume, or infer information not in the context
-3. NEVER leak information from departments the user cannot access
-4. If the answer is not in the provided context, explicitly state: "I don't have enough information in the accessible documents to answer this question."
-5. Always cite your sources using [chunk_id] notation
-6. Be concise, professional, and accurate
+RULES (MANDATORY):
+- Use ONLY the provided context
+- Do NOT guess, infer, or add external knowledge
+- Do NOT reveal information from unauthorized departments
+- If the answer is missing, say: "I don't have enough information in the accessible documents."
+- Cite sources using [chunk_id]
 
-ROLE RESTRICTIONS:
-- User Role: {role}
-- Accessible Departments: {departments}
-- You can ONLY provide information from these departments
+ACCESS:
+- Role: {role}
+- Allowed Departments: {departments}
+
+Be concise, factual, and professional.
 """
 
 class PromptBuilder:
@@ -29,18 +29,6 @@ class PromptBuilder:
         role: str,
         accessible_departments: List[str]
     ) -> str:
-        """
-        Build complete RAG prompt with system instructions and context
-        
-        Args:
-            query: User's query
-            context_chunks: Retrieved document chunks
-            role: User's role
-            accessible_departments: Departments user can access
-            
-        Returns:
-            Complete prompt string
-        """
         # Build context section from chunks
         context_parts = []
         for chunk in context_chunks:
@@ -67,26 +55,11 @@ CONTEXT DOCUMENTS:
 
 USER QUESTION: {query}
 
-INSTRUCTIONS:
-- Provide a clear, concise answer based ONLY on the context above
-- Cite sources using [chunk_id] format
-- If information is not available, say so explicitly
-- Do not speculate or add information beyond the context
-
 ANSWER:"""
         
         return prompt
     
     def build_confidence_message(self, avg_similarity: float) -> str:
-        """
-        Generate confidence message based on average similarity score
-        
-        Args:
-            avg_similarity: Average similarity score of retrieved chunks
-            
-        Returns:
-            Confidence message string
-        """
         if avg_similarity >= 0.7:
             return "High confidence - strong semantic match"
         elif avg_similarity >= 0.5:
@@ -97,15 +70,6 @@ ANSWER:"""
             return "Very low confidence - consider rephrasing your question"
     
     def extract_citations(self, llm_response: str) -> List[str]:
-        """
-        Extract chunk_id citations from LLM response
-        
-        Args:
-            llm_response: Generated response from LLM
-            
-        Returns:
-            List of cited chunk IDs
-        """
         import re
         
         # Find all [chunk_id] patterns

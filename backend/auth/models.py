@@ -105,11 +105,8 @@ class SystemStatus(BaseModel):
     components: Dict[str, str]
 
 class PipelineStats(BaseModel):
-    user_roles: List[str]
-    effective_roles: List[str]
-    effective_permissions: List[str]
-    accessible_departments: List[str]
-    is_admin: bool
     similarity_threshold: float
     total_chunks: int
     total_embeddings: int
+    llm_model: str
+    llm_provider: str

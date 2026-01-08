@@ -8,6 +8,11 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import streamlit as st
 
+class APIError(Exception):
+    """Safe, user-facing API error"""
+    pass
+
+
 class APIClient:
     """Client for interacting with RAG Chatbot API"""
     
@@ -23,67 +28,91 @@ class APIClient:
             raise Exception("Not authenticated. Please login first.")
         return {"Authorization": f"Bearer {self.access_token}"}
     
+    def _map_error_message(self, status_code: int) -> str:
+        if status_code == 401:
+            return "🔒 Your session has expired. Please log in again."
+        if status_code == 403:
+            return "⛔ You do not have permission to perform this action."
+        if status_code == 404:
+            return "⚠️ The AI service is temporarily unavailable."
+        if status_code == 429:
+            return "⏳ Too many requests. Please try again shortly."
+        if status_code >= 500:
+            return "🚧 Server error. Please try again later."
+        return "⚠️ Unable to process your request right now."
+
+    
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
-        """Handle API response and errors"""
+        """Handle API response safely (no backend leaks)"""
+
+        # 🔐 Authentication
         if response.status_code == 401:
-            # Token expired, try to refresh
             if self.refresh_token:
                 try:
-                    self.refresh_access_token()
-                    return {"success": False, "retry": True}
-                except:
-                    raise Exception("Session expired. Please login again.")
-            raise Exception("Authentication required. Please login.")
-        
+                    refreshed = self.refresh_access_token()
+                    if refreshed:
+                        return {"success": False, "retry": True}
+                except Exception:
+                    pass
+            raise APIError("🔒 Your session has expired. Please log in again.")
+
+        # ⛔ Authorization
         if response.status_code == 403:
-            raise Exception("Access denied. Insufficient permissions.")
-        
+            raise APIError("⛔ Access denied. Insufficient permissions.")
+
+        # ❌ Client / Server errors
         if response.status_code >= 400:
             try:
                 error_data = response.json()
-                raise Exception(error_data.get("detail", "Request failed"))
-            except:
-                raise Exception(f"Request failed with status {response.status_code}")
-        
+            except Exception:
+                error_data = response.text
+
+            # 🔍 INTERNAL LOG (never shown to user)
+            print(
+                f"[API ERROR] {response.status_code} | "
+                f"URL: {response.url} | "
+                f"DETAIL: {error_data}"
+            )
+
+            # 🎯 USER-FACING SAFE MESSAGE
+            raise APIError(self._map_error_message(response.status_code))
+
         return response.json()
+
     
     # ==================== AUTHENTICATION ====================
     
     def login(self, username: str, password: str) -> Dict[str, Any]:
-        """
-        Login and store tokens
-        
-        Returns:
-            User info and tokens
-        """
         try:
             response = requests.post(
                 f"{self.base_url}/auth/login",
                 json={"username": username, "password": password},
                 timeout=10
             )
-            
+
             data = self._handle_response(response)
-            
+
             self.access_token = data["access_token"]
             self.refresh_token = data["refresh_token"]
-            
-            # Calculate token expiry
-            expires_in = data.get("expires_in", 900)  # Default 15 minutes
+
+            expires_in = data.get("expires_in", 900)
             self.token_expiry = datetime.now() + timedelta(seconds=expires_in)
-            
+
             return {
                 "success": True,
                 "user_info": data["user_info"],
                 "expires_in": expires_in
             }
-        
+
         except requests.exceptions.ConnectionError:
-            raise Exception("Cannot connect to server. Please ensure the backend is running.")
+            raise APIError("❌ Cannot connect to server.")
         except requests.exceptions.Timeout:
-            raise Exception("Request timed out. Please try again.")
-        except Exception as e:
-            raise Exception(f"Login failed: {str(e)}")
+            raise APIError("⏳ Request timed out.")
+        except APIError as e:
+            raise e
+        except Exception:
+            raise APIError("⚠️ Login failed. Please try again.")
+
     
     def logout(self) -> Dict[str, Any]:
         """

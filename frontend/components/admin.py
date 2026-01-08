@@ -5,8 +5,6 @@ Admin panel component for user management and logs
 import streamlit as st
 from utils.api_client import APIClient
 from config.settings import AVAILABLE_ROLES
-import pandas as pd
-from datetime import datetime
 
 def render_admin_panel(api_client: APIClient):
     """Render admin panel with tabs"""
@@ -20,7 +18,7 @@ def render_admin_panel(api_client: APIClient):
     st.markdown("---")
     
     # Tabs for different admin sections
-    tab1, tab2, tab3 = st.tabs(["👥 User Management", "📋 Audit Logs", "📊 System Info"])
+    tab1, tab2, tab3, tab4 = st.tabs(["👥 User Management", "📋 Audit Logs", "📊 System Info", "👁️ User Activity"])
     
     with tab1:
         render_user_management(api_client)
@@ -30,6 +28,9 @@ def render_admin_panel(api_client: APIClient):
     
     with tab3:
         render_system_info(api_client)
+    
+    with tab4:
+        render_user_activity(api_client)
 
 
 def render_user_management(api_client: APIClient):
@@ -56,9 +57,6 @@ def render_user_management(api_client: APIClient):
             st.info("No users found")
             return
         
-        # Convert to DataFrame for better display
-        df = pd.DataFrame(users)
-        
         # Display metrics
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -67,7 +65,7 @@ def render_user_management(api_client: APIClient):
             active_count = sum(1 for u in users if u.get('is_active', False))
             st.metric("Active Users", active_count)
         with col3:
-            admin_count = sum(1 for u in users if u.get('role') == 'admin')
+            admin_count = sum(1 for u in users if u.get('role', '').lower() == 'admin')
             st.metric("Admins", admin_count)
         
         st.markdown("---")
@@ -231,6 +229,64 @@ def render_audit_logs(api_client: APIClient):
         st.error(f"Failed to load logs: {str(e)}")
 
 
+def render_user_activity(api_client: APIClient):
+    """Render user activity section"""
+    
+    st.subheader("👁️ User Activity Tracking")
+    
+    # Username input
+    username = st.text_input("Enter username to view activity", key="activity_username")
+    
+    limit = st.slider("Number of activity logs", 10, 100, 20, 10, key="activity_limit")
+    
+    if st.button("🔍 Load Activity", use_container_width=True):
+        if not username:
+            st.error("Please enter a username")
+        else:
+            try:
+                with st.spinner(f"Loading activity for {username}..."):
+                    activity = api_client.get_user_activity(username, limit)
+                
+                st.success(f"✅ Loaded activity for {username}")
+                
+                # Display activity sections
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("### 🔐 Authentication Activity")
+                    auth_logs = activity.get("authentication_logs", [])
+                    if auth_logs:
+                        for log in auth_logs:
+                            status = "✅" if log.get('success', False) else "❌"
+                            st.markdown(f"{status} {log.get('action', 'N/A')} - {log.get('timestamp', 'N/A')}")
+                    else:
+                        st.info("No authentication logs")
+                
+                with col2:
+                    st.markdown("### 🔒 Access Activity")
+                    access_logs = activity.get("access_logs", [])
+                    if access_logs:
+                        for log in access_logs:
+                            status = "✅" if log.get('allowed', False) else "❌"
+                            st.markdown(f"{status} {log.get('endpoint', 'N/A')} - {log.get('timestamp', 'N/A')}")
+                    else:
+                        st.info("No access logs")
+                
+                # RAG activity
+                st.markdown("### 🤖 RAG Query Activity")
+                rag_logs = activity.get("rag_logs", [])
+                if rag_logs:
+                    for log in rag_logs:
+                        event = log.get('event_type', 'N/A')
+                        timestamp = log.get('timestamp', 'N/A')
+                        st.markdown(f"📝 {event} - {timestamp}")
+                else:
+                    st.info("No RAG logs")
+            
+            except Exception as e:
+                st.error(f"Failed to load user activity: {str(e)}")
+
+
 def render_system_info(api_client: APIClient):
     """Render system information"""
     
@@ -287,8 +343,16 @@ def render_system_info(api_client: APIClient):
         
         st.markdown("### System Configuration")
         
-        st.markdown(f"**LLM Provider:** {stats.get('llm_provider', 'Unknown')}")
-        st.markdown(f"**LLM Model:** {stats.get('llm_model', 'Unknown')}")
+        llm_provider = stats.get('llm_provider', 'Unknown')
+        llm_model = stats.get('llm_model', 'Not configured')
+        
+        st.markdown(f"**LLM Provider:** {llm_provider}")
+        
+        if llm_model and llm_model != 'Not configured' and llm_model.lower() != 'unknown':
+            st.markdown(f"**LLM Model:** {llm_model}")
+        else:
+            st.warning("**LLM Model:** Not configured or unavailable")
+        
         st.markdown(f"**Timestamp:** {health.get('timestamp', 'Unknown')}")
     
     except Exception as e:

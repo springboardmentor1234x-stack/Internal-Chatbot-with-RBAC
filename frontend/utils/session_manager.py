@@ -50,7 +50,7 @@ class SessionManager:
         
         # Admin state (if admin user)
         if "admin_view" not in st.session_state:
-            st.session_state.admin_view = "users"
+            st.session_state.admin_view = None  # None means chat view
         
         if "selected_user" not in st.session_state:
             st.session_state.selected_user = None
@@ -62,6 +62,7 @@ class SessionManager:
         st.session_state.user_info = user_info
         st.session_state.login_time = datetime.now()
         st.session_state.messages = []  # Clear previous chat
+        st.session_state.admin_view = None  # Reset to chat view
     
     @staticmethod
     def logout():
@@ -107,8 +108,10 @@ class SessionManager:
     @staticmethod
     def is_admin() -> bool:
         """Check if current user is admin"""
-        role = SessionManager.get_user_role().lower()
-        return role == "admin"
+        role = SessionManager.get_user_role()
+        if role:
+            return role.lower() == "admin"
+        return False
     
     @staticmethod
     def get_session_duration() -> Optional[int]:

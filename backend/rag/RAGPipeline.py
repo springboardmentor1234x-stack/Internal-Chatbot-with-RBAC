@@ -308,5 +308,5 @@ class CompleteRAGPipeline:
             "total_chunks": len(self.retriever.chunks),
             "total_embeddings": len(self.retriever.embeddings),
             "llm_provider": self.llm_service.provider,
-            "llm_model": self.llm_service.hf_model if self.llm_service.provider == "huggingface" else "unknown"
+            "llm_model": self.llm_service.llm_model
         }

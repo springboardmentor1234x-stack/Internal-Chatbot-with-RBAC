@@ -1,4 +1,4 @@
-from auth import token_blacklist
+from auth.token_blacklist import token_blacklist
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -314,8 +314,7 @@ async def chat_query(
     Returns AI-generated answer with source citations
     """
     ensure_pipeline_ready()
-    
-    ip_address = request.client.host
+
     start_time = time.time()
     
     try:
@@ -423,17 +422,18 @@ async def get_pipeline_stats(
     """Get RAG pipeline statistics for current user"""
     ensure_pipeline_ready()
     
-    # Create user-specific RBAC engine
-    user_rbac = build_user_rbac(current_user)
+    # # Create user-specific RBAC engine
+    # user_rbac = build_user_rbac(current_user)
     
     stats = rag_pipeline.get_pipeline_stats()
     
     # Update with user-specific info
-    stats["user_roles"] = [current_user["role"]]
-    stats["effective_roles"] = list(user_rbac.resolve_roles())
-    stats["effective_permissions"] = list(user_rbac.get_effective_permissions())
-    stats["accessible_departments"] = user_rbac.get_accessible_departments()
-    stats["is_admin"] = "admin" in user_rbac.resolve_roles()
+    # stats["user_roles"] = [current_user["role"]]
+    # stats["effective_roles"] = list(user_rbac.resolve_roles())
+    # stats["effective_permissions"] = list(user_rbac.get_effective_permissions())
+    # stats["accessible_departments"] = user_rbac.get_accessible_departments()
+    # stats["is_admin"] = "admin" in user_rbac.resolve_roles()
+    # stats["llm_model"] = rag_pipeline.llm_service.llm_model
     
     return PipelineStats(**stats)
 

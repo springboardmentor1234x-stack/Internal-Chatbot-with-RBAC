@@ -25,12 +25,13 @@ class Config:
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     
     # LLM Settings (Using HuggingFace free API)
-    LLM_PROVIDER = "ollama" 
     OLLAMA_API_URL = os.getenv("OLLAMA_API_URL")
-    OLLAMA_MODEL = "mistral"
+    HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+    LLM_PROVIDER = "hf_mistral" # Options: "ollama", "huggingface", "hf_mistral"
+    LLM_MODEL = "mistralai/Mistral-7B-Instruct-v0.2" # Options: "mistral", "google/flan-t5-base", "mistralai/Mistral-7B-Instruct-v0.2"
     
     # RAG Settings
-    TOP_K_RETRIEVAL = 5
+    TOP_K_RETRIEVAL = 4
     SIMILARITY_THRESHOLD = 0.3
     MAX_CONTEXT_LENGTH = 2000
     

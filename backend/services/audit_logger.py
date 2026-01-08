@@ -3,7 +3,7 @@ import logging
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from config import Config
 
 class AuditLogger:
@@ -134,46 +134,116 @@ class AuditLogger:
 
     # ==================== RAG PIPELINE ====================
 
-    def log_query_start(self, query: str, user_roles: List[str], username: Optional[str]):
-        entry = {
-            "timestamp": self._timestamp(),
+    def log_query_start(self, query: str, user_roles: List[str], username: Optional[str] = None):
+        """Log the start of RAG query processing"""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
             "event_type": "rag_query_start",
             "username": username,
             "query": query,
             "user_roles": user_roles
         }
-        self._write_log(self.RAG_LOG_FILE, entry)
-
+        self._write_log(self.RAG_LOG_FILE, log_entry)
+        
         if self.enable_console:
-            self.logger.info("=" * 60)
-            self.logger.info("RAG QUERY START")
-            self.logger.info(f"User: {username}")
-            self.logger.info(f"Query: {query}")
-            self.logger.info(f"Roles: {user_roles}")
-            self.logger.info("=" * 60)
-
-    def log_rbac_resolution(
-        self,
-        user_roles: List[str],
-        effective_roles: set,
-        permissions: set,
-        accessible_depts: List[str]
-    ):
-        entry = {
-            "timestamp": self._timestamp(),
+            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"RAG Query Processing Started")
+            self.logger.info(f"User: {username} | Query: \"{query}\"")
+            self.logger.info(f"User Roles: {user_roles}")
+            self.logger.info(f"{'='*60}\n")
+    
+    def log_normalization(self, original: str, normalized: str):
+        """Log query normalization"""
+        if self.enable_console:
+            self.logger.info("Step 1: Query Normalization")
+            self.logger.info(f"  Original: {original}")
+            self.logger.info(f"  Normalized: {normalized}\n")
+    
+    def log_query_variants(self, variants: List[str]):
+        """Log generated query variants"""
+        if self.enable_console:
+            self.logger.info("Step 2: Query Expansion")
+            self.logger.info(f"  Generated {len(variants)} query variants")
+            for i, variant in enumerate(variants, 1):
+                self.logger.info(f"    {i}. {variant}")
+            self.logger.info("")
+    
+    def log_rbac_resolution(self, user_roles: List[str], effective_roles: set, 
+                           permissions: set, accessible_depts: List[str]):
+        """Log RBAC role resolution and permissions"""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
             "event_type": "rag_rbac_resolution",
             "user_roles": user_roles,
             "effective_roles": list(effective_roles),
             "permissions": list(permissions),
             "accessible_departments": accessible_depts
         }
-        self._write_log(self.RAG_LOG_FILE, entry)
-
-    def log_query_complete(self, results_count: int):
+        self._write_log(self.RAG_LOG_FILE, log_entry)
+        
         if self.enable_console:
-            self.logger.info(f"RAG COMPLETE | Results: {results_count}")
-            self.logger.info("=" * 60)
-
+            self.logger.info("Step 3: RBAC Role Resolution")
+            self.logger.info(f"  User Roles: {user_roles}")
+            self.logger.info(f"  Effective Roles (with inheritance): {effective_roles}")
+            self.logger.info(f"  Effective Permissions: {permissions}")
+            self.logger.info(f"  Accessible Departments: {accessible_depts}\n")
+    
+    def log_retrieval(self, variant_num: int, variant: str, results_count: int, department: str = None):
+        """Log vector retrieval results"""
+        if self.enable_console:
+            dept_info = f" (Department: {department})" if department else ""
+            self.logger.info(f"  Retrieving for variant {variant_num}: \"{variant}\"{dept_info}")
+            self.logger.info(f"    Retrieved {results_count} candidates")
+    
+    def log_retrieval_summary(self, total_candidates: int, accessible_depts: List[str]):
+        """Log retrieval summary"""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": "rag_retrieval_summary",
+            "total_candidates": total_candidates,
+            "accessible_departments": accessible_depts
+        }
+        self._write_log(self.RAG_LOG_FILE, log_entry)
+        
+        if self.enable_console:
+            self.logger.info(f"  Total candidates retrieved: {total_candidates}")
+            self.logger.info(f"  From departments: {accessible_depts}\n")
+    
+    def log_reranking(self, before_count: int, after_count: int, top_k: int):
+        """Log re-ranking results"""
+        if self.enable_console:
+            self.logger.info("Step 4: Re-ranking & Deduplication")
+            self.logger.info(f"  Before re-ranking: {before_count} results")
+            self.logger.info(f"  After re-ranking: {after_count} results")
+            self.logger.info(f"  Returning top {min(top_k, after_count)} results\n")
+    
+    def log_final_results(self, results: List[Dict[str, Any]], username: Optional[str] = None):
+        """Log final RAG results"""
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": "rag_final_results",
+            "username": username,
+            "result_count": len(results),
+            "result_ids": [r['id'] for r in results]
+        }
+        self._write_log(self.RAG_LOG_FILE, log_entry)
+        
+        if self.enable_console:
+            self.logger.info("Step 5: Final Results")
+            for i, result in enumerate(results, 1):
+                dept = result.get('metadata', {}).get('department', 'N/A')
+                self.logger.info(
+                    f"  {i}. {result['id']} | "
+                    f"Dept: {dept} | "
+                    f"Similarity: {result['similarity']:.4f}"
+                )
+    
+    def log_query_complete(self, results_count: int):
+        """Log query completion"""
+        if self.enable_console:
+            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"Pipeline Complete: {results_count} results returned")
+            self.logger.info(f"{'='*60}\n")
     # ==================== GENERIC ====================
 
     def log_error(self, error_type: str, error_msg: str):
