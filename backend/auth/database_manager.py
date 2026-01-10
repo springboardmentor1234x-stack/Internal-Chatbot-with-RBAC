@@ -54,7 +54,7 @@ class DatabaseManager:
     
     def seed_users(self):
         """Create default users for testing"""
-        default_users = Config.DEFALUT_USERS
+        default_users = Config.DEFAULT_USERS
         
         with self.get_connection() as conn:
             cursor = conn.cursor()

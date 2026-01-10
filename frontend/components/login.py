@@ -106,38 +106,6 @@ def render_login(api_client: APIClient):
                 - If you forgot your password, contact HR
             """)
         
-        # Sample credentials (only for demo/testing)
-        with st.expander("📋 Test Credentials (Demo Only)"):
-            st.markdown("""
-                **Admin (Full Access):**
-                - Username: `admin_user`
-                - Password: `admin123`
-                
-                **Finance Analyst:**
-                - Username: `finance_user`
-                - Password: `finance123`
-                
-                **HR Manager:**
-                - Username: `hr_user`
-                - Password: `hr123`
-                
-                **Engineering Lead:**
-                - Username: `engineering_user`
-                - Password: `eng123`
-                
-                **Marketing Manager:**
-                - Username: `marketing_user`
-                - Password: `marketing123`
-                
-                **Manager (Multi-department):**
-                - Username: `manager_user`
-                - Password: `manager123`
-                
-                **Intern (No Access):**
-                - Username: `intern_user`
-                - Password: `intern123`
-            """)
-        
         # Footer
         st.markdown("---")
         st.markdown("""

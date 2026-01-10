@@ -43,7 +43,7 @@ class SessionManager:
         
         # Settings
         if "top_k" not in st.session_state:
-            st.session_state.top_k = 5
+            st.session_state.top_k = 3
         
         if "max_tokens" not in st.session_state:
             st.session_state.max_tokens = 256

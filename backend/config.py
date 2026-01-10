@@ -40,35 +40,4 @@ class Config:
     ACCESS_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/access_audit.log"
     RAG_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/rag_audit.log"
 
-    DEFALUT_USERS = [
-            {
-                "username": "intern_user",
-                "password": "intern123",
-                "role": "Intern"
-            },
-            {
-                "username": "finance_user",
-                "password": "finance123",
-                "role": "Finance Analyst"
-            },
-            {
-                "username": "hr_user",
-                "password": "hr123",
-                "role": "HR Manager"
-            },
-            {
-                "username": "engineering_user",
-                "password": "eng123",
-                "role": "Engineering Lead"
-            },
-            {
-                "username": "manager_user",
-                "password": "manager123",
-                "role": "Manager"
-            },
-            {
-                "username": "admin_user",
-                "password": "admin123",
-                "role": "Admin"
-            }
-        ]
+    DEFAULT_USERS = os.getenv("DEFAULT_USERS",[])

@@ -27,7 +27,7 @@ from create_rag import bootstrap_application
 app = FastAPI(
     title="RAG Chatbot API with RBAC",
     description="Secure RAG chatbot with JWT authentication, role-based access control, and LLM integration",
-    version="2.0.0"
+    version="1.0.0"
 )
 
 # CORS middleware
