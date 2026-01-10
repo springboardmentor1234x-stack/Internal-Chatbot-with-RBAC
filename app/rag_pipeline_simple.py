@@ -95,7 +95,7 @@ class SimpleRAGPipeline:
         return f"{author} ({date}). {title}. [{doc_type}]."
 
     def simple_search(self, query: str, user_role: str) -> List[Dict]:
-        """Simple keyword-based search."""
+        """Simple keyword-based search with chunk metadata."""
         results = []
         query_lower = query.lower()
 
@@ -108,23 +108,34 @@ class SimpleRAGPipeline:
 
             # Simple keyword matching
             if any(word in content for word in query_lower.split()):
-                # Extract relevant snippet
+                # Extract relevant snippet with metadata
                 lines = doc_data["content"].split("\n")
                 relevant_lines = []
+                chunk_details = []
 
-                for line in lines:
+                for i, line in enumerate(lines):
                     if any(word in line.lower() for word in query_lower.split()):
                         relevant_lines.append(line.strip())
+                        # Create simple chunk metadata
+                        chunk_details.append({
+                            "chunk_id": f"simple_chunk_{len(chunk_details)+1:03d}",
+                            "content": line.strip(),
+                            "line_number": i + 1,
+                            "score": len([word for word in query_lower.split() if word in line.lower()]) / len(query_lower.split()),
+                            "type": "line",
+                            "word_count": len(line.split()),
+                            "relevance_score": len([word for word in query_lower.split() if word in line.lower()]) * 10
+                        })
 
                 if relevant_lines:
                     snippet = "\n".join(relevant_lines[:3])  # First 3 relevant lines
-                    results.append(
-                        {
-                            "source": filename,
-                            "content": snippet,
-                            "score": len(relevant_lines),
-                        }
-                    )
+                    results.append({
+                        "source": filename,
+                        "document_name": filename.replace("_", " ").replace(".md", "").title(),
+                        "content": snippet,
+                        "score": len(relevant_lines),
+                        "chunk_details": chunk_details[:5]  # Top 5 matching lines
+                    })
 
         # Sort by relevance (number of matching lines)
         results.sort(key=lambda x: x["score"], reverse=True)
@@ -184,6 +195,14 @@ class SimpleRAGPipeline:
                 "response": response, 
                 "sources": sources, 
                 "citations": citations,
+                "chunk_details": [
+                    {
+                        "document_name": result["document_name"],
+                        "source_file": result["source"],
+                        "chunks": result.get("chunk_details", [])
+                    }
+                    for result in results[:3]
+                ],
                 "error": None
             }
 

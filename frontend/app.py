@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 import time
+import json
 from datetime import datetime, timedelta
 
 # The URL where your FastAPI backend is running
@@ -14,6 +15,7 @@ def initialize_session_state():
         "authenticated": False,
         "username": "",
         "access_token": "",
+        "refresh_token": "",
         "user_role": "Employee",
         "messages": [],
         "chat_session_id": None,
@@ -49,13 +51,46 @@ def is_session_expired():
             headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
             response = requests.get(f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5)
             if response.status_code == 401:
-                # Token is invalid/expired
+                # Try to refresh the token before declaring session expired
+                if st.session_state.get("refresh_token"):
+                    if refresh_access_token():
+                        return False  # Successfully refreshed, session is still valid
+                # Token refresh failed or no refresh token available
                 return True
         except:
             # Network error, assume session is still valid for now
             pass
     
     return is_expired
+
+
+def refresh_access_token():
+    """Attempt to refresh the access token using the refresh token."""
+    refresh_token = st.session_state.get("refresh_token")
+    if not refresh_token:
+        return False
+    
+    try:
+        # The endpoint expects refresh_token as a query parameter or form data
+        response = requests.post(
+            f"{BACKEND_URL}/auth/refresh",
+            params={"refresh_token": refresh_token},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            # Update access token
+            st.session_state.access_token = data["access_token"]
+            # Reset activity timestamp
+            st.session_state.last_activity = datetime.now()
+            return True
+        else:
+            # Refresh token is invalid or expired
+            return False
+    except Exception as e:
+        print(f"Token refresh error: {e}")
+        return False
 
 def clear_session():
     """Clear all session state data"""
@@ -170,6 +205,7 @@ def login():
                         st.session_state.authenticated = True
                         st.session_state.username = username
                         st.session_state.access_token = data["access_token"]
+                        st.session_state.refresh_token = data.get("refresh_token", "")
                         st.session_state.login_time = datetime.now()
                         st.session_state.last_activity = datetime.now()
                         st.session_state.chat_session_id = f"{username}_{int(time.time())}"
@@ -314,7 +350,7 @@ def main_chat_interface():
             avg_accuracy = sum(st.session_state.session_accuracy) / len(st.session_state.session_accuracy)
             st.write(f"**Avg Accuracy:** {avg_accuracy:.1f}%")
         
-        # Chat controls
+        # Enhanced chat controls with history features
         st.divider()
         st.subheader("🎛️ Chat Controls")
         
@@ -331,26 +367,193 @@ def main_chat_interface():
             if st.button("🔄 Refresh", use_container_width=True, help="Refresh the interface"):
                 st.rerun()
         
-        # Export chat option
+        # Save current session
+        if st.session_state.get('messages') and len(st.session_state.messages) > 0:
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("💾 Save Session", use_container_width=True, help="Save current chat to history"):
+                    try:
+                        session_id = st.session_state.get('chat_session_id', f"{st.session_state.username}_{int(time.time())}")
+                        
+                        headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                        save_response = requests.post(
+                            f"{BACKEND_URL}/api/v1/chat/history/save",
+                            json={
+                                "session_id": session_id,
+                                "messages": st.session_state.messages,
+                                "metadata": {
+                                    "total_queries": st.session_state.get('total_queries', 0),
+                                    "avg_accuracy": sum(st.session_state.get('session_accuracy', [])) / len(st.session_state.get('session_accuracy', [1])),
+                                    "session_duration": str(datetime.now() - st.session_state.get('login_time', datetime.now())),
+                                    "user_role": st.session_state.get('user_role', 'Employee')
+                                }
+                            },
+                            headers=headers,
+                            timeout=10
+                        )
+                        
+                        if save_response.status_code == 200:
+                            st.success("✅ Session saved to history!")
+                        else:
+                            st.error("❌ Failed to save session")
+                    except Exception as e:
+                        st.error(f"❌ Save error: {str(e)}")
+            
+            with col2:
+                # Search chat history
+                if st.button("🔍 Search History", use_container_width=True, help="Search your chat history"):
+                    st.session_state.show_history_search = True
+                    st.rerun()
+        
+        # Chat history search interface
+        if st.session_state.get('show_history_search', False):
+            st.divider()
+            st.subheader("🔍 Search Chat History")
+            
+            search_query = st.text_input("Search your previous conversations:", placeholder="Enter keywords to search...")
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("🔍 Search", use_container_width=True):
+                    if search_query and len(search_query.strip()) >= 2:
+                        try:
+                            headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                            search_response = requests.get(
+                                f"{BACKEND_URL}/api/v1/chat/history/search",
+                                params={"q": search_query, "limit": 10},
+                                headers=headers,
+                                timeout=10
+                            )
+                            
+                            if search_response.status_code == 200:
+                                results = search_response.json()
+                                st.session_state.search_results = results.get("results", [])
+                                st.success(f"✅ Found {len(st.session_state.search_results)} results")
+                            else:
+                                st.error("❌ Search failed")
+                        except Exception as e:
+                            st.error(f"❌ Search error: {str(e)}")
+                    else:
+                        st.warning("⚠️ Please enter at least 2 characters")
+            
+            with col2:
+                if st.button("📊 Analytics", use_container_width=True):
+                    try:
+                        headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                        analytics_response = requests.get(
+                            f"{BACKEND_URL}/api/v1/chat/history/analytics",
+                            params={"days": 30},
+                            headers=headers,
+                            timeout=10
+                        )
+                        
+                        if analytics_response.status_code == 200:
+                            st.session_state.chat_analytics = analytics_response.json().get("analytics", {})
+                            st.success("✅ Analytics loaded")
+                        else:
+                            st.error("❌ Analytics failed")
+                    except Exception as e:
+                        st.error(f"❌ Analytics error: {str(e)}")
+            
+            with col3:
+                if st.button("❌ Close Search", use_container_width=True):
+                    st.session_state.show_history_search = False
+                    st.session_state.search_results = []
+                    st.session_state.chat_analytics = {}
+                    st.rerun()
+            
+            # Display search results
+            if st.session_state.get('search_results'):
+                st.subheader("🔍 Search Results")
+                for i, result in enumerate(st.session_state.search_results[:5]):
+                    with st.expander(f"Result {i+1}: {result.get('content', '')[:100]}..."):
+                        st.write(f"**Role:** {result.get('role', 'Unknown')}")
+                        st.write(f"**Date:** {result.get('timestamp', 'Unknown')}")
+                        st.write(f"**Content:** {result.get('content', '')}")
+                        if result.get('accuracy_score'):
+                            st.write(f"**Accuracy:** {result.get('accuracy_score', 0):.1f}%")
+                        if result.get('sources'):
+                            st.write(f"**Sources:** {', '.join(result.get('sources', []))}")
+            
+            # Display analytics
+            if st.session_state.get('chat_analytics'):
+                st.subheader("📊 Your Chat Analytics (Last 30 Days)")
+                analytics = st.session_state.chat_analytics
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                session_stats = analytics.get('session_stats', {})
+                message_stats = analytics.get('message_stats', {})
+                
+                with col1:
+                    st.metric("Total Sessions", session_stats.get('total_sessions', 0))
+                with col2:
+                    st.metric("Total Messages", message_stats.get('total_messages', 0))
+                with col3:
+                    avg_acc = message_stats.get('avg_accuracy', 0)
+                    st.metric("Avg Accuracy", f"{avg_acc:.1f}%" if avg_acc else "N/A")
+                with col4:
+                    avg_msgs = session_stats.get('avg_messages_per_session', 0)
+                    st.metric("Avg Msgs/Session", f"{avg_msgs:.1f}" if avg_msgs else "N/A")
+                
+                # Category breakdown
+                if analytics.get('category_breakdown'):
+                    st.subheader("📈 Query Categories")
+                    for category in analytics['category_breakdown']:
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            st.write(f"**{category.get('query_category', 'Unknown').title()}**")
+                        with col2:
+                            st.write(f"{category.get('count', 0)} queries ({category.get('avg_accuracy', 0):.1f}% avg)")
+        
+        # Export chat option (enhanced)
         if st.session_state.get('messages'):
-            if st.button("📥 Export Chat", use_container_width=True):
+            st.divider()
+            if st.button("📥 Export Current Chat", use_container_width=True):
                 chat_export = []
                 for msg in st.session_state.messages:
                     chat_export.append({
                         "role": msg["role"],
                         "content": msg["content"],
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": msg.get("timestamp", datetime.now().isoformat()),
                         "sources": msg.get("sources", []),
-                        "accuracy": msg.get("accuracy", 0)
+                        "accuracy_score": msg.get("accuracy_score", 0),
+                        "confidence_level": msg.get("confidence_level", "unknown"),
+                        "quality_metrics": msg.get("quality_metrics", {}),
+                        "query_category": msg.get("query_category", "")
                     })
                 
                 st.download_button(
-                    label="💾 Download Chat History",
-                    data=str(chat_export),
-                    file_name=f"chat_history_{st.session_state.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                    mime="text/plain",
+                    label="💾 Download Current Chat",
+                    data=json.dumps(chat_export, indent=2),
+                    file_name=f"current_chat_{st.session_state.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
                     use_container_width=True
                 )
+            
+            # Export complete history
+            if st.button("📚 Export Complete History", use_container_width=True):
+                try:
+                    headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                    export_response = requests.get(
+                        f"{BACKEND_URL}/api/v1/chat/history/export",
+                        params={"format": "json"},
+                        headers=headers,
+                        timeout=30
+                    )
+                    
+                    if export_response.status_code == 200:
+                        st.download_button(
+                            label="💾 Download Complete History",
+                            data=export_response.content,
+                            file_name=f"complete_history_{st.session_state.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                            mime="application/json",
+                            use_container_width=True
+                        )
+                    else:
+                        st.error("❌ Export failed")
+                except Exception as e:
+                    st.error(f"❌ Export error: {str(e)}")
 
         st.divider()
         if st.button("🚪 Logout", use_container_width=True):
@@ -409,39 +612,119 @@ def main_chat_interface():
                 
                 # Enhanced message metadata
                 if message["role"] == "assistant":
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        if message.get("sources"):
-                            st.caption(f"📄 Sources: {len(message['sources'])} documents")
-                    
-                    with col2:
-                        if message.get("accuracy"):
-                            accuracy = message["accuracy"]
-                            if accuracy >= 90:
-                                st.caption(f"🎯 Accuracy: {accuracy:.1f}%")
-                            elif accuracy >= 80:
-                                st.caption(f"✅ Accuracy: {accuracy:.1f}%")
-                            elif accuracy >= 70:
-                                st.caption(f"⚠️ Accuracy: {accuracy:.1f}%")
-                            else:
-                                st.caption(f"❌ Accuracy: {accuracy:.1f}%")
-                    
-                    with col3:
-                        st.caption(f"🕒 Message #{i+1}")
-                    
-                    # Detailed sources and citations in expander
-                    if message.get("sources"):
-                        with st.expander("📋 View Sources & Citations", expanded=False):
-                            sources = message.get("sources", [])
-                            citations = message.get("citations", [])
-                            
-                            for j, source in enumerate(sources, 1):
-                                st.write(f"**{j}.** {source}")
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            if message.get("sources"):
+                                st.caption(f"📄 Sources: {len(message['sources'])} documents")
+                        
+                        with col2:
+                            if message.get("accuracy_score"):
+                                accuracy = message["accuracy_score"]
+                                if accuracy >= 90:
+                                    st.caption(f"🎯 Accuracy: {accuracy:.1f}%")
+                                elif accuracy >= 80:
+                                    st.caption(f"✅ Accuracy: {accuracy:.1f}%")
+                                elif accuracy >= 70:
+                                    st.caption(f"⚠️ Accuracy: {accuracy:.1f}%")
+                                else:
+                                    st.caption(f"❌ Accuracy: {accuracy:.1f}%")
+                        
+                        with col3:
+                            if message.get("confidence_level"):
+                                confidence = message["confidence_level"]
+                                confidence_icons = {
+                                    "very_high": "🔥",
+                                    "high": "✨",
+                                    "medium": "⭐",
+                                    "low": "⚠️",
+                                    "very_low": "❌"
+                                }
+                                icon = confidence_icons.get(confidence, "❓")
+                                st.caption(f"{icon} Confidence: {confidence.replace('_', ' ').title()}")
+                        
+                        with col4:
+                            st.caption(f"🕒 Message #{i+1}")
+                        
+                        # Enhanced accuracy metrics in expander
+                        if message.get("quality_metrics") or message.get("improvement_suggestions"):
+                            with st.expander("📊 Accuracy Analysis", expanded=False):
                                 
-                                # Display citation if available
-                                if citations and j <= len(citations):
-                                    st.caption(f"📖 **Citation:** {citations[j-1]}")
+                                # Quality metrics
+                                if message.get("quality_metrics"):
+                                    st.subheader("Quality Metrics")
+                                    metrics = message["quality_metrics"]
+                                    
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        for metric, score in list(metrics.items())[:3]:
+                                            metric_name = metric.replace("_", " ").title()
+                                            st.metric(metric_name, f"{score:.1f}%")
+                                    
+                                    with col2:
+                                        for metric, score in list(metrics.items())[3:]:
+                                            metric_name = metric.replace("_", " ").title()
+                                            st.metric(metric_name, f"{score:.1f}%")
+                                
+                                # Improvement suggestions
+                                if message.get("improvement_suggestions"):
+                                    st.subheader("💡 Improvement Suggestions")
+                                    for suggestion in message["improvement_suggestions"]:
+                                        st.write(f"• {suggestion}")
+                                
+                                # Query optimization info
+                                if message.get("query_optimization"):
+                                    opt_info = message["query_optimization"]
+                                    st.subheader("🔍 Query Analysis")
+                                    
+                                    if opt_info.get("optimized_query") != opt_info.get("original_query"):
+                                        st.write(f"**Original:** {opt_info.get('original_query', 'N/A')}")
+                                        st.write(f"**Optimized:** {opt_info.get('optimized_query', 'N/A')}")
+                                    
+                                    if opt_info.get("expanded_terms"):
+                                        st.write("**Expanded Terms:**")
+                                        for term in opt_info["expanded_terms"]:
+                                            st.caption(f"• {term}")
+                        
+                        # Detailed sources, citations, and chunks in expander
+                        if message.get("sources"):
+                            with st.expander("📋 View Sources, Citations & Chunk Analysis", expanded=False):
+                                sources = message.get("sources", [])
+                                citations = message.get("citations", [])
+                                chunk_details = message.get("chunk_details", [])
+                                
+                                for j, source in enumerate(sources, 1):
+                                    st.write(f"**{j}. {source}**")
+                                    
+                                    # Display citation if available
+                                    if citations and j <= len(citations):
+                                        st.caption(f"📖 **Citation:** {citations[j-1]}")
+                                    
+                                    # Display chunk details if available
+                                    if chunk_details and j <= len(chunk_details):
+                                        chunk_info = chunk_details[j-1]
+                                        document_name = chunk_info.get("document_name", source)
+                                        chunks = chunk_info.get("chunks", [])
+                                        
+                                        if chunks:
+                                            st.write(f"🔍 **Document:** {document_name}")
+                                            st.write(f"📊 **Found {len(chunks)} relevant chunks**")
+                                            
+                                            # Show chunk summary table
+                                            chunk_summary = []
+                                            for chunk in chunks[:3]:
+                                                chunk_summary.append({
+                                                    "Chunk ID": chunk.get("chunk_id", "N/A"),
+                                                    "Type": chunk.get("type", "N/A").title(),
+                                                    "Score": f"{chunk.get('score', 0):.3f}",
+                                                    "Words": chunk.get("word_count", 0)
+                                                })
+                                            
+                                            if chunk_summary:
+                                                import pandas as pd
+                                                df = pd.DataFrame(chunk_summary)
+                                                st.dataframe(df, use_container_width=True)
+                                    
                                     st.markdown("---")
 
     # Document viewer section (enhanced) - using read-only role from session state
@@ -539,44 +822,116 @@ def main_chat_interface():
                             st.markdown(bot_message)
                             
                             # Enhanced accuracy display with color coding
+                            accuracy = data.get("accuracy_score", 0)
                             if accuracy > 0:
                                 # Add to session accuracy tracking
                                 if 'session_accuracy' not in st.session_state:
                                     st.session_state.session_accuracy = []
                                 st.session_state.session_accuracy.append(accuracy)
                                 
-                                # Color-coded accuracy display
-                                if accuracy >= 90:
-                                    st.success(f"🎯 **Excellent Accuracy:** {accuracy:.1f}%")
-                                elif accuracy >= 80:
-                                    st.info(f"✅ **Good Accuracy:** {accuracy:.1f}%")
-                                elif accuracy >= 70:
-                                    st.warning(f"⚠️ **Fair Accuracy:** {accuracy:.1f}%")
-                                else:
-                                    st.error(f"❌ **Low Accuracy:** {accuracy:.1f}% - Consider rephrasing your question")
+                                # Color-coded accuracy display with enhanced metrics
+                                col1, col2, col3 = st.columns(3)
+                                
+                                with col1:
+                                    if accuracy >= 90:
+                                        st.success(f"🎯 **Excellent Accuracy:** {accuracy:.1f}%")
+                                    elif accuracy >= 80:
+                                        st.info(f"✅ **Good Accuracy:** {accuracy:.1f}%")
+                                    elif accuracy >= 70:
+                                        st.warning(f"⚠️ **Fair Accuracy:** {accuracy:.1f}%")
+                                    else:
+                                        st.error(f"❌ **Low Accuracy:** {accuracy:.1f}% - Consider rephrasing your question")
+                                
+                                with col2:
+                                    confidence = data.get("confidence_level", "unknown")
+                                    confidence_display = confidence.replace("_", " ").title()
+                                    confidence_icons = {
+                                        "Very High": "🔥",
+                                        "High": "✨", 
+                                        "Medium": "⭐",
+                                        "Low": "⚠️",
+                                        "Very Low": "❌"
+                                    }
+                                    icon = confidence_icons.get(confidence_display, "❓")
+                                    st.info(f"{icon} **Confidence:** {confidence_display}")
+                                
+                                with col3:
+                                    validation_score = data.get("validation_score", 0)
+                                    if validation_score > 0:
+                                        st.info(f"📊 **Validation:** {validation_score:.1f}%")
                             
-                            # Enhanced source display with citations
+                            # Enhanced source display with citations and chunk details
                             if sources:
                                 st.success(f"📄 **Found {len(sources)} relevant sources**")
                                 
-                                # Check if citations are available
+                                # Check if citations and chunk details are available
                                 citations = data.get("citations", [])
+                                chunk_details = data.get("chunk_details", [])
                                 
-                                with st.expander("📋 View All Sources & Citations", expanded=False):
+                                with st.expander("📋 View All Sources, Citations & Chunk Analysis", expanded=False):
                                     for i, source in enumerate(sources, 1):
-                                        st.write(f"**{i}.** {source}")
+                                        st.write(f"**{i}. {source}**")
                                         
                                         # Display citation if available
                                         if citations and i <= len(citations):
-                                            st.caption(f"📖 Citation: {citations[i-1]}")
-                                            st.markdown("---")
+                                            st.caption(f"📖 **Citation:** {citations[i-1]}")
+                                        
+                                        # Display chunk details if available
+                                        if chunk_details and i <= len(chunk_details):
+                                            chunk_info = chunk_details[i-1]
+                                            document_name = chunk_info.get("document_name", source)
+                                            chunks = chunk_info.get("chunks", [])
+                                            
+                                            if chunks:
+                                                st.write(f"🔍 **Document:** {document_name}")
+                                                st.write(f"📊 **Found {len(chunks)} relevant chunks:**")
+                                                
+                                                # Create a table for chunk information
+                                                chunk_data = []
+                                                for chunk in chunks[:3]:  # Show top 3 chunks
+                                                    chunk_data.append({
+                                                        "Chunk ID": chunk.get("chunk_id", "N/A"),
+                                                        "Type": chunk.get("type", "N/A").title(),
+                                                        "Relevance Score": f"{chunk.get('relevance_score', 0):.1f}",
+                                                        "Match Score": f"{chunk.get('score', 0):.3f}",
+                                                        "Words": chunk.get("word_count", 0),
+                                                        "Preview": chunk.get("content", "")[:100] + "..." if len(chunk.get("content", "")) > 100 else chunk.get("content", "")
+                                                    })
+                                                
+                                                # Display chunk table
+                                                if chunk_data:
+                                                    import pandas as pd
+                                                    df = pd.DataFrame(chunk_data)
+                                                    st.dataframe(df, use_container_width=True)
+                                                
+                                                # Show detailed chunk content in sub-expanders
+                                                for j, chunk in enumerate(chunks[:3], 1):
+                                                    with st.expander(f"📝 Chunk {j}: {chunk.get('chunk_id', 'N/A')}", expanded=False):
+                                                        col1, col2, col3 = st.columns(3)
+                                                        with col1:
+                                                            st.metric("Relevance Score", f"{chunk.get('relevance_score', 0):.1f}")
+                                                        with col2:
+                                                            st.metric("Match Score", f"{chunk.get('score', 0):.3f}")
+                                                        with col3:
+                                                            st.metric("Word Count", chunk.get('word_count', 0))
+                                                        
+                                                        st.write("**Content:**")
+                                                        st.text_area("", chunk.get("content", ""), height=150, key=f"chunk_{i}_{j}", disabled=True)
+                                                        
+                                                        # Show keywords if available
+                                                        keywords = chunk.get("keywords", [])
+                                                        if keywords:
+                                                            st.write("**Keywords Found:**")
+                                                            st.write(", ".join(keywords[:10]))  # Show first 10 keywords
+                                        
+                                        st.markdown("---")
                                 
                                 st.info("💡 **Tip:** Use the 'Available Documents' section above to view full documents!")
 
-                            # Performance metrics in a nice layout
+                            # Enhanced performance metrics in a nice layout
                             if data.get("query_category") or data.get("total_chunks_analyzed"):
                                 st.divider()
-                                col1, col2, col3 = st.columns(3)
+                                col1, col2, col3, col4 = st.columns(4)
                                 with col1:
                                     if data.get("query_category"):
                                         st.metric("🔍 Category", data["query_category"].title())
@@ -586,25 +941,92 @@ def main_chat_interface():
                                 with col3:
                                     if accuracy > 0:
                                         st.metric("📈 Accuracy Score", f"{accuracy:.1f}%")
+                                with col4:
+                                    original_accuracy = data.get("original_accuracy", 0)
+                                    if original_accuracy > 0 and original_accuracy != accuracy:
+                                        improvement = accuracy - original_accuracy
+                                        st.metric("🚀 Improvement", f"+{improvement:.1f}%")
 
-                            # Add bot response to chat history with citations
+                            # Query optimization insights
+                            query_opt = data.get("query_optimization", {})
+                            if query_opt.get("optimization_score", 0) > 0:
+                                with st.expander("🔍 Query Analysis & Optimization", expanded=False):
+                                    opt_score = query_opt.get("optimization_score", 0)
+                                    st.metric("Optimization Score", f"{opt_score:.1f}%")
+                                    
+                                    if query_opt.get("optimized_query") != query_opt.get("original_query"):
+                                        st.write("**Query Enhancement:**")
+                                        st.write(f"Original: {query_opt.get('original_query', 'N/A')}")
+                                        st.write(f"Optimized: {query_opt.get('optimized_query', 'N/A')}")
+                                    
+                                    if query_opt.get("expanded_terms"):
+                                        st.write("**Expanded Terms:**")
+                                        for term in query_opt["expanded_terms"]:
+                                            st.caption(f"• {term}")
+                                    
+                                    if query_opt.get("suggested_alternatives"):
+                                        st.write("**Alternative Queries:**")
+                                        for alt in query_opt["suggested_alternatives"]:
+                                            st.caption(f"• {alt}")
+
+                            # Improvement suggestions
+                            improvement_suggestions = data.get("improvement_suggestions", [])
+                            if improvement_suggestions:
+                                with st.expander("💡 Suggestions for Better Results", expanded=False):
+                                    st.write("**To improve accuracy, try:**")
+                                    for suggestion in improvement_suggestions:
+                                        st.write(f"• {suggestion}")
+
+                            # Add bot response to chat history with enhanced metadata
                             st.session_state.messages.append({
                                 "role": "assistant",
                                 "content": bot_message,
                                 "sources": sources,
                                 "citations": data.get("citations", []),
-                                "accuracy": accuracy,
+                                "chunk_details": data.get("chunk_details", []),
+                                "accuracy_score": accuracy,
+                                "original_accuracy": data.get("original_accuracy", 0),
+                                "validation_score": data.get("validation_score", 0),
+                                "confidence_level": data.get("confidence_level", "unknown"),
+                                "quality_metrics": data.get("quality_metrics", {}),
+                                "improvement_suggestions": improvement_suggestions,
+                                "query_optimization": query_opt,
                                 "timestamp": datetime.now().isoformat(),
                                 "query_category": data.get("query_category", ""),
                                 "chunks_analyzed": data.get("total_chunks_analyzed", 0)
                             })
                             
                         elif response.status_code == 401:
-                            st.error("🔐 Session expired. Please login again.")
-                            st.session_state.session_expired = True
-                            clear_session()
-                            time.sleep(2)
-                            st.rerun()
+                            # Try to refresh token before showing session expired
+                            if refresh_access_token():
+                                # Token refreshed successfully, retry the request
+                                headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                                response = requests.post(
+                                    f"{BACKEND_URL}/api/v1/chat",
+                                    json={"query": prompt},
+                                    headers=headers,
+                                    timeout=30
+                                )
+                                
+                                if response.status_code == 200:
+                                    # Process the successful response
+                                    data = response.json()
+                                    bot_message = data.get("response", "No response received")
+                                    sources = data.get("sources", [])
+                                    accuracy = data.get("accuracy_score", 0)
+                                    # Continue with normal processing...
+                                else:
+                                    st.error("🔐 Session expired. Please login again.")
+                                    st.session_state.session_expired = True
+                                    clear_session()
+                                    time.sleep(2)
+                                    st.rerun()
+                            else:
+                                st.error("🔐 Session expired. Please login again.")
+                                st.session_state.session_expired = True
+                                clear_session()
+                                time.sleep(2)
+                                st.rerun()
                         elif response.status_code == 403:
                             st.error("🚫 Access denied. You don't have permission for this request.")
                         else:
