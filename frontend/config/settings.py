@@ -44,13 +44,13 @@ WELCOME_MESSAGE = """
 
 I can help you find information from company documents based on your role and department access.
 
-**How to use:**
+How to use:
 - Type your question in the chat input below
 - I'll search through accessible documents and provide an answer
 - Sources will be cited for transparency
 - You can adjust search parameters in the sidebar
 
-**Privacy:** Your queries and the documents you can access are determined by your role.
+Privacy: Your queries and the documents you can access are determined by your role.
 """
 
 ERROR_MESSAGES = {

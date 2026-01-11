@@ -84,7 +84,7 @@ def ensure_pipeline_ready():
 async def startup_event():
     """Initialize database on startup"""
     db_manager.initialize_database()
-    db_manager.seed_users()
+    # db_manager.seed_users()
     audit_logger.log_info("API server started")
 
     global rag_pipeline

@@ -40,4 +40,4 @@ class Config:
     ACCESS_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/access_audit.log"
     RAG_LOG_FILE = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/logs/rag_audit.log"
 
-    DEFAULT_USERS = os.getenv("DEFAULT_USERS",[])
+    # DEFAULT_USERS = os.getenv("DEFAULT_USERS",[])
