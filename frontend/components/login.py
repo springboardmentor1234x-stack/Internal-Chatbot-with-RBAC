@@ -111,6 +111,6 @@ def render_login(api_client: APIClient):
         st.markdown("""
             <div style='text-align: center; color: #666; font-size: 0.85rem;'>
                 <p>🔒 Secure Authentication | 🛡️ Role-Based Access Control | 📊 Audit Logging</p>
-                <p style='margin-top: 0.5rem;'>© 2024 Company Internal Systems</p>
+                <p style='margin-top: 0.5rem;'>© 2026 Company Internal Systems</p>
             </div>
         """, unsafe_allow_html=True)

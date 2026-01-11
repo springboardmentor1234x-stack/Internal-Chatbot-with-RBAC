@@ -8,7 +8,7 @@ from utils.api_client import APIClient
 from utils.session_manager import SessionManager
 from components.login import render_login
 from components.chat import render_chat
-from components.sidebar import render_sidebar, render_admin_sidebar
+from components.sidebar import render_sidebar
 from components.admin import render_admin_panel
 from config.settings import APP_TITLE, APP_ICON, PAGE_LAYOUT, API_BASE_URL
 
@@ -143,17 +143,12 @@ def main():
         is_admin = SessionManager.is_admin()
         
         # Render sidebar
-        render_sidebar(api_client)
-        
-        if is_admin:
-            render_admin_sidebar(api_client)
+        render_sidebar(api_client, is_admin)
         
         # Main content area
         if is_admin and st.session_state.get("admin_view"):
-            # Show admin panel
             render_admin_panel(api_client)
         else:
-            # Show chat interface
             render_chat(api_client)
         
         # Auto-refresh token if expiring soon
