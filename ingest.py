@@ -1,51 +1,82 @@
 import os
-from langchain_community.document_loaders import PyPDFLoader, UnstructuredMarkdownLoader
+import shutil
+import re
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
-DATA_PATH = "data/"
-DB_PATH = "vector_db/"
+# Absolute paths ensure stability on Windows
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_PATH = os.path.join(BASE_DIR, "data")
+DB_PATH = os.path.join(BASE_DIR, "chroma_db")
 
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-def process_files():
-    if not os.path.exists(DB_PATH):
-        os.makedirs(DB_PATH)
+def clean_text(text):
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    text = re.sub(r' +', ' ', text)
+    text = re.sub(r'Page \d+ of \d+', '', text)
+    return text.strip()
 
+def process_files():
+    if not os.path.exists(DATA_PATH):
+        os.makedirs(DATA_PATH)
+        print(f"📁 Folder created at {DATA_PATH}. Place your dept folders here.")
+        return
+
+    # Fresh Start: Clears old data to prevent "WinError 32" locking issues
+    if os.path.exists(DB_PATH):
+        try:
+            shutil.rmtree(DB_PATH)
+        except PermissionError:
+            print("🛑 Error: Database is locked. Close all other terminals first!")
+            return
+
+    all_docs = []
+    # walk into subfolders: data/hr, data/finance, etc.
     for root, dirs, files in os.walk(DATA_PATH):
+        # The department name is the folder name
+        dept = os.path.basename(root).lower()
+        if dept == "data" or not dept:
+            dept = "general"
+            
         for file in files:
             file_path = os.path.join(root, file)
-            
-            if file.lower().endswith(".pdf"):
-                loader = PyPDFLoader(file_path)
-            elif file.lower().endswith((".md", ".txt")):
-                loader = UnstructuredMarkdownLoader(file_path)
-            else:
-                continue
+            try:
+                # Select loader based on extension
+                if file.lower().endswith(".pdf"):
+                    loader = PyPDFLoader(file_path)
+                elif file.lower().endswith(".csv"):
+                    loader = CSVLoader(file_path, encoding='utf-8')
+                elif file.lower().endswith((".txt", ".md")):
+                    loader = TextLoader(file_path, encoding='utf-8')
+                else:
+                    continue
+                
+                documents = loader.load()
+                for doc in documents:
+                    doc.page_content = clean_text(doc.page_content)
+                    # Metadata Tagging: This is where RBAC is enforced
+                    doc.metadata.update({"dept": dept, "source": file})
+                all_docs.extend(documents)
+                print(f"✅ Assigned {file} -> Department: {dept}")
+            except Exception as e:
+                print(f"❌ Error loading {file}: {e}")
 
-            documents = loader.load()
-            
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000, 
-                chunk_overlap=200,
-                separators=["\n\n", "\n", " ", ""]
-            )
-            chunks = text_splitter.split_documents(documents)
-            
-            if "salary" in file.lower() or "hr" in file.lower():
-                collection_name = "hr_data"
-            elif "marketing" in file.lower():
-                collection_name = "marketing_data"
-            else:
-                collection_name = "general_data"
-            
-            Chroma.from_documents(
-                documents=chunks,
-                embedding=embeddings,
-                collection_name=collection_name,
-                persist_directory=DB_PATH
-            )
+    if all_docs:
+        # Smaller chunks (350) for high-precision retrieval
+        splitter = RecursiveCharacterTextSplitter(chunk_size=350, chunk_overlap=50)
+        chunks = splitter.split_documents(all_docs)
+        
+        Chroma.from_documents(
+            documents=chunks, 
+            embedding=embeddings, 
+            persist_directory=DB_PATH
+        )
+        print(f"🎉 Success! Vector database built with {len(chunks)} chunks.")
+    else:
+        print("🛑 No documents found! Ensure your files are inside subfolders in 'data/'.")
 
 if __name__ == "__main__":
     process_files()

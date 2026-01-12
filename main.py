@@ -1,87 +1,87 @@
 import os
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_groq import ChatGroq # Swapped from OpenAI
 from langchain_chroma import Chroma
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_classic.chains import RetrievalQA
 
-load_dotenv()
-api_key = os.getenv("GROQ_API_KEY")
+# 1. SET YOUR FREE GROQ KEY HERE
+os.environ["GROQ_API_KEY"] = "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"
 
-app = FastAPI()
+app = FastAPI(title="FinSolve Free Secure Backend")
 
-llm = ChatGroq(
-    model_name="llama-3.3-70b-versatile", 
-    temperature=0,
-    groq_api_key=api_key  
-)
-
-PERMISSION_MAP = {
-    "admin": ["hr_data", "marketing_data", "general_data"],
-    "hr_manager": ["hr_data", "general_data"],
-    "marketing_manager": ["marketing_data", "general_data"],
-    "intern": ["marketing_data", "general_data"]
+# 2. RBAC ACCESS MATRIX
+ACCESS_MATRIX = {
+    "C-Level": ["engineering", "finance", "hr", "marketing", "general"],
+    "Finance_Manager": ["finance", "general"],
+    "HR_Manager": ["hr", "general"],
+    "Engineering_Lead": ["engineering", "general"],
+    "Marketing_Manager": ["marketing", "general"],
+    "Intern": ["general"] 
 }
 
+# 3. INITIALIZE VECTOR DB
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "chroma_db")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-RAG_PROMPT = ChatPromptTemplate.from_template("""
-You are an expert Fintech Analyst. Use the provided context to answer the user's question accurately.
-
-Context:
-{context}
-
-Question: {question}
-
-Instructions:
-1. If the answer is in the context, provide a detailed response.
-2. If the context is related but doesn't have the specific answer, summarize what is available.
-3. Only if the context is completely irrelevant, say "I don't have enough information for your role."
-
-Answer:""")
-
 @app.get("/ask")
-async def ask_bot(role: str, question: str):
+async def secure_query(role: str, query: str):
+    if role not in ACCESS_MATRIX:
+        raise HTTPException(status_code=403, detail="Unauthorized: Role not recognized.")
+
+    # Negative Test: Interns are restricted from sensitive keywords
+    sensitive_keywords = ["salary", "revenue", "architecture", "profit", "payroll"]
+    if role == "Intern" and any(word in query.lower() for word in sensitive_keywords):
+        raise HTTPException(
+            status_code=403, 
+            detail="Forbidden: Interns do not have permission to access restricted data."
+        )
+
+    if not os.path.exists(DB_PATH):
+        raise HTTPException(status_code=500, detail="Database not found. Run ingest.py first.")
+
     try:
-        role = role.lower()
-        if role not in PERMISSION_MAP:
-            raise HTTPException(status_code=403, detail="Invalid role")
-
-        allowed_collections = PERMISSION_MAP[role]
-        context_docs = []
+        vector_db = Chroma(persist_directory=DB_PATH, embedding_function=embeddings)
         
-        for collection in allowed_collections:
-            try:
-                vector_db = Chroma(
-                    persist_directory="vector_db/", 
-                    embedding_function=embeddings, 
-                    collection_name=collection
-                )
-                docs = vector_db.similarity_search(question, k=2)
-                context_docs.extend(docs)
-            except Exception:
-                continue
+        # Apply Metadata Filter
+        allowed_depts = ACCESS_MATRIX[role]
+        search_filter = {"dept": {"$in": allowed_depts}}
+        
+        retriever = vector_db.as_retriever(
+            search_kwargs={"filter": search_filter, "k": 3}
+        )
+        
+        # 4. INITIALIZE GROQ MODEL (FREE)
+        # We use Llama-3 for high-speed, grounded performance
+        llm = ChatGroq(
+            temperature=0, 
+            model_name="llama3-8b-8192"
+        )
+        
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            chain_type="stuff",
+            retriever=retriever,
+            return_source_documents=True
+        )
+        
+        result = qa_chain.invoke({"query": query})
+        
+        if not result['source_documents']:
+            return {
+                "answer": "I am sorry, the expected information is not available in your authorized documents.",
+                "sources": []
+            }
 
-        if not context_docs:
-            return {"answer": "I don't have enough information for your role.", "sources": []}
-
-        combined_context = "\n".join([doc.page_content for doc in context_docs])
-        sources = list(set([doc.metadata.get("source", "Unknown") for doc in context_docs]))
-
-        formatted_prompt = RAG_PROMPT.format(context=combined_context, question=question)
-        response = llm.invoke(formatted_prompt)
-
-        return {
-            "question": question, 
-            "role": role, 
-            "answer": response.content,
-            "sources": sources
-        }
-
+        sources = list(set([os.path.basename(d.metadata.get('source', 'Unknown')) for d in result['source_documents']]))
+        
+        return {"answer": result['result'], "sources": sources}
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"!!! BACKEND ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
