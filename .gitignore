@@ -1,11 +1,6 @@
+﻿.venv/
 __pycache__/
+chroma_db/
+vector_db/
 .env
-.env.*
-venv/
-.venv/
-data/chroma/   # if you store local vector DB
-*.sqlite3
-*.db
-.DS_Store
-.vscode/
-.ipynb_checkpoints/
+.streamlit/config.toml
