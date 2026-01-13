@@ -5,6 +5,12 @@ import time
 import json
 from datetime import datetime, timedelta
 
+# Import enhanced error handling
+from error_handler_frontend import (
+    frontend_error_handler, safe_api_call, handle_session_error,
+    show_error_report_dialog, display_error_statistics
+)
+
 # The URL where your FastAPI backend is running
 BACKEND_URL = "http://127.0.0.1:8000"
 
@@ -37,48 +43,71 @@ def update_activity():
     st.session_state.last_activity = datetime.now()
 
 def is_session_expired():
-    """Check if session has expired (30 minutes of inactivity)"""
+    """Check if session has expired (30 minutes of inactivity) with enhanced error handling"""
     if not st.session_state.get("last_activity"):
         return False
     
-    # Check for session expiry (30 minutes of inactivity)
-    expiry_time = st.session_state.last_activity + timedelta(minutes=30)
-    is_expired = datetime.now() > expiry_time
-    
-    # Also check if authentication token is still valid
-    if st.session_state.get("authenticated") and st.session_state.get("access_token"):
-        try:
-            headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
-            response = requests.get(f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5)
-            if response.status_code == 401:
-                # Try to refresh the token before declaring session expired
-                if st.session_state.get("refresh_token"):
-                    if refresh_access_token():
-                        return False  # Successfully refreshed, session is still valid
-                # Token refresh failed or no refresh token available
-                return True
-        except:
-            # Network error, assume session is still valid for now
-            pass
-    
-    return is_expired
+    try:
+        # Check for session expiry (30 minutes of inactivity)
+        expiry_time = st.session_state.last_activity + timedelta(minutes=30)
+        is_expired = datetime.now() > expiry_time
+        
+        # Also check if authentication token is still valid
+        if st.session_state.get("authenticated") and st.session_state.get("access_token"):
+            try:
+                response = safe_api_call(
+                    f"{BACKEND_URL}/api/v1/user/profile",
+                    method="GET",
+                    headers={"Authorization": f"Bearer {st.session_state.get('access_token')}"},
+                    operation="Check session validity",
+                    show_spinner=False,
+                    timeout=5
+                )
+                
+                if response and response.status_code == 401:
+                    # Try to refresh the token before declaring session expired
+                    if st.session_state.get("refresh_token"):
+                        if refresh_access_token():
+                            return False  # Successfully refreshed, session is still valid
+                    # Token refresh failed or no refresh token available
+                    return True
+                elif response is None:
+                    # Network error, assume session is still valid for now
+                    pass
+                    
+            except Exception as e:
+                # Log error but don't fail session check
+                frontend_error_handler.handle_request_error(
+                    e, "session validation", show_user_message=False
+                )
+        
+        return is_expired
+        
+    except Exception as e:
+        # Log error but assume session is valid to avoid blocking user
+        frontend_error_handler.handle_request_error(
+            e, "session expiry check", show_user_message=False
+        )
+        return False
 
 
 def refresh_access_token():
-    """Attempt to refresh the access token using the refresh token."""
+    """Attempt to refresh the access token using the refresh token with enhanced error handling."""
     refresh_token = st.session_state.get("refresh_token")
     if not refresh_token:
         return False
     
     try:
-        # The endpoint expects refresh_token as a query parameter or form data
-        response = requests.post(
+        response = safe_api_call(
             f"{BACKEND_URL}/auth/refresh",
+            method="POST",
             params={"refresh_token": refresh_token},
+            operation="Refresh access token",
+            show_spinner=False,
             timeout=10
         )
         
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             data = response.json()
             # Update access token
             st.session_state.access_token = data["access_token"]
@@ -88,8 +117,11 @@ def refresh_access_token():
         else:
             # Refresh token is invalid or expired
             return False
+            
     except Exception as e:
-        print(f"Token refresh error: {e}")
+        frontend_error_handler.handle_request_error(
+            e, "token refresh", show_user_message=False
+        )
         return False
 
 def clear_session():
@@ -102,25 +134,43 @@ def clear_session():
 
 
 def view_document(filename):
-    """Display document content in a modal-like expander"""
+    """Display document content in a modal-like expander with enhanced error handling"""
     file_path = os.path.join("data", "raw", filename)
 
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
+    try:
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
 
-            # Create a unique key for each document viewer
-            with st.expander(f"📖 Viewing: {filename}", expanded=True):
-                st.markdown("---")
-                st.markdown(content)
-                st.markdown("---")
-                if st.button(f"Close {filename}", key=f"close_{filename}"):
-                    st.rerun()
-        except Exception as e:
-            st.error(f"Error reading {filename}: {str(e)}")
-    else:
-        st.error(f"Document {filename} not found at {file_path}")
+                # Create a unique key for each document viewer
+                with st.expander(f"📖 Viewing: {filename}", expanded=True):
+                    st.markdown("---")
+                    st.markdown(content)
+                    st.markdown("---")
+                    if st.button(f"Close {filename}", key=f"close_{filename}"):
+                        st.rerun()
+                        
+            except UnicodeDecodeError:
+                st.error(f"❌ Cannot read {filename}: File encoding not supported")
+                st.info("💡 Please ensure the file is saved in UTF-8 encoding")
+            except PermissionError:
+                st.error(f"❌ Cannot read {filename}: Permission denied")
+                st.info("💡 Check file permissions or contact administrator")
+            except Exception as e:
+                st.error(f"❌ Error reading {filename}: {str(e)}")
+                frontend_error_handler.handle_request_error(
+                    e, f"reading document {filename}", show_user_message=False
+                )
+        else:
+            st.error(f"❌ Document {filename} not found at {file_path}")
+            st.info("💡 Contact administrator to ensure document is available")
+            
+    except Exception as e:
+        st.error(f"❌ Unexpected error accessing document: {str(e)}")
+        frontend_error_handler.handle_request_error(
+            e, f"accessing document {filename}", show_user_message=False
+        )
 
 
 def check_user_access(filename, user_role):
@@ -144,7 +194,7 @@ def check_user_access(filename, user_role):
 
 
 def login():
-    """Enhanced login interface with session management"""
+    """Enhanced login interface with comprehensive error handling and session management"""
     st.title("🔐 FinSolve Internal Chatbot - Login")
     st.markdown("**Role-Based Access Control (RBAC) System**")
 
@@ -152,6 +202,10 @@ def login():
     if st.session_state.get("session_expired"):
         st.warning("⏰ Your session has expired. Please login again.")
         st.session_state.session_expired = False
+
+    # Validate backend connection first
+    if not frontend_error_handler.validate_backend_connection(BACKEND_URL):
+        st.stop()  # Stop execution if backend is not available
 
     # Show available test accounts (collapsed by default for security)
     with st.expander("🔧 Demo Test Accounts", expanded=False):
@@ -184,21 +238,23 @@ def login():
                 st.rerun()
 
         if submit:
+            # Validate input
             if not username or not password:
-                st.error("Please enter both username and password")
+                st.error("❌ Please enter both username and password")
                 return
 
-            # Show login spinner
+            # Show login spinner with enhanced error handling
             with st.spinner("🔐 Authenticating..."):
                 try:
-                    # Updated to match the FastAPI endpoint
-                    response = requests.post(
+                    response = safe_api_call(
                         f"{BACKEND_URL}/auth/login",
+                        method="POST",
                         data={"username": username, "password": password},
+                        operation="User login",
                         timeout=10
                     )
 
-                    if response.status_code == 200:
+                    if response and response.status_code == 200:
                         data = response.json()
                         
                         # Set session state with role fetched from backend
@@ -213,52 +269,104 @@ def login():
                         
                         # Fetch and store user role as read-only immediately after login
                         try:
-                            headers = {"Authorization": f"Bearer {data['access_token']}"}
-                            profile_response = requests.get(
-                                f"{BACKEND_URL}/api/v1/user/profile", headers=headers, timeout=5
+                            profile_response = safe_api_call(
+                                f"{BACKEND_URL}/api/v1/user/profile",
+                                method="GET",
+                                headers={"Authorization": f"Bearer {data['access_token']}"},
+                                operation="Fetch user profile",
+                                show_spinner=False,
+                                timeout=5
                             )
-                            if profile_response.status_code == 200:
+                            
+                            if profile_response and profile_response.status_code == 200:
                                 profile = profile_response.json()
                                 # Store role as read-only in session state
                                 st.session_state.user_role = profile.get('role', 'Employee')
                             else:
                                 st.session_state.user_role = 'Employee'  # Default fallback
-                        except:
+                                
+                        except Exception as e:
                             st.session_state.user_role = 'Employee'  # Default fallback
+                            frontend_error_handler.handle_request_error(
+                                e, "fetch user profile", show_user_message=False
+                            )
                         
                         st.success("✅ Login successful!")
                         time.sleep(1)  # Brief pause for user feedback
                         st.rerun()
+                        
+                    elif response:
+                        # Handle specific error responses
+                        try:
+                            error_data = response.json()
+                            error_detail = error_data.get("detail", "Login failed")
+                            
+                            if response.status_code == 401:
+                                st.error(f"🔐 {error_detail}")
+                                st.info("💡 Check your username and password")
+                            elif response.status_code == 403:
+                                st.error(f"🚫 {error_detail}")
+                                st.info("💡 Your account may be locked or disabled")
+                            else:
+                                st.error(f"❌ Login failed: {error_detail}")
+                                
+                        except json.JSONDecodeError:
+                            st.error(f"❌ Login failed with status {response.status_code}")
+                        
+                        st.session_state.error_count = st.session_state.get("error_count", 0) + 1
                     else:
-                        error_detail = response.json().get("detail", "Login failed")
-                        st.error(f"❌ {error_detail}")
+                        # Response is None (handled by safe_api_call)
                         st.session_state.error_count = st.session_state.get("error_count", 0) + 1
                         
-                except requests.exceptions.Timeout:
-                    st.error("⏰ Login request timed out. Please try again.")
-                except requests.exceptions.ConnectionError:
-                    st.error(
-                        "🔌 Cannot connect to backend. Make sure FastAPI is running on http://127.0.0.1:8000"
-                    )
                 except Exception as e:
-                    st.error(f"❌ Login error: {str(e)}")
+                    frontend_error_handler.handle_request_error(e, "login")
                     st.session_state.error_count = st.session_state.get("error_count", 0) + 1
 
-    # Show connection status
+    # Show connection status with enhanced information
     with st.expander("🔧 System Status", expanded=False):
         try:
-            health_response = requests.get(f"{BACKEND_URL}/health", timeout=5)
-            if health_response.status_code == 200:
+            health_response = safe_api_call(
+                f"{BACKEND_URL}/health",
+                method="GET",
+                operation="Health check",
+                show_spinner=False,
+                timeout=5
+            )
+            
+            if health_response and health_response.status_code == 200:
+                health_data = health_response.json()
                 st.success("✅ Backend server is running")
+                
+                # Show component status
+                components = health_data.get("components", {})
+                if components:
+                    st.write("**Component Status:**")
+                    for component, status in components.items():
+                        if status == "healthy":
+                            st.write(f"✅ {component.title()}: {status}")
+                        elif status == "degraded":
+                            st.write(f"⚠️ {component.title()}: {status}")
+                        else:
+                            st.write(f"❌ {component.title()}: {status}")
+                
+                # Show error statistics if available
+                error_stats = health_data.get("error_stats", {})
+                if error_stats.get("total_errors", 0) > 0:
+                    st.write(f"**Recent Errors:** {error_stats['total_errors']}")
+                    
             else:
                 st.warning("⚠️ Backend server responding with errors")
-        except:
+                
+        except Exception as e:
             st.error("❌ Backend server is not accessible")
             st.info("💡 Make sure to run: `python run.py`")
+            frontend_error_handler.handle_request_error(
+                e, "backend health check", show_user_message=False
+            )
 
 
 def main_chat_interface():
-    """Enhanced main chat interface with session expiry and read-only role management"""
+    """Enhanced main chat interface with comprehensive error handling and session management"""
     
     # Check session expiry first
     if is_session_expired():
@@ -270,6 +378,12 @@ def main_chat_interface():
     
     # Update activity timestamp on every interaction
     update_activity()
+    
+    # Show error report dialog if requested
+    show_error_report_dialog()
+    
+    # Display error statistics in sidebar
+    display_error_statistics()
     
     # Sidebar with enhanced user info and controls
     with st.sidebar:
@@ -765,7 +879,7 @@ def main_chat_interface():
             else:
                 st.write("🔒 Access Denied - Engineering role required")
 
-    # Enhanced chat input with processing state
+    # Enhanced chat input with processing state and error handling
     if not st.session_state.get('processing', False):
         if prompt := st.chat_input("Ask about company documents...", disabled=st.session_state.get('processing', False)):
             # Set processing state
@@ -784,7 +898,7 @@ def main_chat_interface():
             with st.chat_message("user"):
                 st.markdown(prompt)
 
-            # Get bot response with enhanced spinner and error handling
+            # Get bot response with enhanced error handling
             with st.chat_message("assistant"):
                 # Multiple spinner messages for better UX
                 spinner_messages = [
@@ -798,21 +912,17 @@ def main_chat_interface():
                 
                 with st.spinner(current_spinner):
                     try:
-                        headers = {
-                            "Authorization": f"Bearer {st.session_state.get('access_token')}"
-                        }
-                        
-                        # Update spinner message
-                        st.session_state.current_spinner = spinner_messages[1]
-                        
-                        response = requests.post(
+                        # Make API request with enhanced error handling
+                        response = safe_api_call(
                             f"{BACKEND_URL}/api/v1/chat",
+                            method="POST",
                             json={"query": prompt},
-                            headers=headers,
+                            headers={"Authorization": f"Bearer {st.session_state.get('access_token')}"},
+                            operation="Chat query",
                             timeout=30
                         )
 
-                        if response.status_code == 200:
+                        if response and response.status_code == 200:
                             data = response.json()
                             bot_message = data.get("response", "No response received")
                             sources = data.get("sources", [])
@@ -996,51 +1106,63 @@ def main_chat_interface():
                                 "chunks_analyzed": data.get("total_chunks_analyzed", 0)
                             })
                             
-                        elif response.status_code == 401:
-                            # Try to refresh token before showing session expired
+                        elif response and response.status_code == 401:
+                            # Handle authentication errors with token refresh
                             if refresh_access_token():
                                 # Token refreshed successfully, retry the request
-                                headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
-                                response = requests.post(
+                                retry_response = safe_api_call(
                                     f"{BACKEND_URL}/api/v1/chat",
+                                    method="POST",
                                     json={"query": prompt},
-                                    headers=headers,
+                                    headers={"Authorization": f"Bearer {st.session_state.get('access_token')}"},
+                                    operation="Chat query (retry)",
+                                    show_spinner=False,
                                     timeout=30
                                 )
                                 
-                                if response.status_code == 200:
-                                    # Process the successful response
-                                    data = response.json()
+                                if retry_response and retry_response.status_code == 200:
+                                    # Process the successful response (same as above)
+                                    data = retry_response.json()
                                     bot_message = data.get("response", "No response received")
                                     sources = data.get("sources", [])
                                     accuracy = data.get("accuracy_score", 0)
+                                    st.markdown(bot_message)
                                     # Continue with normal processing...
                                 else:
-                                    st.error("🔐 Session expired. Please login again.")
-                                    st.session_state.session_expired = True
-                                    clear_session()
-                                    time.sleep(2)
-                                    st.rerun()
+                                    handle_session_error()
                             else:
-                                st.error("🔐 Session expired. Please login again.")
-                                st.session_state.session_expired = True
-                                clear_session()
-                                time.sleep(2)
-                                st.rerun()
-                        elif response.status_code == 403:
+                                handle_session_error()
+                                
+                        elif response and response.status_code == 403:
                             st.error("🚫 Access denied. You don't have permission for this request.")
+                            st.info("💡 Contact your administrator to request access to this information")
+                            
+                        elif response:
+                            # Handle other HTTP errors
+                            try:
+                                error_data = response.json()
+                                error_detail = error_data.get("detail", "Unknown error")
+                                st.error(f"❌ Error {response.status_code}: {error_detail}")
+                                
+                                # Show suggestions if available
+                                if isinstance(error_data, dict) and "error" in error_data:
+                                    error_info = error_data["error"]
+                                    suggestions = error_info.get("suggestions", [])
+                                    if suggestions:
+                                        with st.expander("💡 Suggestions", expanded=False):
+                                            for suggestion in suggestions:
+                                                st.write(f"• {suggestion}")
+                                                
+                            except json.JSONDecodeError:
+                                st.error(f"❌ Server error (Status: {response.status_code})")
                         else:
-                            error_detail = response.json().get("detail", "Unknown error")
-                            st.error(f"❌ Error {response.status_code}: {error_detail}")
+                            # Response is None (handled by safe_api_call)
+                            st.error("❌ Failed to get response from server")
+                            st.info("🔄 Please try again or check your connection")
 
-                    except requests.exceptions.Timeout:
-                        st.error("⏰ Request timed out. The server might be busy. Please try again.")
-                    except requests.exceptions.ConnectionError:
-                        st.error("🔌 Cannot connect to backend. Make sure FastAPI is running.")
-                        st.info("💡 **Troubleshooting:** Run `python run.py` in your terminal")
                     except Exception as e:
-                        st.error(f"❌ Request failed: {str(e)}")
-                        st.info("🔄 Please try refreshing the page or logging in again")
+                        # Handle unexpected errors
+                        frontend_error_handler.handle_request_error(e, "chat query")
                     
                     finally:
                         # Reset processing state

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-01-10T10:30:54.443036",
+  "summary": {
+    "passed": 54,
+    "failed": 0,
+    "warnings": 8,
+    "security_issues": 0,
+    "success_rate": 100.0,
+    "errors": [],
+    "warnings_list": [
+      "Chunk analysis for admin: No chunk details found",
+      "Chunk analysis for finance_user: No chunk details found",
+      "Chunk analysis for marketing_user: No chunk details found",
+      "Chunk analysis for hr_user: No chunk details found",
+      "Low accuracy for hr_user: Accuracy: 66.195%",
+      "Chunk analysis for engineering_user: No chunk details found",
+      "Chunk analysis for employee: No chunk details found",
+      "Low accuracy for employee: Accuracy: 66.195%"
+    ],
+    "security_issues_list": []
+  },
+  "detailed_results": {
+    "errors": [],
+    "warnings": [
+      "Chunk analysis for admin: No chunk details found",
+      "Chunk analysis for finance_user: No chunk details found",
+      "Chunk analysis for marketing_user: No chunk details found",
+      "Chunk analysis for hr_user: No chunk details found",
+      "Low accuracy for hr_user: Accuracy: 66.195%",
+      "Chunk analysis for engineering_user: No chunk details found",
+      "Chunk analysis for employee: No chunk details found",
+      "Low accuracy for employee: Accuracy: 66.195%"
+    ],
+    "security_issues": []
+  }
+}
