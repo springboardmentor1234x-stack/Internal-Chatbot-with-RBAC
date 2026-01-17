@@ -30,3 +30,7 @@ requests==2.31.0
 
 # Additional utilities
 python-jose[cryptography]==3.3.0
+
+# Redis for caching
+redis==5.0.1
+hiredis==2.2.3

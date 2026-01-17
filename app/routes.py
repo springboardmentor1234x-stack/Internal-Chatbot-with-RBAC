@@ -6,6 +6,8 @@ from datetime import datetime
 # --- UPDATED IMPORTS ---
 try:
     from .rag_pipeline_enhanced import rag_pipeline
+    from .rag_pipeline_cached import get_cached_pipeline
+    from .redis_cache import get_search_cache
     from .auth_utils import get_current_user, check_permission
     from .accuracy_enhancer import accuracy_enhancer
     from .query_optimizer import query_optimizer
@@ -13,6 +15,8 @@ try:
 except ImportError:
     # Fallback for different execution contexts
     from rag_pipeline_enhanced import rag_pipeline
+    from rag_pipeline_cached import get_cached_pipeline
+    from redis_cache import get_search_cache
     from auth_utils import get_current_user, check_permission
     from accuracy_enhancer import accuracy_enhancer
     from query_optimizer import query_optimizer
@@ -49,7 +53,7 @@ async def chat_endpoint(
     request: QueryRequest, current_user: dict = Depends(get_current_user)
 ):
     """
-    Enhanced chat endpoint with security-based accuracy improvements.
+    Enhanced chat endpoint with Redis caching and security-based accuracy improvements.
     Users can only access documents their role permits with enhanced security validation.
     """
     try:
@@ -82,8 +86,9 @@ async def chat_endpoint(
                 detail=f"Access denied: Role '{user_role}' does not have search permissions",
             )
 
-        # 5. Run enhanced RAG pipeline with security context
-        rag_result = rag_pipeline.run_pipeline(final_query, user_role)
+        # 5. Use cached RAG pipeline for improved performance
+        cached_pipeline = get_cached_pipeline(user_role)
+        rag_result = cached_pipeline.run_pipeline(final_query, use_cache=True)
 
         # 6. Handle errors from RAG pipeline
         if rag_result.get("error"):
@@ -109,7 +114,7 @@ async def chat_endpoint(
         # Calculate final enhanced accuracy
         enhanced_accuracy = min(100.0, base_accuracy + security_boost)
         
-        # 9. Enhanced response formatting with security metrics
+        # 9. Enhanced response formatting with security metrics and cache info
         citations = rag_result.get("citations", [])
         
         # Create enhanced response with security information
@@ -121,7 +126,7 @@ async def chat_endpoint(
             citations=citations
         )
         
-        # Add comprehensive accuracy and security metrics
+        # Add comprehensive accuracy, security, and cache metrics
         response.update({
             "accuracy_score": enhanced_accuracy,
             "original_accuracy": rag_result.get("accuracy_score", 0.0),
@@ -134,6 +139,8 @@ async def chat_endpoint(
             "chunk_details": rag_result.get("chunk_details", []),
             "quality_metrics": validation_result_accuracy.get("quality_metrics", {}),
             "improvement_suggestions": validation_result_accuracy.get("improvement_suggestions", []),
+            "cache_info": rag_result.get("cache_info", {}),
+            "performance": rag_result.get("performance", {}),
             "security_context": {
                 "security_score": validation_result.get("security_score", 100.0),
                 "security_warnings": validation_result.get("security_warnings", []),
@@ -444,3 +451,241 @@ async def export_chat_history(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Export error: {str(e)}")
+
+
+# --- CACHE MANAGEMENT ENDPOINTS ---
+
+class CacheWarmupRequest(BaseModel):
+    queries: List[str]
+    force_refresh: bool = False
+
+
+@router.get("/cache/stats")
+async def get_cache_statistics(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive cache performance statistics."""
+    try:
+        user_role = current_user.get("role", "Employee")
+        cached_pipeline = get_cached_pipeline(user_role)
+        
+        # Get cache statistics
+        stats = cached_pipeline.get_cache_statistics()
+        
+        # Get Redis health
+        cache_instance = get_search_cache()
+        health = cache_instance.health_check()
+        
+        return {
+            "user": current_user.get("username"),
+            "user_role": user_role,
+            "cache_statistics": stats,
+            "cache_health": health,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache stats error: {str(e)}")
+
+
+@router.post("/cache/clear")
+async def clear_user_cache(current_user: dict = Depends(get_current_user)):
+    """Clear cache entries for the current user's role."""
+    try:
+        user_role = current_user.get("role", "Employee")
+        
+        # Check if user has permission to clear cache
+        if not check_permission(user_role, "read:general"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Insufficient permissions to clear cache"
+            )
+        
+        cached_pipeline = get_cached_pipeline(user_role)
+        result = cached_pipeline.clear_user_cache()
+        
+        return {
+            "message": f"Cache cleared for role: {user_role}",
+            "result": result,
+            "user": current_user.get("username"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache clear error: {str(e)}")
+
+
+@router.post("/cache/clear/query")
+async def clear_query_cache(
+    request: QueryRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Clear cache entries for a specific query across all roles."""
+    try:
+        # Check permissions
+        if not check_permission(current_user.get("role", "Employee"), "read:general"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Insufficient permissions to clear cache"
+            )
+        
+        cache_instance = get_search_cache()
+        deleted_count = cache_instance.invalidate_query_cache(request.query)
+        
+        return {
+            "message": f"Cache cleared for query: {request.query[:50]}...",
+            "deleted_entries": deleted_count,
+            "query": request.query,
+            "user": current_user.get("username"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Query cache clear error: {str(e)}")
+
+
+@router.post("/cache/warmup")
+async def warmup_cache(
+    request: CacheWarmupRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Pre-populate cache with common queries for improved performance."""
+    try:
+        user_role = current_user.get("role", "Employee")
+        
+        # Check permissions
+        if not check_permission(user_role, "read:general"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Insufficient permissions to warm cache"
+            )
+        
+        # Validate queries
+        if not request.queries or len(request.queries) == 0:
+            raise HTTPException(status_code=400, detail="No queries provided for warmup")
+        
+        if len(request.queries) > 20:
+            raise HTTPException(status_code=400, detail="Too many queries (max 20)")
+        
+        cached_pipeline = get_cached_pipeline(user_role)
+        
+        # Clear existing cache if force refresh is requested
+        if request.force_refresh:
+            cached_pipeline.clear_user_cache()
+        
+        # Warm up cache
+        warmup_result = cached_pipeline.warm_cache(request.queries)
+        
+        return {
+            "message": "Cache warmup completed",
+            "warmup_result": warmup_result,
+            "user_role": user_role,
+            "user": current_user.get("username"),
+            "queries_processed": len(request.queries),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache warmup error: {str(e)}")
+
+
+@router.get("/cache/health")
+async def cache_health_check(current_user: dict = Depends(get_current_user)):
+    """Perform comprehensive cache health check."""
+    try:
+        cache_instance = get_search_cache()
+        health = cache_instance.health_check()
+        
+        # Add additional health metrics
+        health.update({
+            "user": current_user.get("username"),
+            "user_role": current_user.get("role"),
+            "timestamp": datetime.now().isoformat(),
+            "cache_features": {
+                "search_results_caching": True,
+                "response_caching": True,
+                "role_based_caching": True,
+                "automatic_ttl": True,
+                "fallback_cache": True
+            }
+        })
+        
+        return health
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache health check error: {str(e)}")
+
+
+@router.get("/cache/keys")
+async def list_cache_keys(
+    pattern: str = "*",
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """List cache keys (for debugging - admin only)."""
+    try:
+        # This should be admin-only in production
+        user_role = current_user.get("role", "Employee")
+        if user_role not in ["C-Level", "Admin"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Admin privileges required"
+            )
+        
+        cache_instance = get_search_cache()
+        
+        if not cache_instance.redis_client:
+            return {
+                "message": "Redis not connected, using fallback cache",
+                "keys": list(getattr(cache_instance, '_fallback_cache', {}).keys())[:limit]
+            }
+        
+        # Get keys matching pattern
+        keys = cache_instance.redis_client.keys(pattern)[:limit]
+        
+        return {
+            "pattern": pattern,
+            "total_keys": len(keys),
+            "keys": keys,
+            "limit": limit,
+            "user": current_user.get("username"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cache keys error: {str(e)}")
+
+
+@router.post("/cache/admin/clear-all")
+async def admin_clear_all_cache(current_user: dict = Depends(get_current_user)):
+    """Clear all cache entries (admin only - use with caution)."""
+    try:
+        # Admin-only operation
+        user_role = current_user.get("role", "Employee")
+        if user_role not in ["C-Level", "Admin"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Admin privileges required"
+            )
+        
+        cache_instance = get_search_cache()
+        success = cache_instance.clear_all_cache()
+        
+        return {
+            "message": "All cache entries cleared" if success else "Cache clear failed",
+            "success": success,
+            "admin_user": current_user.get("username"),
+            "timestamp": datetime.now().isoformat(),
+            "warning": "This operation cleared ALL cached data for ALL users"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Admin cache clear error: {str(e)}")
