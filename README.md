@@ -1,23 +1,48 @@
-# 🤖 Company Internal Chatbot with Role-Based Access Control (RBAC)
+# 🤖 FinSolve Internal Chatbot with RBAC - PRESENTATION READY
 
-A secure internal chatbot system that processes natural language queries and retrieves department-specific company information using Retrieval-Augmented Generation (RAG). The system authenticates users, assigns roles, and provides role-based access to company documents stored in a vector database.
+A sophisticated Role-Based Access Control (RBAC) chatbot system for internal company use, featuring intelligent RAG (Retrieval-Augmented Generation) pipeline, JWT authentication, and advanced analytics.
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Presentation](https://img.shields.io/badge/Status-Presentation%20Ready-brightgreen.svg)](#)
 
-## 🚀 Features
+## 🎯 **PRESENTATION-READY VERSION**
 
-- **🔐 Secure Authentication**: JWT-based authentication with role assignment
-- **👥 Role-Based Access Control**: Finance, Marketing, HR, Engineering, C-Level, Employee, and Intern roles
-- **🤖 RAG Pipeline**: Semantic search with LLM-generated responses
-- **📚 Document Processing**: Supports Markdown and CSV documents
-- **🎯 Role-Filtered Search**: Users only see documents their role permits
-- **💬 Chat Interface**: Streamlit-based web interface
-- **📊 Source Attribution**: Responses include source document references
+**🚀 One-Click Demo Startup:**
+```bash
+# Double-click this file for instant demo
+PRESENTATION_STARTUP.bat
+```
 
-## ⚡ Quick Start
+**📍 Access URLs:**
+- **Frontend**: http://localhost:8502
+- **Backend API**: http://127.0.0.1:8001  
+- **API Documentation**: http://127.0.0.1:8001/docs
+
+**🔑 Demo Accounts** (password: `password123`):
+- `admin` - Full access (C-Level) - **Best for demo**
+- `finance_user` - Finance reports only
+- `marketing_user` - Marketing data only  
+- `hr_user` - HR policies only
+- `engineering_user` - Technical docs only
+- `employee` - Basic access only
+
+## 🚀 Enhanced Features
+
+- **🔐 Advanced Authentication**: JWT-based with refresh tokens and session management
+- **👥 Comprehensive RBAC**: 6 distinct roles with granular document permissions
+- **🤖 Intelligent RAG Pipeline**: Context-aware responses with accuracy scoring
+- **📚 Smart Document Processing**: Multi-format support with relevance ranking
+- **🎯 Role-Filtered Access**: Dynamic content filtering based on user permissions
+- **💬 Professional Chat Interface**: Real-time chat with analytics dashboard
+- **📊 Advanced Analytics**: Chat history, usage statistics, and performance metrics
+- **🔍 Source Attribution**: Detailed citations with chunk-level analysis
+- **⚡ Real-time Features**: Session management, accuracy tracking, query optimization
+- **🎭 Presentation Ready**: Complete demo setup with test accounts and scenarios
+
+## ⚡ Quick Start for Presentation
 
 ### 1. Install Dependencies
 
