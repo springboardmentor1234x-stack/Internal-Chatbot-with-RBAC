@@ -5,20 +5,20 @@ from datetime import datetime
 
 # --- UPDATED IMPORTS ---
 try:
-    from .rag_pipeline_enhanced import rag_pipeline
+    from .rag_pipeline_accuracy_boost import get_accuracy_boosted_pipeline
     from .rag_pipeline_cached import get_cached_pipeline
     from .redis_cache import get_search_cache
     from .auth_utils import get_current_user, check_permission
-    from .accuracy_enhancer import accuracy_enhancer
+    from .accuracy_enhancer_v2 import enhanced_accuracy_validator as accuracy_enhancer
     from .query_optimizer import query_optimizer
     from .security_accuracy_enhancer import secure_accuracy_enhancer, secure_accuracy_decorator
 except ImportError:
     # Fallback for different execution contexts
-    from rag_pipeline_enhanced import rag_pipeline
+    from rag_pipeline_accuracy_boost import get_accuracy_boosted_pipeline
     from rag_pipeline_cached import get_cached_pipeline
     from redis_cache import get_search_cache
     from auth_utils import get_current_user, check_permission
-    from accuracy_enhancer import accuracy_enhancer
+    from accuracy_enhancer_v2 import enhanced_accuracy_validator as accuracy_enhancer
     from query_optimizer import query_optimizer
     from security_accuracy_enhancer import secure_accuracy_enhancer, secure_accuracy_decorator
 
@@ -86,9 +86,14 @@ async def chat_endpoint(
                 detail=f"Access denied: Role '{user_role}' does not have search permissions",
             )
 
-        # 5. Use cached RAG pipeline for improved performance
-        cached_pipeline = get_cached_pipeline(user_role)
-        rag_result = cached_pipeline.run_pipeline(final_query, use_cache=True)
+        # 5. Use accuracy-boosted RAG pipeline for improved accuracy
+        try:
+            boosted_pipeline = get_accuracy_boosted_pipeline(user_role)
+            rag_result = boosted_pipeline.run_pipeline(final_query, use_cache=use_cache)
+        except:
+            # Fallback to cached pipeline if boosted fails
+            cached_pipeline = get_cached_pipeline(user_role)
+            rag_result = cached_pipeline.run_pipeline(final_query, use_cache=True)
 
         # 6. Handle errors from RAG pipeline
         if rag_result.get("error"):
