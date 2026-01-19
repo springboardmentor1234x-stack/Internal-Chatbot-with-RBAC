@@ -121,10 +121,8 @@ def render_sidebar(api_client: APIClient, is_admin: bool):
                         st.markdown(f"• {dept.title()}")
         else:
             st.warning("⚠️ No accessible departments")
-        
-        
+                
         if SessionManager.is_admin():
-            st.markdown("")
             st.markdown("### 🔧 Admin Controls")
             
             # Navigation between admin panel and chat
@@ -212,8 +210,6 @@ def render_sidebar(api_client: APIClient, is_admin: bool):
             help="Display confidence levels"
         )
         st.session_state.show_confidence = show_confidence
-        
-        st.markdown("")
         
         # Actions
         st.markdown("### 🎯 Actions")
