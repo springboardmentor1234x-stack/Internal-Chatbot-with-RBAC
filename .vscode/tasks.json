@@ -2,14 +2,66 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "📦 Install Dependencies",
+            "label": "🚀 Start FinSolve Backend",
             "type": "shell",
-            "command": "pip",
-            "args": ["install", "-r", "requirements.txt"],
-            "group": {
-                "kind": "build",
-                "isDefault": false
+            "command": "python",
+            "args": [
+                "backend_only.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
             },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🎨 Start FinSolve Frontend",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "frontend_only.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔧 Install Dependencies",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "fastapi",
+                "uvicorn[standard]",
+                "pydantic",
+                "python-multipart",
+                "pyjwt",
+                "passlib[bcrypt]",
+                "python-dotenv",
+                "streamlit",
+                "requests"
+            ],
+            "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -21,112 +73,21 @@
             "problemMatcher": []
         },
         {
-            "label": "🗄️ Setup Database",
+            "label": "🧪 Test Backend Connection",
             "type": "shell",
             "command": "python",
-            "args": ["setup.py"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "🚀 Start Backend",
-            "type": "shell",
-            "command": "python",
-            "args": ["app/main.py"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "problemMatcher": [],
-            "isBackground": true,
-            "runOptions": {
-                "instanceLimit": 1
-            }
-        },
-        {
-            "label": "🎨 Start Frontend",
-            "type": "shell",
-            "command": "streamlit",
-            "args": ["run", "frontend/app.py", "--server.port=8501"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "new"
-            },
-            "problemMatcher": [],
-            "isBackground": true,
-            "runOptions": {
-                "instanceLimit": 1
-            }
-        },
-        {
-            "label": "🔥 Start Full Application",
-            "type": "shell",
-            "command": "python",
-            "args": ["run.py"],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "new"
-            },
-            "problemMatcher": [],
-            "isBackground": true
-        },
-        {
-            "label": "🧪 Run All Tests",
-            "type": "shell",
-            "command": "python",
-            "args": ["scripts/test_auth.py"],
+            "args": [
+                "-c",
+                "import requests; print('Backend Health:', requests.get('http://127.0.0.1:8000/health', timeout=5).json()['status'])"
+            ],
             "group": "test",
             "presentation": {
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "🔧 Initialize Vector Store",
-            "type": "shell",
-            "command": "curl",
-            "args": ["-X", "GET", "http://127.0.0.1:8000/api/v1/setup-vector-store"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "🧹 Clean Cache",
-            "type": "shell",
-            "command": "python",
-            "args": ["-Bc", "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.py[co]')]; [p.rmdir() for p in pathlib.Path('.').rglob('__pycache__')]"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared"
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
             },
             "problemMatcher": []
         }

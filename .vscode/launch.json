@@ -2,93 +2,47 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "🚀 Run Backend (FastAPI)",
+            "name": "🚀 Run FinSolve (Full App)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_in_vscode.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "🔧 Backend Only",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend_only.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "🎨 Frontend Only",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/frontend_only.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "🔍 Debug Backend",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/app/main.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/app",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "PYTHONUNBUFFERED": "1"
-            },
-            "args": [],
-            "justMyCode": true
-        },
-        {
-            "name": "🎨 Run Frontend (Streamlit)",
-            "type": "python",
-            "request": "launch",
-            "module": "streamlit",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "args": [
-                "run",
-                "frontend/app.py",
-                "--server.port=8501",
-                "--server.address=localhost"
-            ],
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "🔥 Run Full Application",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/run.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "⚙️ Setup Database & Vector Store",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/setup.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "🧪 Run Authentication Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/scripts/test_auth.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "🔍 Run System Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/scripts/test_system.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        }
-    ],
-    "compounds": [
-        {
-            "name": "🔥 Debug Full Stack",
-            "configurations": [
-                "🚀 Run Backend (FastAPI)",
-                "🎨 Run Frontend (Streamlit)"
-            ],
-            "stopAll": true,
-            "presentation": {
-                "hidden": false,
-                "group": "Full Stack",
-                "order": 1
+                "PYTHONPATH": "${workspaceFolder}/app"
             }
         }
     ]
