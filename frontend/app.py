@@ -12,7 +12,7 @@ from error_handler_frontend import (
 )
 
 # The URL where your FastAPI backend is running
-BACKEND_URL = "http://127.0.0.1:8001"
+BACKEND_URL = "http://127.0.0.1:8000"
 
 # Session state initialization
 def initialize_session_state():

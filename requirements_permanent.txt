@@ -1,0 +1,23 @@
+# PERMANENT REQUIREMENTS for FinSolve Internal Chatbot
+# Install with: pip install -r requirements_permanent.txt
+
+# Core FastAPI Backend
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Authentication & Security
+pyjwt==2.8.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# Frontend
+streamlit==1.28.2
+requests==2.31.0
+
+# Database
+sqlite3
+
+# Optional (will fallback if not available)
+redis==5.0.1
