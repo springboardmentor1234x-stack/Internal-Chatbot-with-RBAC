@@ -1,0 +1,185 @@
+/* =========================================================
+   GLOBAL APP BACKGROUND & TEXT
+   ========================================================= */
+html, body, .stApp {
+    background-color: #F5F7FA;
+    color: #1F2933;
+    font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+section[data-testid="stSidebar"] {
+    background-color: #FFFFFF;
+    border-right: 1px solid #D1D5DB;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #1F2933;
+}
+
+/* Sidebar buttons */
+section[data-testid="stSidebar"] button {
+    background-color: #F0F3F7;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+}
+
+section[data-testid="stSidebar"] button:hover {
+    background-color: #E5EAF0;
+}
+
+/* =========================================================
+   HEADERS & TITLES
+   ========================================================= */
+h1, h2, h3 {
+    color: #111827;
+    font-weight: 600;
+}
+
+.stCaption {
+    color: #6B7280;
+}
+
+/* =========================================================
+   CHAT MESSAGES
+   ========================================================= */
+.stChatMessage {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Assistant message accent */
+.stChatMessage[data-testid="chat-message-assistant"] {
+    border-left: 4px solid #10B981;
+}
+
+/* User message accent */
+.stChatMessage[data-testid="chat-message-user"] {
+    border-left: 4px solid #38BDF8;
+}
+
+/* =========================================================
+   CHAT INPUT
+   ========================================================= */
+.stChatInput textarea {
+    background-color: #FFFFFF;
+    color: #1F2933;
+    border-radius: 10px;
+    border: 1px solid #D1D5DB;
+}
+
+/* =========================================================
+   BUTTONS (GLOBAL)
+   ========================================================= */
+.stButton > button {
+    background-color: #10B981;
+    color: #FFFFFF;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.stButton > button:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+}
+
+/* Logout button */
+.stButton > button:has(span:contains("Logout")) {
+    background-color: #EF4444;
+}
+
+/* Clear chat button */
+.stButton > button:has(span:contains("Clear")) {
+    background-color: #38BDF8;
+    color: #FFFFFF;
+}
+
+/* =========================================================
+   EXPANDERS (SOURCES PANEL)
+   ========================================================= */
+.streamlit-expanderHeader {
+    background-color: #EEF2F6;
+    color: #1F2933;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid #D1D5DB;
+}
+
+.streamlit-expanderContent {
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #D1D5DB;
+}
+
+/* =========================================================
+   SOURCE CONTENT & EXCERPTS
+   ========================================================= */
+.streamlit-expanderContent p,
+.streamlit-expanderContent li {
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+/* Blockquote (excerpt text) */
+.streamlit-expanderContent blockquote {
+    border-left: 3px solid #10B981;
+    padding-left: 0.75rem;
+    background-color: #F0F3F7;
+    color: #111827;
+    border-radius: 6px;
+}
+
+/* Chunk IDs / code */
+code {
+    background-color: #E5EAF0;
+    color: #0F766E;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* =========================================================
+   INPUT FIELDS (LOGIN)
+   ========================================================= */
+input {
+    background-color: #FFFFFF !important;
+    color: #1F2933 !important;
+    border-radius: 8px !important;
+    border: 1px solid #D1D5DB !important;
+}
+
+/* =========================================================
+   ALERTS
+   ========================================================= */
+.stAlert {
+    border-radius: 8px;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* =========================================================
+   HIDE STREAMLIT BRANDING
+   ========================================================= */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }

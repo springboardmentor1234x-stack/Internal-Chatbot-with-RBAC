@@ -20,3 +20,8 @@ __pycache__/
 
 # Chroma vector database (binary files)
 chroma_db/
+
+*.db
+
+# Pytest cache
+.pytest_cache/
