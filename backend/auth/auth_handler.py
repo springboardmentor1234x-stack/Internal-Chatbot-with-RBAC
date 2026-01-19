@@ -27,6 +27,9 @@ class AuthHandler:
                 plain_password.encode('utf-8'),
                 hashed_password.encode('utf-8')
             )
+        except ValueError as e:
+            # Invalid hash format
+            return False
         except Exception:
             return False
     
@@ -87,6 +90,10 @@ class AuthHandler:
                     "role": role
                 }
             return None
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
         except Exception:
             return None
     
@@ -109,6 +116,10 @@ class AuthHandler:
                     "user_id": user_id,
                     "role": role
                 }
+            return None
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
             return None
         except Exception:
             return None

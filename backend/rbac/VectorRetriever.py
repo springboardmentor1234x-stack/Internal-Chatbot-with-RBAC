@@ -2,6 +2,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 from sentence_transformers import SentenceTransformer
 from services.audit_logger import AuditLogger
+from functools import lru_cache
 
 class VectorRetriever:
     """Vector-based document retrieval using ChromaDB"""
@@ -19,11 +20,16 @@ class VectorRetriever:
         self.chunks = chunks
         self.metadata = metadata
         self.embeddings = embeddings
+        self._query_embedding_cache = {}
         self.audit_logger = audit_logger or AuditLogger()
         
+        @lru_cache(maxsize=1)
+        def load_embedding_model(model_name):
+            return SentenceTransformer(model_name)
+
         # Load embedding model
         self.audit_logger.log_info(f"Loading embedding model: {model_name}")
-        self.model = SentenceTransformer(model_name)
+        self.model = load_embedding_model(model_name)
         
         # Create lookup dictionaries
         self.embedding_lookup = {
@@ -44,9 +50,12 @@ class VectorRetriever:
         self.audit_logger.log_component_init("Vector Retriever", model_name)
     
     def embed_query(self, query: str) -> np.ndarray:
-        """Generate embedding for query string"""
-        embedding = self.model.encode([query])[0]
-        return embedding.reshape(1, -1)
+        if query in self._query_embedding_cache:
+            return self._query_embedding_cache[query]
+
+        embedding = self.model.encode([query])[0].reshape(1, -1)
+        self._query_embedding_cache[query] = embedding
+        return embedding
     
     def department_specific_search(
         self,
@@ -81,6 +90,9 @@ class VectorRetriever:
             
             # Search each accessible department
             for dept in departments:
+                if dept == "hr":
+                    dept = "human_resource"
+                
                 dept_lower = dept.lower()
                 
                 # Check if department collection exists

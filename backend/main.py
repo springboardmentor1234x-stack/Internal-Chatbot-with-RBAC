@@ -2,16 +2,24 @@ from auth.token_blacklist import token_blacklist
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
+from pathlib import Path
 from datetime import datetime
 import time
 from typing import Dict
+from fastapi.responses import HTMLResponse, FileResponse, PlainTextResponse
+from fastapi import Query
+import mimetypes
+import pandas as pd
+import markdown
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DOCUMENTS_DIR = BASE_DIR / "data" / "documents"
 
 from auth.models import (
     LoginRequest, LoginResponse, RefreshRequest, TokenResponse,
     UserInfo, SystemStatus, PipelineStats,
     UserCreate, UserUpdate, UserResponse,
-    AuditLogQuery, UserActivityQuery
+    AuditLogQuery
 )
 from models.chat import (
     ChatRequest, ChatResponse, SourceCitation,
@@ -71,6 +79,7 @@ def require_admin(current_user: Dict):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
+        
 def ensure_pipeline_ready():
     if not rag_pipeline:
         raise HTTPException(
@@ -194,20 +203,27 @@ security = HTTPBearer()
 @app.post("/auth/logout")
 async def logout(
     request: Request,
+    refresh: RefreshRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     current_user: Dict = Depends(get_current_user)
 ):
-    token_blacklist.blacklist(credentials.credentials)
+    access_token = credentials.credentials
+    refresh_token = refresh.refresh_token
+
+    # Blacklist both
+    token_blacklist.blacklist(access_token)
+    token_blacklist.blacklist(refresh_token)
 
     audit_logger.log_auth_attempt(
         username=current_user["username"],
         action="logout",
         success=True,
-        reason="Token invalidated",
+        reason="Access & refresh tokens invalidated",
         ip_address=request.client.host
     )
 
     return {"message": "Logout successful"}
+
 
 
 @app.post("/auth/refresh", response_model=TokenResponse)
@@ -216,58 +232,71 @@ async def refresh_token(request: Request, refresh_request: RefreshRequest):
     ip_address = request.client.host
     
     try:
-        # Validate refresh token
-        user_info = auth_handler.validate_refresh_token(refresh_request.refresh_token)
-        
-        if not user_info:
+        if token_blacklist.is_blacklisted(refresh_request.refresh_token):
             audit_logger.log_auth_attempt(
                 username="unknown",
                 action="refresh",
                 success=False,
-                reason="Invalid refresh token",
+                reason="Blacklisted refresh token",
                 ip_address=ip_address
             )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token"
             )
+        else:
+            # Validate refresh token
+            user_info = auth_handler.validate_refresh_token(refresh_request.refresh_token)
+            
+            if not user_info:
+                audit_logger.log_auth_attempt(
+                    username="unknown",
+                    action="refresh",
+                    success=False,
+                    reason="Invalid refresh token",
+                    ip_address=ip_address
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token"
+                )
+            
+            # Verify user still exists and is active
+            user = db_manager.get_user_by_username(user_info["username"])
+            if not user or not user["is_active"]:
+                audit_logger.log_auth_attempt(
+                    username=user_info["username"],
+                    action="refresh",
+                    success=False,
+                    reason="User not found or disabled",
+                    ip_address=ip_address
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User account not found or disabled"
+                )
         
-        # Verify user still exists and is active
-        user = db_manager.get_user_by_username(user_info["username"])
-        if not user or not user["is_active"]:
+            # Create new access token
+            access_token = auth_handler.create_access_token(
+                username=user["username"],
+                role=user["role"],
+                user_id=user["id"]
+            )
+            
             audit_logger.log_auth_attempt(
                 username=user_info["username"],
                 action="refresh",
-                success=False,
-                reason="User not found or disabled",
+                success=True,
+                reason="Token refreshed",
                 ip_address=ip_address
             )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User account not found or disabled"
+            
+            return TokenResponse(
+                access_token=access_token,
+                token_type="bearer",
+                expires_in=auth_handler.ACCESS_TOKEN_EXPIRE_MINUTES * 60
             )
         
-        # Create new access token
-        access_token = auth_handler.create_access_token(
-            username=user["username"],
-            role=user["role"],
-            user_id=user["id"]
-        )
-        
-        audit_logger.log_auth_attempt(
-            username=user_info["username"],
-            action="refresh",
-            success=True,
-            reason="Token refreshed",
-            ip_address=ip_address
-        )
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            expires_in=auth_handler.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
-    
     except Exception as e:
         audit_logger.log_auth_attempt(
             username="unknown",
@@ -280,7 +309,7 @@ async def refresh_token(request: Request, refresh_request: RefreshRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token refresh failed"
         )
-
+   
 
 @app.get("/auth/me", response_model=UserInfo)
 async def get_current_user_info(
@@ -353,7 +382,7 @@ async def chat_query(
             accessible_departments=response["accessible_departments"],
             model=response.get("model"),
             normalized_query=response.get("normalized_query"),
-            error=response.get("error")
+            # error=response.get("error")
         )
     
     except Exception as e:
@@ -362,7 +391,6 @@ async def chat_query(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Query execution failed: {str(e)}"
         )
-
 
 @app.post("/chat/retrieval-only", response_model=RetrievalOnlyResponse)
 async def retrieval_only(
@@ -414,6 +442,104 @@ async def retrieval_only(
             detail=f"Retrieval failed: {str(e)}"
         )
 
+@app.get("/documents/{document_name}")
+async def open_document(
+    document_name: str,
+    token: str = Query(..., description="JWT access token")
+):
+    ensure_pipeline_ready()
+
+    # --- Validate token ---
+    try:
+        current_user = auth_handler.decode_token(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    # --- RBAC enforcement ---
+    user_rbac = build_user_rbac(current_user)
+
+    allowed_docs = []
+    for dept in user_rbac.get_accessible_departments():
+        allowed_docs.extend(
+            rag_pipeline.rbac.rbac_config["resources"].get(dept, [])
+        )
+
+    if document_name not in allowed_docs:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # --- File resolution ---
+    file_path = DOCUMENTS_DIR / document_name
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    ext = file_path.suffix.lower()
+
+    # ========== Markdown ==========
+    if ext in [".md", ".markdown"]:
+        text = file_path.read_text(encoding="utf-8")
+        html = markdown.markdown(text)
+
+        return HTMLResponse(f"""
+        <html>
+        <head>
+            <title>{document_name}</title>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    padding: 40px;
+                    line-height: 1.6;
+                }}
+                pre {{ background: #f5f5f5; padding: 10px; }}
+                code {{ background: #f5f5f5; padding: 2px 4px; }}
+            </style>
+        </head>
+        <body>
+            <h2>{document_name}</h2>
+            {html}
+        </body>
+        </html>
+        """)
+
+    # ========== CSV ==========
+    if ext == ".csv":
+        df = pd.read_csv(file_path)
+        table = df.to_html(index=False)
+
+        return HTMLResponse(f"""
+        <html>
+        <head>
+            <title>{document_name}</title>
+            <style>
+                body {{ font-family: Arial; padding: 30px; }}
+                table {{ border-collapse: collapse; width: 100%; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; }}
+                th {{ background: #f3f4f6; }}
+            </style>
+        </head>
+        <body>
+            <h2>{document_name}</h2>
+            {table}
+        </body>
+        </html>
+        """)
+
+    # ========== TXT ==========
+    if ext == ".txt":
+        return PlainTextResponse(file_path.read_text(encoding="utf-8"))
+
+    # ========== PDF ==========
+    if ext == ".pdf":
+        return FileResponse(file_path, media_type="application/pdf")
+
+    # ========== Fallback ==========
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    return FileResponse(
+        file_path,
+        media_type=mime_type or "application/octet-stream",
+        filename=document_name
+    )
+    
 
 @app.get("/chat/stats", response_model=PipelineStats)
 async def get_pipeline_stats(

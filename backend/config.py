@@ -20,15 +20,15 @@ class Config:
     METADATA_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/all_metadata.json"
     ABBREVIATIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/ABBREVIATIONS.json"
     RBAC_PERMISSIONS_PATH = r"D:/Infosys Springboard Virtual Internship 6.0/Internal-Chatbot-with-RBAC/data/rbac_permissions.json"
-    
+
     # Embedding Model
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     
     # LLM Settings (Using HuggingFace free API)
     OLLAMA_API_URL = os.getenv("OLLAMA_API_URL")
     HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-    LLM_PROVIDER = "hf_mistral" # Options: "ollama", "huggingface", "hf_mistral"
-    LLM_MODEL = "mistralai/Mistral-7B-Instruct-v0.2" # Options: "mistral", "google/flan-t5-base", "mistralai/Mistral-7B-Instruct-v0.2"
+    LLM_PROVIDER = "ollama" # Options: "ollama", "huggingface", "hf_mistral"
+    LLM_MODEL = "mistral" # Options: "mistral", "google/flan-t5-base", "mistralai/Mistral-7B-Instruct-v0.2"
     
     # RAG Settings
     TOP_K_RETRIEVAL = 4

@@ -114,6 +114,8 @@ def load_real_data():
 
     return chroma_client, chunks, metadata, embeddings, rbac_config, abbreviations
 
+from functools import lru_cache
+@lru_cache(maxsize=1)
 def bootstrap_application(audit_logger):
 
     audit_logger.log_info("Loading real document data...")

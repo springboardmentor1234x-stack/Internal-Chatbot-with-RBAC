@@ -35,7 +35,8 @@ class CompleteRAGPipeline:
         self.llm_service = llm_service or LLMService()
         self.prompt_builder = prompt_builder or PromptBuilder()
         self.audit_logger = audit_logger or AuditLogger()
-        
+        self._query_cache = {}
+
         self.audit_logger.log_component_init("Complete RAG Pipeline")
     
     def process_query(
@@ -57,6 +58,12 @@ class CompleteRAGPipeline:
         Returns:
             Complete response with answer, confidence, sources
         """
+        cache_key = f"{query}|{top_k}|{max_tokens}|{username}"
+
+        if cache_key in self._query_cache:
+            self.audit_logger.log_info("Returning cached RAG response")
+            return self._query_cache[cache_key]
+
         # Log query start
         self.audit_logger.log_query_start(query, self.rbac.user_roles, username)
         
@@ -191,42 +198,52 @@ class CompleteRAGPipeline:
             "normalized_query": normalized_query
         }
         
-        # Add error if present
-        if "error" in llm_result:
-            response["error"] = llm_result["error"]
+        # # Add error if present
+        # if "error" in llm_result:
+        #     response["error"] = llm_result["error"]
         
         self.audit_logger.log_query_complete(len(final_chunks))
-        
+        self._query_cache[cache_key] = response
+
         return response
     
     def _format_sources(self, chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Format source citations for response
-        
-        Args:
-            chunks: Retrieved document chunks
-            
-        Returns:
-            List of formatted source citations
-        """
-        sources = []
-        
+        grouped = {}
+
         for chunk in chunks:
             metadata = chunk.get("metadata", {})
+            doc = metadata.get("source_document", "Unknown")
+            dept = metadata.get("department", "Unknown")
+            chunk_id = chunk.get("id", "unknown")
+            similarity = chunk.get("similarity", 0.0)
             content = chunk.get("content", "")
-            
-            # Truncate long content
-            excerpt = content[:100] + "..." if len(content) > 100 else content
-            
-            sources.append({
-                "chunk_id": chunk.get("id", "unknown"),
-                "document": metadata.get("source_document", "Unknown"),
-                "department": metadata.get("department", "Unknown"),
-                "similarity": round(chunk.get("similarity", 0.0), 3),
-                "excerpt": excerpt
+
+            if doc not in grouped:
+                grouped[doc] = {
+                    "document": doc,
+                    "department": dept,
+                    "chunks": [],
+                    "similarity": similarity,
+                    "excerpt_parts": [],
+                }
+
+            grouped[doc]["chunks"].append(chunk_id)
+            grouped[doc]["similarity"] = max(grouped[doc]["similarity"], similarity)
+            grouped[doc]["excerpt_parts"].append(content[:120])
+
+        formatted = []
+        for doc, data in grouped.items():
+            formatted.append({
+                "document": doc,
+                "department": data["department"],
+                "similarity": round(data["similarity"], 3),
+                "chunks": data["chunks"],
+                "excerpt": " ... ".join(data["excerpt_parts"])[:400],
+                "source_url": f"/documents/{doc}"
             })
-        
-        return sources
+
+        return formatted
+
     
     def get_retrieval_only(
         self,

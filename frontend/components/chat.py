@@ -6,17 +6,38 @@ import streamlit as st
 from utils.api_client import APIClient
 from utils.session_manager import SessionManager
 from config.settings import WELCOME_MESSAGE
-import time
 
 def render_chat_header():
-    """Render chat header with title and info"""
     st.markdown("""
-        <div style='text-align: center; padding: 1rem 0;'>
-            <h1>💬 AI Assistant</h1>
-            <p style='color: #666;'>Ask questions about company documents and policies</p>
+        <div style="text-align:center; padding:1.2rem 0;">
+        
+        <h1 style="
+            margin:0;
+            font-size:2.6rem;
+            font-weight:900;
+            letter-spacing:1px;
+            background: linear-gradient(90deg, #00F5A0, #00D9F5, #8B5CF6, #EC4899);
+            background-size: 300% auto;
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: glow 4s linear infinite;
+        ">
+            SentinelAI
+        </h1>
+
+        <p style="color:#9CA3AF; font-size:1rem; margin-top:0.4rem;">
+            Ask questions about company documents and policies
+        </p>
         </div>
-    """, unsafe_allow_html=True)
-    st.markdown("---")
+
+        <style>
+        @keyframes glow {
+        0%   { background-position: 0% center; }
+        100% { background-position: 300% center; }
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
 def render_message_with_sources(message: dict):
     """Render a single message with sources"""
@@ -28,8 +49,8 @@ def render_message_with_sources(message: dict):
         # User message with custom styling (right-aligned with different color)
         st.markdown(f"""
             <div style='
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
+                background: linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%);
+                color: black;
                 padding: 1rem;
                 border-radius: 12px;
                 margin: 0.5rem 0 0.5rem auto;
@@ -40,7 +61,7 @@ def render_message_with_sources(message: dict):
                     <div style='margin-right: 0.5rem; text-align: right;'>
                         {content}
                     </div>
-                    <div style='font-size: 1.5rem;'>👤</div>
+                    <div style='font-size: 1.5rem;'> 👤</div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -73,10 +94,10 @@ def render_message_with_sources(message: dict):
             confidence_score = message.get("confidence_score", 0)
             
             # Color code confidence
-            if confidence_score >= 0.7:
+            if confidence_score >= 0.5:
                 color = "#28a745"
                 icon = "🟢"
-            elif confidence_score >= 0.5:
+            elif confidence_score >= 0.3:
                 color = "#ffc107"
                 icon = "🟡"
             else:
@@ -102,6 +123,10 @@ def render_message_with_sources(message: dict):
                 sources = message["sources"]
                 
                 for i, source in enumerate(sources, 1):
+                    doc = source.get("document")
+                    token = st.session_state.api_client.access_token
+                    url = f"{APIClient().base_url}{source.get('source_url')}?token={token}"
+                    
                     st.markdown(f"""
                         <div style='
                             background-color: #0f172a;
@@ -110,17 +135,19 @@ def render_message_with_sources(message: dict):
                             border-radius: 8px;
                             border-left: 4px solid #667eea;
                         '>
-                            <strong>Source {i}</strong><br>
+                        <strong>Source {i}</strong><br>
+                            <a href="{url}" target="_blank" style="color:#60a5fa;">
+                            {doc}</a><br>
                             <small>
-                                📄 <strong>Document:</strong> {source.get('document', 'Unknown')}<br>
-                                🏢 <strong>Department:</strong> {source.get('department', 'Unknown')}<br>
-                                📊 <strong>Similarity:</strong> {source.get('similarity', 0):.2%}<br>
-                                🔗 <strong>Chunk ID:</strong> <code>{source.get('chunk_id', 'unknown')}</code>
+                                🏢 <strong>Department:</strong> {source.get("department")}<br>
+                                📊 <strong>Similarity:</strong> {source.get("similarity"):.2%}<br>
+                                🧩 <strong>Chunks:</strong> {", ".join(source.get("chunks", []))}
                             </small>
                             <hr style='margin: 0.5rem 0;'>
-                            <small><em>"{source.get('excerpt', 'No excerpt available')}"</em></small>
+                            <small><em>{source.get("excerpt")}</em></small>
                         </div>
                     """, unsafe_allow_html=True)
+                    print("source render end.")
         
         # Show model info if available
         if "model" in message and message["model"]:
@@ -129,8 +156,8 @@ def render_message_with_sources(message: dict):
                 st.caption(f"🤖 Model: {model_name}")
         
         # Show error if present
-        if "error" in message and message["error"]:
-            st.warning(f"⚠️ Note: {message['error']}")
+        # if "error" in message and message["error"]:
+        #     st.warning(f"⚠️ Note: {message['error']}")
 
 
 def render_chat(api_client: APIClient):
@@ -170,21 +197,25 @@ def render_chat(api_client: APIClient):
     ):
         # Add user message
         SessionManager.add_message("user", prompt)
-        
-        # Display user message
-        render_message_with_sources({
-            "role": "user",
-            "content": prompt
-        })
+    
          # Show thinking animation
         with st.spinner("🤔 Thinking..."):
             try:
-                # Call API
-                response = api_client.chat_query(
-                    query=prompt,
-                    top_k=st.session_state.top_k,
-                    max_tokens=st.session_state.max_tokens
-                )
+                query_key = f"{prompt}|{st.session_state.top_k}|{st.session_state.max_tokens}"
+
+                if "query_cache" not in st.session_state:
+                    st.session_state.query_cache = {}
+
+                if query_key in st.session_state.query_cache:
+                    response = st.session_state.query_cache[query_key]
+                else:
+                    # Call API
+                    response = api_client.chat_query(
+                        query=prompt,
+                        top_k=st.session_state.top_k,
+                        max_tokens=st.session_state.max_tokens
+                    )
+                    st.session_state.query_cache[query_key] = response
                 
                 # Extract response data
                 answer = response.get("answer", "Sorry, I couldn't generate a response.")
@@ -192,18 +223,7 @@ def render_chat(api_client: APIClient):
                 confidence = response.get("confidence", "N/A")
                 confidence_score = response.get("confidence_score", 0.0)
                 model = response.get("model")
-                error = response.get("error")
-                
-                # Display answer
-                render_message_with_sources({
-                    "role": "assistant",
-                    "content": answer,
-                    "sources": sources,
-                    "confidence": confidence,
-                    "confidence_score": confidence_score,
-                    "model": model,
-                    "error": error
-                })
+                # error = response.get("error")
                 
                 # Add to chat history
                 SessionManager.add_message(
@@ -213,27 +233,17 @@ def render_chat(api_client: APIClient):
                     confidence=confidence,
                     confidence_score=confidence_score,
                     model=model,
-                    error=error
+                    # error=error
                 )
             
-            except Exception as e:
-                st.markdown(f"""
-                    <div style="
-                        background: rgba(234,179,8,0.15);
-                        padding: 1rem;
-                        border-radius: 8px;
-                        border-left: 4px solid #eab308;
-                    ">
-                    {"Sorry, there was an error processing your request."}
-                    </div>
-                    """, unsafe_allow_html=True)
-                
+            except Exception as e:               
                 SessionManager.add_message(
                     "assistant",
                     "Sorry, there was an error processing your request.",
                     sources=[],
                     error=str(e)
                 )
-        
+        # Force clean rerender
+        st.rerun()
     # Show typing indicator at bottom
     st.markdown("<br>", unsafe_allow_html=True)

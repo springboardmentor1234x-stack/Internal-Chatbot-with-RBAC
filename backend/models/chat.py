@@ -35,13 +35,14 @@ class ChatRequest(BaseModel):
     }
 
 class SourceCitation(BaseModel):
-    """Source citation for retrieved documents"""
-    chunk_id: str = Field(..., description="Unique chunk identifier")
+    """Grouped source citation by document"""
     document: str = Field(..., description="Source document name")
     department: str = Field(..., description="Department name")
-    page: Optional[Any] = Field(None, description="Page number or section")
-    similarity: float = Field(..., description="Similarity score", ge=0, le=1)
-    excerpt: str = Field(..., description="Content excerpt")
+    similarity: float = Field(..., description="Highest similarity score")
+    chunks: List[str] = Field(..., description="List of chunk IDs used")
+    excerpt: str = Field(..., description="Combined excerpt")
+    source_url: str = Field(..., description="Clickable document URL")
+
 
 class ChatResponse(BaseModel):
     """Response model for chat/query endpoint"""

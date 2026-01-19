@@ -6,7 +6,6 @@ Handles all communication with FastAPI backend
 import requests
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
-import streamlit as st
 
 class APIError(Exception):
     """Safe, user-facing API error"""
@@ -25,46 +24,63 @@ class APIClient:
     def _get_headers(self) -> Dict[str, str]:
         """Get headers with authentication token"""
         if not self.access_token:
-            raise Exception("Not authenticated. Please login first.")
+            raise APIError("Not authenticated. Please login first.")
         return {"Authorization": f"Bearer {self.access_token}"}
     
-    def _map_error_message(self, status_code: int) -> str:
+    def _map_error_message(self, status_code: int, detail: str = None) -> str:
+        """Map HTTP status codes to user-friendly messages"""
         if status_code == 401:
-            return "🔒 Your session has expired. Please log in again."
+            if detail and "expired" in detail.lower():
+                return "🔒 Your session has expired. Please log in again."
+            return "🔒 Authentication failed. Please log in again."
         if status_code == 403:
+            if detail:
+                return f"⛔ {detail}"
             return "⛔ You do not have permission to perform this action."
         if status_code == 404:
-            return "⚠️ The AI service is temporarily unavailable."
+            if detail:
+                return f"⚠️ {detail}"
+            return "⚠️ The requested resource was not found."
         if status_code == 429:
             return "⏳ Too many requests. Please try again shortly."
         if status_code >= 500:
             return "🚧 Server error. Please try again later."
+        if detail:
+            return f"⚠️ {detail}"
         return "⚠️ Unable to process your request right now."
 
     
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """Handle API response safely (no backend leaks)"""
 
+        # Extract detail message if available
+        detail = None
+        try:
+            error_data = response.json()
+            detail = error_data.get("detail")
+        except:
+            pass
+
         # 🔐 Authentication
         if response.status_code == 401:
-            if self.refresh_token:
+            if self.refresh_token and not ("refresh" in response.url):
                 try:
                     refreshed = self.refresh_access_token()
                     if refreshed:
                         return {"success": False, "retry": True}
-                except Exception:
+                except:
                     pass
-            raise APIError("🔒 Your session has expired. Please log in again.")
+            raise APIError(self._map_error_message(401, detail))
 
         # ⛔ Authorization
         if response.status_code == 403:
-            raise APIError("⛔ Access denied. Insufficient permissions.")
+            raise APIError(self._map_error_message(403, detail))
 
         # ❌ Client / Server errors
         if response.status_code >= 400:
             try:
                 error_data = response.json()
-            except Exception:
+            except:
                 error_data = response.text
 
             # 🔍 INTERNAL LOG (never shown to user)
@@ -75,7 +91,7 @@ class APIClient:
             )
 
             # 🎯 USER-FACING SAFE MESSAGE
-            raise APIError(self._map_error_message(response.status_code))
+            raise APIError(self._map_error_message(response.status_code, detail))
 
         return response.json()
 
@@ -83,6 +99,7 @@ class APIClient:
     # ==================== AUTHENTICATION ====================
     
     def login(self, username: str, password: str) -> Dict[str, Any]:
+        """Login with username and password"""
         try:
             response = requests.post(
                 f"{self.base_url}/auth/login",
@@ -105,23 +122,24 @@ class APIClient:
             }
 
         except requests.exceptions.ConnectionError:
-            raise APIError("❌ Cannot connect to server.")
+            raise APIError("❌ Cannot connect to server. Please check your network connection.")
         except requests.exceptions.Timeout:
-            raise APIError("⏳ Request timed out.")
+            raise APIError("⏳ Request timed out. Please try again.")
         except APIError as e:
             raise e
-        except Exception:
-            raise APIError("⚠️ Login failed. Please try again.")
+        except Exception as e:
+            raise APIError(f"⚠️ Login failed: {str(e)}")
 
     
     def logout(self) -> Dict[str, Any]:
-        """
-        Logout and invalidate token
-        """
+        """Logout and invalidate token"""
         try:
-            response = requests.post(
+            requests.post(
                 f"{self.base_url}/auth/logout",
                 headers=self._get_headers(),
+                json={
+                    "refresh_token": self.refresh_token
+                },
                 timeout=10
             )
             
@@ -132,7 +150,7 @@ class APIClient:
             
             return {"success": True, "message": "Logged out successfully"}
         
-        except Exception as e:
+        except Exception:
             # Clear tokens anyway
             self.access_token = None
             self.refresh_token = None
@@ -140,12 +158,7 @@ class APIClient:
             return {"success": True, "message": "Logged out locally"}
     
     def refresh_access_token(self) -> bool:
-        """
-        Refresh access token using refresh token
-        
-        Returns:
-            True if successful, False otherwise
-        """
+        """Refresh access token using refresh token"""
         if not self.refresh_token:
             return False
         
@@ -169,13 +182,20 @@ class APIClient:
     
     def get_user_info(self) -> Dict[str, Any]:
         """Get current user information including accessible departments"""
-        response = requests.get(
-            f"{self.base_url}/auth/me",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        return self._handle_response(response)
+        try:
+            response = requests.get(
+                f"{self.base_url}/auth/me",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching user information.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch user information: {str(e)}")
     
     def is_token_expiring_soon(self) -> bool:
         """Check if token will expire in next 2 minutes"""
@@ -191,79 +211,88 @@ class APIClient:
         top_k: int = 5,
         max_tokens: int = 500
     ) -> Dict[str, Any]:
-        """
-        Send chat query and get AI response with sources
-        
-        Args:
-            query: User's question
-            top_k: Number of documents to retrieve
-            max_tokens: Maximum tokens for LLM response
+        """Send chat query and get AI response with sources"""
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/query",
+                headers=self._get_headers(),
+                json={
+                    "query": query,
+                    "top_k": top_k,
+                    "max_tokens": max_tokens
+                },
+                timeout=80  # Longer timeout for LLM
+            )
             
-        Returns:
-            Response with answer, sources, and confidence
-        """
-        response = requests.post(
-            f"{self.base_url}/chat/query",
-            headers=self._get_headers(),
-            json={
-                "query": query,
-                "top_k": top_k,
-                "max_tokens": max_tokens
-            },
-            timeout=80  # Longer timeout for LLM
-        )
-        
-        return self._handle_response(response)
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ The query took too long to process. Please try a simpler question.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to process query: {str(e)}")
     
     def retrieval_only(
         self,
         query: str,
         top_k: int = 5
     ) -> Dict[str, Any]:
-        """
-        Get document retrieval results without LLM response
-        
-        Args:
-            query: Search query
-            top_k: Number of documents to retrieve
+        """Get document retrieval results without LLM response"""
+        try:
+            response = requests.post(
+                f"{self.base_url}/chat/retrieval-only",
+                headers=self._get_headers(),
+                json={
+                    "query": query,
+                    "top_k": top_k
+                },
+                timeout=30
+            )
             
-        Returns:
-            Retrieved documents with metadata
-        """
-        response = requests.post(
-            f"{self.base_url}/chat/retrieval-only",
-            headers=self._get_headers(),
-            json={
-                "query": query,
-                "top_k": top_k
-            },
-            timeout=30
-        )
-        
-        return self._handle_response(response)
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Document retrieval timed out. Please try again.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to retrieve documents: {str(e)}")
     
     def get_pipeline_stats(self) -> Dict[str, Any]:
         """Get RAG pipeline statistics for current user"""
-        response = requests.get(
-            f"{self.base_url}/chat/stats",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        return self._handle_response(response)
+        try:
+            response = requests.get(
+                f"{self.base_url}/chat/stats",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching pipeline statistics.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch pipeline statistics: {str(e)}")
     
     # ==================== ADMIN ENDPOINTS ====================
     
     def list_users(self) -> List[Dict[str, Any]]:
         """List all users (admin only)"""
-        response = requests.get(
-            f"{self.base_url}/admin/users",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        data = self._handle_response(response)
-        return data.get("users", [])
+        try:
+            response = requests.get(
+                f"{self.base_url}/admin/users",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            data = self._handle_response(response)
+            return data.get("users", [])
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching users.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch users: {str(e)}")
     
     def create_user(
         self,
@@ -272,18 +301,25 @@ class APIClient:
         role: str
     ) -> Dict[str, Any]:
         """Create new user (admin only)"""
-        response = requests.post(
-            f"{self.base_url}/admin/users",
-            headers=self._get_headers(),
-            json={
-                "username": username,
-                "password": password,
-                "role": role
-            },
-            timeout=10
-        )
-        
-        return self._handle_response(response)
+        try:
+            response = requests.post(
+                f"{self.base_url}/admin/users",
+                headers=self._get_headers(),
+                json={
+                    "username": username,
+                    "password": password,
+                    "role": role
+                },
+                timeout=10
+            )
+            
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while creating user.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to create user: {str(e)}")
     
     def update_user(
         self,
@@ -292,55 +328,83 @@ class APIClient:
         role: Optional[str] = None
     ) -> Dict[str, Any]:
         """Update user (admin only)"""
-        update_data = {}
-        if is_active is not None:
-            update_data["is_active"] = is_active
-        if role is not None:
-            update_data["role"] = role
-        
-        response = requests.patch(
-            f"{self.base_url}/admin/users/{username}",
-            headers=self._get_headers(),
-            json=update_data,
-            timeout=10
-        )
-        
-        return self._handle_response(response)
+        try:
+            update_data = {}
+            if is_active is not None:
+                update_data["is_active"] = is_active
+            if role is not None:
+                update_data["role"] = role
+            
+            response = requests.patch(
+                f"{self.base_url}/admin/users/{username}",
+                headers=self._get_headers(),
+                json=update_data,
+                timeout=10
+            )
+            
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while updating user.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to update user: {str(e)}")
     
     # ==================== AUDIT LOGS ====================
     
     def get_auth_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get authentication logs (admin only)"""
-        response = requests.get(
-            f"{self.base_url}/logs/auth?limit={limit}",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        data = self._handle_response(response)
-        return data.get("logs", [])
+        try:
+            response = requests.get(
+                f"{self.base_url}/logs/auth?limit={limit}",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            data = self._handle_response(response)
+            return data.get("logs", [])
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching authentication logs.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch authentication logs: {str(e)}")
     
     def get_access_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get access control logs (admin only)"""
-        response = requests.get(
-            f"{self.base_url}/logs/access?limit={limit}",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        data = self._handle_response(response)
-        return data.get("logs", [])
+        try:
+            response = requests.get(
+                f"{self.base_url}/logs/access?limit={limit}",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            data = self._handle_response(response)
+            return data.get("logs", [])
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching access logs.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch access logs: {str(e)}")
     
     def get_rag_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Get RAG pipeline logs (admin only)"""
-        response = requests.get(
-            f"{self.base_url}/logs/rag?limit={limit}",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        data = self._handle_response(response)
-        return data.get("logs", [])
+        try:
+            response = requests.get(
+                f"{self.base_url}/logs/rag?limit={limit}",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            data = self._handle_response(response)
+            return data.get("logs", [])
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching RAG logs.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch RAG logs: {str(e)}")
     
     def get_user_activity(
         self,
@@ -348,13 +412,20 @@ class APIClient:
         limit: int = 20
     ) -> Dict[str, Any]:
         """Get activity logs for specific user"""
-        response = requests.get(
-            f"{self.base_url}/logs/user/{username}?limit={limit}",
-            headers=self._get_headers(),
-            timeout=10
-        )
-        
-        return self._handle_response(response)
+        try:
+            response = requests.get(
+                f"{self.base_url}/logs/user/{username}?limit={limit}",
+                headers=self._get_headers(),
+                timeout=10
+            )
+            
+            return self._handle_response(response)
+        except requests.exceptions.Timeout:
+            raise APIError("⏳ Request timed out while fetching user activity.")
+        except APIError:
+            raise
+        except Exception as e:
+            raise APIError(f"⚠️ Failed to fetch user activity: {str(e)}")
     
     # ==================== HEALTH CHECK ====================
     
@@ -366,5 +437,9 @@ class APIClient:
                 timeout=5
             )
             return response.json()
-        except:
-            return {"status": "offline"}
+        except requests.exceptions.ConnectionError:
+            return {"status": "offline", "message": "Cannot connect to server"}
+        except requests.exceptions.Timeout:
+            return {"status": "offline", "message": "Server connection timed out"}
+        except Exception:
+            return {"status": "offline", "message": "Server unavailable"}
