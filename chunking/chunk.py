@@ -144,7 +144,8 @@ import json
 # ==========================================================
 # 1. Configuration
 # ==========================================================
-SOURCE_DIRECTORY = r"C:\Users\HP\Desktop\InternalComapanyChatbot"
+SOURCE_DIRECTORY = r"C:\Users\HP\Desktop\InternalComapanyChatbot\InternalChatbot_normalized"
+
 
 CHUNKS_OUTPUT_FILE = "student_chunks.json"
 METADATA_OUTPUT_FILE = "student_metadata.json"

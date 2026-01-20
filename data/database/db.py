@@ -14,7 +14,7 @@ DB_PATH = os.path.join(BASE_DIR, "data", "auth.db")
 
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
-print("🔥 AUTH DB PATH:", DB_PATH)
+
 
 engine = create_engine(
     DATABASE_URL,
