@@ -7,8 +7,12 @@ from langchain_community.vectorstores import FAISS
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # --- SECURE CONFIGURATION ---
-MY_GROQ_KEY = "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"
+MY_GROQ_KEY = os.getenv("GROQ_API_KEY") 
 MODEL_NAME = "llama-3.1-8b-instant"
+
+if not MY_GROQ_KEY:
+    raise ValueError("GROQ_API_KEY not found in environment variables")
+
 client = Groq(api_key=MY_GROQ_KEY)
 
 def search(query, user_role, chat_history):
