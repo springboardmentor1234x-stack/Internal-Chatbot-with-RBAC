@@ -32,6 +32,7 @@ ROLE_PERMISSIONS = {
     "HR": ["read:hr", "read:general", "write:hr"],
     "Engineering": ["read:engineering", "read:general", "write:engineering"],
     "Employee": ["read:general"],
+    "Intern": ["read:general", "read:training"],
 }
 
 

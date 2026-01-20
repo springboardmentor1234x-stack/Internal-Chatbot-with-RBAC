@@ -5,11 +5,80 @@ import time
 import json
 from datetime import datetime, timedelta
 
-# Import enhanced error handling
-from error_handler_frontend import (
-    frontend_error_handler, safe_api_call, handle_session_error,
-    show_error_report_dialog, display_error_statistics
-)
+# The URL where your FastAPI backend is running
+BACKEND_URL = "http://127.0.0.1:8000"
+
+# Simple error handling functions (integrated)
+def safe_api_call(url, method="GET", data=None, headers=None, operation="API call", 
+                  show_spinner=True, timeout=10, **kwargs):
+    """Enhanced API call wrapper with proper error handling"""
+    try:
+        if method.upper() == "POST":
+            if headers is None:
+                headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            response = requests.post(url, data=data, headers=headers, timeout=timeout, **kwargs)
+        elif method.upper() == "GET":
+            response = requests.get(url, headers=headers, timeout=timeout, **kwargs)
+        else:
+            response = requests.request(method, url, data=data, headers=headers, timeout=timeout, **kwargs)
+        
+        return response
+    except requests.exceptions.ConnectionError:
+        if show_spinner:
+            st.error(f"❌ Cannot connect to backend for {operation}")
+        return None
+    except requests.exceptions.Timeout:
+        if show_spinner:
+            st.error(f"⏱️ Request timeout for {operation}")
+        return None
+    except Exception as e:
+        if show_spinner:
+            st.error(f"❌ Error in {operation}: {str(e)}")
+        return None
+
+def handle_session_error(error_msg):
+    """Handle session-related errors"""
+    st.error(error_msg)
+    if st.button("Retry Login"):
+        st.session_state.authenticated = False
+        st.rerun()
+
+def show_error_report_dialog(error_details=None):
+    """Show error details in an expandable section"""
+    if error_details:
+        with st.expander("Error Details", expanded=False):
+            st.code(error_details)
+
+def display_error_statistics():
+    """Display simple error statistics"""
+    error_count = st.session_state.get("error_count", 0)
+    if error_count > 0:
+        st.sidebar.metric("Errors Today", error_count)
+
+def handle_request_error(error, context, show_user_message=True):
+    """Simple error handler"""
+    if show_user_message:
+        st.error(f"Error in {context}: {str(error)}")
+    # Log error (simplified)
+    print(f"Error in {context}: {str(error)}")
+
+def validate_backend_connection(url):
+    """Simple backend connection validator"""
+    try:
+        response = requests.get(f"{url}/health", timeout=5)
+        return response.status_code == 200
+    except:
+        return False
+
+# Create a simple frontend_error_handler object for compatibility
+class FrontendErrorHandler:
+    def validate_backend_connection(self, url):
+        return validate_backend_connection(url)
+    
+    def handle_request_error(self, error, context, show_user_message=True):
+        return handle_request_error(error, context, show_user_message)
+
+frontend_error_handler = FrontendErrorHandler()
 
 # The URL where your FastAPI backend is running
 BACKEND_URL = "http://127.0.0.1:8000"
@@ -135,7 +204,8 @@ def clear_session():
 
 def view_document(filename):
     """Display document content in a modal-like expander with enhanced error handling"""
-    file_path = os.path.join("data", "raw", filename)
+    # Fix path to be relative to project root, not frontend folder
+    file_path = os.path.join("..", "data", "raw", filename)
 
     try:
         if os.path.exists(file_path):
@@ -185,6 +255,7 @@ def check_user_access(filename, user_role):
             "Finance",
             "Marketing",
             "Engineering",
+            "Intern",
         ],
         "engineering_master_doc.md": ["Engineering", "C-Level"],
     }
@@ -206,25 +277,6 @@ def login():
     # Validate backend connection first
     if not frontend_error_handler.validate_backend_connection(BACKEND_URL):
         st.stop()  # Stop execution if backend is not available
-
-    # Show available test accounts (collapsed by default for security)
-    with st.expander("🔧 Demo Test Accounts", expanded=False):
-        st.markdown(
-            """
-        **For demonstration purposes only:**
-        
-        All test accounts use password: `password123`
-        
-        - **admin** → C-Level access (all documents)
-        - **finance_user** → Finance department access
-        - **marketing_user** → Marketing department access  
-        - **hr_user** → HR department access
-        - **engineering_user** → Engineering department access
-        - **employee** → General employee access
-        
-        *Note: In production, use secure authentication with proper user management.*
-        """
-        )
 
     with st.form("login_form"):
         username = st.text_input("Username", placeholder="Enter your username")
@@ -302,67 +354,37 @@ def login():
                             error_detail = error_data.get("detail", "Login failed")
                             
                             if response.status_code == 401:
-                                st.error(f"🔐 {error_detail}")
-                                st.info("💡 Check your username and password")
+                                # Show clear error message for incorrect credentials
+                                st.error("❌ **Incorrect username or password**")
+                                st.info("💡 Please check your username and password and try again")
+                                    
                             elif response.status_code == 403:
-                                st.error(f"🚫 {error_detail}")
-                                st.info("💡 Your account may be locked or disabled")
+                                # For security, also show same message for access denied
+                                st.error("❌ **Incorrect username or password**")
+                                st.info("💡 Please check your username and password and try again")
                             else:
-                                st.error(f"❌ Login failed: {error_detail}")
+                                # For any other error, show same message for security
+                                st.error("❌ **Incorrect username or password**")
+                                st.info("� Please check your username and password and try again")
                                 
                         except json.JSONDecodeError:
-                            st.error(f"❌ Login failed with status {response.status_code}")
+                            st.error("❌ **Incorrect username or password**")
+                            st.info("💡 Please check your credentials and try again")
                         
                         st.session_state.error_count = st.session_state.get("error_count", 0) + 1
                     else:
-                        # Response is None (handled by safe_api_call)
+                        # Response is None (connection failed or timeout)
+                        # Show same error message for security - don't reveal connection issues
+                        st.error("❌ **Incorrect username or password**")
+                        st.info("💡 Please check your username and password and try again")
                         st.session_state.error_count = st.session_state.get("error_count", 0) + 1
                         
                 except Exception as e:
+                    # Handle any other exceptions - show same error for security
+                    st.error("❌ **Incorrect username or password**")
+                    st.info("💡 Please check your username and password and try again")
                     frontend_error_handler.handle_request_error(e, "login")
                     st.session_state.error_count = st.session_state.get("error_count", 0) + 1
-
-    # Show connection status with enhanced information
-    with st.expander("🔧 System Status", expanded=False):
-        try:
-            health_response = safe_api_call(
-                f"{BACKEND_URL}/health",
-                method="GET",
-                operation="Health check",
-                show_spinner=False,
-                timeout=5
-            )
-            
-            if health_response and health_response.status_code == 200:
-                health_data = health_response.json()
-                st.success("✅ Backend server is running")
-                
-                # Show component status
-                components = health_data.get("components", {})
-                if components:
-                    st.write("**Component Status:**")
-                    for component, status in components.items():
-                        if status == "healthy":
-                            st.write(f"✅ {component.title()}: {status}")
-                        elif status == "degraded":
-                            st.write(f"⚠️ {component.title()}: {status}")
-                        else:
-                            st.write(f"❌ {component.title()}: {status}")
-                
-                # Show error statistics if available
-                error_stats = health_data.get("error_stats", {})
-                if error_stats.get("total_errors", 0) > 0:
-                    st.write(f"**Recent Errors:** {error_stats['total_errors']}")
-                    
-            else:
-                st.warning("⚠️ Backend server responding with errors")
-                
-        except Exception as e:
-            st.error("❌ Backend server is not accessible")
-            st.info("💡 Make sure to run: `python run.py`")
-            frontend_error_handler.handle_request_error(
-                e, "backend health check", show_user_message=False
-            )
 
 
 def main_chat_interface():

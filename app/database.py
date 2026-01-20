@@ -21,8 +21,8 @@ except ImportError:
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Database Pathing
-# This ensures project.db is found inside the 'app' folder
-DB_PATH = os.path.join(os.path.dirname(__file__), "project.db")
+# Use the root level project.db file
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "project.db")
 
 @contextmanager
 def get_db_connection():
@@ -259,6 +259,11 @@ FAKE_USERS_DB = {
     "employee": {
         "username": "employee",
         "role": "Employee",
+        "password_hash": PWD_CONTEXT.hash("password123"),
+    },
+    "intern_user": {
+        "username": "intern_user",
+        "role": "Intern",
         "password_hash": PWD_CONTEXT.hash("password123"),
     },
 }

@@ -32,6 +32,10 @@ def run_pipeline(query: str, user_role: str) -> Dict[str, Any]:
         "Employee": {
             "content": f"Employee information for '{query}': Company policies allow flexible work arrangements. Health benefits and 25 days annual leave available. Performance reviews quarterly.",
             "sources": ["employee_handbook.md"]
+        },
+        "Intern": {
+            "content": f"Intern information for '{query}': Welcome to the internship program! You have access to basic company policies and learning resources. Training materials include orientation guides and mentorship programs. Please reach out to your supervisor for specific project guidance.",
+            "sources": ["employee_handbook.md", "intern_orientation_guide.md"]
         }
     }
     

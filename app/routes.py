@@ -5,10 +5,10 @@ from datetime import datetime
 
 # Simple working imports
 try:
-    from .rag_pipeline_simple_working import rag_pipeline
+    from .rag_pipeline_enhanced_real import run_pipeline
     from .auth_utils import get_current_user, check_permission
 except ImportError:
-    from rag_pipeline_simple_working import rag_pipeline
+    from rag_pipeline_enhanced_real import run_pipeline
     from auth_utils import get_current_user, check_permission
 
 router = APIRouter()
@@ -55,28 +55,82 @@ async def chat_endpoint(
                 detail=f"Access denied: Role '{user_role}' does not have search permissions",
             )
 
-        # Use simple RAG pipeline
-        rag_result = rag_pipeline.run_pipeline(request.query, user_role)
-
-        # Handle errors
-        if rag_result.get("error"):
-            raise HTTPException(status_code=500, detail=rag_result["error"])
+        # Use RAG pipeline with role-based access
+        rag_result = run_pipeline(request.query, user_role)
+        
+        # Format the response based on available documents
+        if rag_result and rag_result.get("response"):
+            response_text = rag_result["response"]
+            sources = rag_result.get("sources", [])
+            citations = rag_result.get("citations", [])
+            
+            # Create structured response with all the data from run_pipeline
+            formatted_result = {
+                "response": response_text,
+                "sources": sources,
+                "citations": citations,
+                "accuracy_score": rag_result.get("accuracy_score", 85.0),
+                "confidence_level": rag_result.get("confidence_level", "medium"),
+                "validation_score": rag_result.get("validation_score", 80.0),
+                "query_category": rag_result.get("query_category", "general"),
+                "total_chunks_analyzed": rag_result.get("total_chunks_analyzed", 0),
+                "chunk_details": rag_result.get("chunk_details", []),
+                "quality_metrics": rag_result.get("quality_metrics", {}),
+                "improvement_suggestions": rag_result.get("improvement_suggestions", []),
+                "query_optimization": rag_result.get("query_optimization", {})
+            }
+        else:
+            # No documents accessible to this role
+            response_text = f"I couldn't find information about '{request.query}' in the documents accessible to your role ({user_role}).\n\n"
+            response_text += f"🔐 **Your Access Level**: {user_role}\n"
+            response_text += f"📄 **Available Documents**: None found for your role\n\n"
+            response_text += "**Possible reasons:**\n"
+            response_text += "• The information might be in documents restricted to other roles\n"
+            response_text += "• Try rephrasing your question\n"
+            response_text += "• Contact your administrator for additional access if needed\n\n"
+            
+            # Show what document types this role can access
+            role_access = {
+                "C-Level": "All documents (Finance, Marketing, HR, Engineering, General)",
+                "Finance": "Financial reports and general documents",
+                "Marketing": "Marketing reports and general documents", 
+                "HR": "HR policies and general documents",
+                "Engineering": "Technical documentation and general documents",
+                "Employee": "General employee documents only"
+            }
+            
+            response_text += f"**Your role ({user_role}) can access**: {role_access.get(user_role, 'General documents')}"
+            
+            formatted_result = {
+                "response": response_text,
+                "sources": [],
+                "citations": [],
+                "accuracy_score": 0.0,
+                "confidence_level": "low",
+                "validation_score": 0.0,
+                "query_category": "access_denied",
+                "total_chunks_analyzed": 0,
+                "chunk_details": [],
+                "quality_metrics": {"relevance": 0.0, "completeness": 0.0, "role_filtered": True},
+                "improvement_suggestions": ["Try rephrasing your question", "Check if you have access to relevant documents", "Contact administrator for additional access"],
+                "query_optimization": {"role": user_role, "accessible_docs": 0}
+            }
 
         # Format response
         return {
             "user": {"username": username, "role": user_role},
-            "response": rag_result.get("response", "No response generated"),
-            "sources": rag_result.get("sources", []),
-            "accuracy_score": rag_result.get("accuracy_score", 85.0),
-            "confidence_level": rag_result.get("confidence_level", "medium"),
-            "validation_score": rag_result.get("validation_score", 80.0),
-            "query_category": rag_result.get("query_category", "general"),
-            "total_chunks_analyzed": rag_result.get("total_chunks_analyzed", 3),
-            "citations": rag_result.get("citations", []),
-            "chunk_details": rag_result.get("chunk_details", []),
-            "quality_metrics": rag_result.get("quality_metrics", {}),
-            "improvement_suggestions": rag_result.get("improvement_suggestions", []),
-            "query_optimization": rag_result.get("query_optimization", {}),
+            "response": formatted_result.get("response", "No response generated"),
+            "sources": formatted_result.get("sources", []),
+            "accuracy_score": formatted_result.get("accuracy_score", 85.0),
+            "confidence_level": formatted_result.get("confidence_level", "medium"),
+            "validation_score": formatted_result.get("validation_score", 80.0),
+            "query_category": formatted_result.get("query_category", "general"),
+            "total_chunks_analyzed": formatted_result.get("total_chunks_analyzed", 0),
+            "citations": formatted_result.get("citations", []),
+            "chunk_details": formatted_result.get("chunk_details", []),
+            "quality_metrics": formatted_result.get("quality_metrics", {}),
+            "improvement_suggestions": formatted_result.get("improvement_suggestions", []),
+            "query_optimization": formatted_result.get("query_optimization", {}),
             "timestamp": datetime.now().isoformat(),
         }
 
