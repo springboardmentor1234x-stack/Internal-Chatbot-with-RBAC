@@ -11,6 +11,30 @@ short_description: A secure internal chatbot system for company employees
 
 This portal is a professional-grade internal chatbot system that processes natural language queries. It uses Retrieval-Augmented Generation (RAG) to provide context-rich, sourced responses restricted by role permissions.
 
+## 🛠️ Getting Started (Local Setup)
+
+Follow these steps to deploy the chatbot on your local machine using Docker.
+
+### 1. Clone the Repository
+```bash
+# Clone the repository
+git clone [https://github.com/springboardmentor1234x-stack/Internal-Chatbot-with-RBAC.git](https://github.com/springboardmentor1234x-stack/Internal-Chatbot-with-RBAC.git)
+
+# Navigate into the project folder
+cd Internal-Chatbot-with-RBAC
+2. Build the Docker Image
+This process installs dependencies and triggers data_ingest.py to index the corporate documents.
+
+Bash
+
+docker build -t internal-chatbot .
+3. Run the Application
+Bash
+
+docker run -p 7860:7860 internal-chatbot
+4. Access the UI
+Open your browser and go to: http://localhost:7860
+
 ### 🛡️ Core Security: Role-Based Access Control (RBAC)
 The system features a specialized security mechanism. The backend programmatically filters search results from the vector database based on your authenticated department.
 1. **C-Level:** Full visibility into all corporate records.
