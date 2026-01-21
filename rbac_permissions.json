@@ -1,0 +1,137 @@
+{
+  "roles": {
+    "engineering_employee": {
+      "inherits": [],
+      "permissions": [
+        "read:engineering",
+        "read:general"
+      ]
+    },
+
+    "engineering_manager": {
+      "inherits": ["engineering_employee"],
+      "permissions": [
+        "read:engineering",
+        "read:general",
+        "write:engineering",
+        "delete:engineering"
+      ]
+    },
+
+    "finance_employee": {
+      "inherits": [],
+      "permissions": [
+        "read:finance",
+        "read:general"
+      ]
+    },
+
+    "finance_manager": {
+      "inherits": ["finance_employee"],
+      "permissions": [
+        "read:finance",
+        "read:general",
+        "write:finance",
+        "delete:finance"
+      ]
+    },
+
+    "hr_employee": {
+      "inherits": [],
+      "permissions": [
+        "read:hr",
+        "read:general"
+      ]
+    },
+
+    "hr_manager": {
+      "inherits": ["hr_employee"],
+      "permissions": [
+        "read:hr",
+        "read:general",
+        "write:hr",
+        "delete:hr"
+      ]
+    },
+
+    "marketing_employee": {
+      "inherits": [],
+      "permissions": [
+        "read:marketing",
+        "read:general"
+      ]
+    },
+
+    "marketing_manager": {
+      "inherits": ["marketing_employee"],
+      "permissions": [
+        "read:marketing",
+        "read:general",
+        "write:marketing",
+        "delete:marketing"
+      ]
+    },
+
+    "employee": {
+      "inherits": [],
+      "permissions": [
+        "read:general"
+      ]
+    },
+
+    "intern": {
+      "inherits": [],
+      "permissions": [
+        "read:general"
+      ]
+    },
+
+    "c_level": {
+      "inherits": [],
+      "permissions": [
+        "*"
+      ]
+    },
+
+    "admin": {
+      "inherits": [],
+      "permissions": [
+        "*"
+      ]
+    }
+  },
+
+  "role_mapping": {
+    "software_engineer": "engineering_employee",
+    "senior_engineer": "engineering_employee",
+    "devops_engineer": "engineering_employee",
+    "technical_lead": "engineering_manager",
+    "engineering_manager": "engineering_manager",
+
+    "finance_analyst": "finance_employee",
+    "accounts_executive": "finance_employee",
+    "chartered_accountant": "finance_manager",
+    "finance_manager": "finance_manager",
+
+    "hr_executive": "hr_employee",
+    "hr_generalist": "hr_employee",
+    "recruiter": "hr_employee",
+    "hr_manager": "hr_manager",
+
+    "marketing_executive": "marketing_employee",
+    "digital_marketer": "marketing_employee",
+    "seo_specialist": "marketing_employee",
+    "campaign_manager": "marketing_manager",
+    "marketing_manager": "marketing_manager",
+
+    "employee": "employee",
+    "intern": "intern",
+
+    "ceo": "c_level",
+    "cto": "c_level",
+    "cfo": "c_level",
+    "coo": "c_level",
+
+    "admin": "admin"
+  }
+}
