@@ -1,11 +1,13 @@
 # frontend/auth_ui.py
-
+import os
 import streamlit as st
 import requests
 from datetime import datetime
 import jwt
 
-API_BASE = "http://127.0.0.1:8000"
+# API_BASE = "http://127.0.0.1:8000"
+API_BASE = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+
 
 
 # ======================================================

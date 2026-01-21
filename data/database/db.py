@@ -9,10 +9,19 @@ BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 
-# Force DB into /data/auth.db
-DB_PATH = os.path.join(BASE_DIR, "data", "auth.db")
+# # Force DB into /data/auth.db
+# DB_PATH = os.path.join(BASE_DIR, "data", "auth.db")
 
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+# DATABASE_URL = f"sqlite:///{DB_PATH}"
+
+# --------------------------------------------------
+# Database Configuration (ENV-AWARE)
+# --------------------------------------------------
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"sqlite:///{os.path.join(BASE_DIR, 'data', 'auth.db')}"
+)
+
 
 
 
