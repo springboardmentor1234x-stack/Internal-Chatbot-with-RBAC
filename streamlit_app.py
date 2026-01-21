@@ -97,7 +97,7 @@ else:
             if docs:
                 with st.expander("📄 Source Verification"):
                     for d in docs:
-                        st.markdown(f"**File:** `{d.metadata.get('source', 'Unknown')}`")
+                        st.markdown(f"**Source & Rank:** `{d.metadata.get('source', 'Unknown')}`")
                         st.caption(d.page_content[:250] + "...")
             
             st.session_state.messages.append({"role": "assistant", "content": full_response})
