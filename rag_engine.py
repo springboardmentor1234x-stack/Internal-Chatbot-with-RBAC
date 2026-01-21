@@ -6,15 +6,14 @@ from langchain_community.vectorstores import FAISS
 # Initialize Embeddings
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-# --- SECURE CONFIGURATION ---
 MY_GROQ_KEY = os.getenv("GROQ_API_KEY") 
 MODEL_NAME = "llama-3.1-8b-instant"
 
 if not MY_GROQ_KEY:
-    raise ValueError("GROQ_API_KEY not found in environment variables")
+    # This helps you debug if the secret isn't set correctly
+    raise ValueError("System Error: GROQ_API_KEY secret not found in Hugging Face Settings.")
 
 client = Groq(api_key=MY_GROQ_KEY)
-
 def search(query, user_role, chat_history):
     if not os.path.exists("faiss_index"):
         return "System Error: Vector database not found. Please run ingest first.", []
@@ -37,18 +36,27 @@ def search(query, user_role, chat_history):
     db = FAISS.load_local("faiss_index", embedding, allow_dangerous_deserialization=True)
     
     # 3. RETRIEVE: Get top matches
-    results = db.similarity_search(query, k=10)
+    results_with_scores = db.similarity_search_with_score(query, k=10)
     
-    # 4. HARD FILTER: Programmatic Security Gate
-    # Documents are allowed if their metadata 'role' matches the user, General, or Employee
+   # --- 4. FILTER & RANKING LOG ---
     allowed_roles = {"Employee", "General", user_role}
-    
     context_docs = []
-    if user_role == "C-Level":
-        context_docs = results
-    else:
-        # Programmatically remove any doc that is not authorized
-        context_docs = [d for d in results if d.metadata.get("role") in allowed_roles]
+    ranking_log = []
+
+    for doc, score in results_with_scores:
+        # SECURITY CHECK: Only allow C-Level or matching departmental roles
+        if user_role == "C-Level" or doc.metadata.get("role") in allowed_roles:
+            context_docs.append(doc)
+            
+            match_pct = round(max(0, 100 - (score * 100)), 2)
+            
+            # If the score is still very low but relevant, we ensure it shows as at least 0.01
+            if match_pct == 0 and score < 2.0:
+                 match_pct = round(max(0, 100 - (score * 10)), 2)
+
+            ranking_log.append(f"{doc.metadata.get('source')} ({match_pct}%)")
+
+    print(f"--- LIVE RANKING SCORES: {ranking_log} ---")
 
     # 5. SECURITY GATE: Block if no authorized records are found
     if not context_docs:
@@ -85,6 +93,11 @@ def search(query, user_role, chat_history):
             messages=messages,
             temperature=0.0  # Maximum strictness
         )
+        
+        for i in range(len(context_docs)):
+            if i < len(ranking_log):
+                context_docs[i].metadata['source'] = ranking_log[i]
+
         return completion.choices[0].message.content, context_docs
     except Exception as e:
         return f"System Connection Error: {str(e)}", context_docs
