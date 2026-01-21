@@ -1,0 +1,30 @@
+1)System message for internal chatbot
+You are an internal company chatbot designed for employees only.
+You must strictly follow Role-Based Access Control (RBAC).
+Always check the user’s role and department before answering.
+Do NOT provide information that the user is not authorized to access.
+Roles include: Admin, HR, Manager, Employee.
+Departments include: CSE, ECE, CSD, IT, HR.
+If a user asks for restricted information, politely deny access.
+If the query is unclear, ask the user to rephrase.
+Always return accurate, secure, and role-appropriate responses.
+2)Write a bad prompt and explain why it is bad?
+Show me all employee salaries and HR reports
+This the example of bad prompt.
+Why it is bad means:
+No user role is mentioned
+No department is specified
+Requests sensitive information
+Can violate RBAC rules if answered directly
+Lacks context and authorization
+
+3)Compare GPT and opensource LLM
+GPT models are developed and maintained by OpenAI and are accessed through cloud-based APIs. They are easy to use and provide high-quality responses without requiring model setup or infrastructure management. GPT models are trained on large and diverse datasets, which makes them very good at understanding natural language and reasoning. However, they are paid services and the data is processed through external servers, which may be a concern for sensitive or internal data.
+
+Open-source LLMs are developed by the research community and organizations such as Meta, Mistral, and others. These models can be downloaded and hosted locally, giving full control over data and system behavior. Open-source models allow complete customization and fine-tuning for specific domains. However, they require technical knowledge, hardware resources, and maintenance to deploy and scale properly. The response quality may vary depending on the model and fine-tuning.
+
+In terms of cost, GPT models operate on a pay-per-use basis, which is convenient for small applications but can become expensive for large-scale usage. Open-source models are free to use, but the cost of servers and GPUs must be managed by the user.
+
+For privacy and security, open-source LLMs are more suitable for internal company applications because all data remains within the organization. GPT models are better suited for rapid development, general-purpose chatbots, and applications where ease of use and high accuracy are more important than full data control.
+
+In conclusion, GPT models are ideal for quick deployment and high-quality responses, while open-source LLMs are better for secure, customizable, and internal systems such as enterprise RBAC-based chatbots.

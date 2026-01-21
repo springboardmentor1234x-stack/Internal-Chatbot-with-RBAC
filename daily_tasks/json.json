@@ -1,0 +1,115 @@
+{
+  "rbac": {
+    "roles": {
+      "Employee": {
+        "inherits": [],
+        "permissions": [
+          "ask_general_queries",
+          "view_company_policies",
+          "view_holiday_list"
+        ]
+      },
+
+      "HR": {
+        "inherits": ["Employee"],
+        "permissions": [
+          "view_employee_details",
+          "manage_leave_requests",
+          "view_payroll_information"
+        ]
+      },
+
+      "Manager": {
+        "inherits": ["Employee"],
+        "permissions": [
+          "view_team_details",
+          "approve_leave_requests",
+          "view_performance_reports"
+        ]
+      },
+
+      "IT_Admin": {
+        "inherits": ["Employee"],
+        "permissions": [
+          "manage_user_accounts",
+          "reset_passwords",
+          "view_system_logs"
+        ]
+      },
+
+      "Super_Admin": {
+        "inherits": ["HR", "Manager", "IT_Admin"],
+        "permissions": [
+          "full_system_access",
+          "manage_roles",
+          "manage_permissions"
+        ]
+      }
+    }
+  }
+}
+#using code
+{
+  "roles": {
+    "Employee": {
+      "inherits": [],
+      "permissions": [
+        "chatbot.ask.general",
+        "chatbot.view.company_policies",
+        "chatbot.view.holidays"
+      ]
+    },
+
+    "HR": {
+      "inherits": ["Employee"],
+      "permissions": [
+        "chatbot.view.employee_details",
+        "chatbot.manage.leave",
+        "chatbot.view.payroll_info"
+      ]
+    },
+
+    "Manager": {
+      "inherits": ["Employee"],
+      "permissions": [
+        "chatbot.view.team_details",
+        "chatbot.approve.leave",
+        "chatbot.view.performance_reports"
+      ]
+    },
+
+    "IT_Admin": {
+      "inherits": ["Employee"],
+      "permissions": [
+        "chatbot.manage.users",
+        "chatbot.reset_passwords",
+        "chatbot.view.system_logs"
+      ]
+    },
+
+    "Super_Admin": {
+      "inherits": ["HR", "Manager", "IT_Admin"],
+      "permissions": [
+        "chatbot.full_access",
+        "chatbot.manage.roles",
+        "chatbot.manage.permissions"
+      ]
+    }
+  }
+}
+#role hierarchy
+#Employee
+ #├─ HR
+ #├─ Manager
+ #├─ IT_Admin
+  #     └─ Super_Admin
+#“RBAC is implemented using a JSON configuration defining roles, role inheritance, and permissions to control chatbot access securely.”
+# JSON FILE SHOWS
+#Inheritance → Higher roles automatically get lower role permissions
+
+# Least privilege → Each role has only required access
+
+# Scalable → New roles/permissions can be added easily
+
+# Industry-ready format → Suitable for backend integration
+
