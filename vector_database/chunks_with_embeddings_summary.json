@@ -1,0 +1,8 @@
+{
+  "total_chunks": 70,
+  "embedding_dimension": 384,
+  "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+  "chunks_by_department": {
+    "Unknown": 70
+  }
+}

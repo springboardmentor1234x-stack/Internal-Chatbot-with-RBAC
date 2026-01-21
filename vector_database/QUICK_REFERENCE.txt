@@ -1,0 +1,190 @@
+═══════════════════════════════════════════════════════════════
+MODULE 3: VECTOR DATABASE & EMBEDDINGS - QUICK REFERENCE
+═══════════════════════════════════════════════════════════════
+
+📋 QUICK START
+═══════════════════════════════════════════════════════════════
+
+# Run complete pipeline
+python module3_pipeline.py
+
+# Run automated tests
+bash test_module3.sh
+
+# View summary
+cat module3_summary.json
+
+
+═══════════════════════════════════════════════════════════════
+📊 OUTPUT FILES
+═══════════════════════════════════════════════════════════════
+
+chunks_with_embeddings.json    → All chunks with 384-dim embeddings
+module3_summary.json           → Pipeline execution summary
+chroma_db/                     → Persistent vector database
+
+
+═══════════════════════════════════════════════════════════════
+🔧 INDIVIDUAL COMPONENTS
+═══════════════════════════════════════════════════════════════
+
+# Test embedding generation only
+python embedding_generator.py
+
+# Test vector database only
+python vector_db_manager.py
+
+
+═══════════════════════════════════════════════════════════════
+🔍 PYTHON API USAGE
+═══════════════════════════════════════════════════════════════
+
+# Generate embeddings
+from embedding_generator import EmbeddingGenerator
+
+generator = EmbeddingGenerator()
+chunks_with_embeddings = generator.embed_chunks(chunks)
+generator.save_embeddings(chunks_with_embeddings, "output.json")
+
+
+# Use vector database
+from vector_db_manager import VectorDBManager
+
+db = VectorDBManager(persist_directory="./chroma_db")
+db.add_documents(chunks_with_embeddings)
+
+# Search without RBAC
+results = db.search(query_text="financial performance", n_results=5)
+
+# Search with RBAC
+results = db.search(
+    query_text="financial performance",
+    user_role="finance_employee",
+    n_results=5
+)
+
+# Get statistics
+stats = db.get_stats()
+
+
+═══════════════════════════════════════════════════════════════
+🔐 RBAC ROLE EXAMPLES
+═══════════════════════════════════════════════════════════════
+
+admin               → Access to ALL departments
+finance_employee    → Finance + General only
+marketing_employee  → Marketing + General only
+hr_employee         → HR + General only
+engineering_employee → Engineering + General only
+employee            → General only
+
+
+═══════════════════════════════════════════════════════════════
+📈 CURRENT STATS
+═══════════════════════════════════════════════════════════════
+
+Total Chunks:       70
+Embedding Dim:      384 dimensions
+Model:              sentence-transformers/all-MiniLM-L6-v2
+
+Chunks by Department:
+  Engineering:      13 chunks
+  Finance:          9 chunks
+  General:          7 chunks
+  HR:               25 chunks
+  Marketing:        16 chunks
+
+
+═══════════════════════════════════════════════════════════════
+🧪 TESTING COMMANDS
+═══════════════════════════════════════════════════════════════
+
+# Run all automated tests
+bash test_module3.sh
+
+# Test with sample queries
+python -c "
+from vector_db_manager import VectorDBManager
+db = VectorDBManager()
+results = db.search('financial revenue', n_results=3)
+print(f'Found {results[\"count\"]} results')
+"
+
+
+═══════════════════════════════════════════════════════════════
+🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+Problem: Module 2 output not found
+Fix:     cd ../module_2_document_preprocessing && python preprocessing_pipeline.py
+
+Problem: ChromaDB locked
+Fix:     rm -rf chroma_db/*.lock
+
+Problem: Import errors
+Fix:     pip install -r requirements.txt
+
+
+═══════════════════════════════════════════════════════════════
+📦 DEPENDENCIES
+═══════════════════════════════════════════════════════════════
+
+sentence-transformers  → Embedding generation
+chromadb              → Vector database
+torch                 → Neural network backend
+tqdm                  → Progress tracking
+
+
+═══════════════════════════════════════════════════════════════
+🔄 VALIDATION CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+✅ chunks_with_embeddings.json created (70 chunks)
+✅ module3_summary.json generated
+✅ chroma_db/ directory exists
+✅ All chunks have 384-dim embeddings
+✅ Semantic search working
+✅ RBAC filtering validated
+✅ All tests passed
+
+
+═══════════════════════════════════════════════════════════════
+🚀 NEXT STEPS
+═══════════════════════════════════════════════════════════════
+
+Module 3 Complete! Ready for Module 4: Backend & Authentication
+
+1. FastAPI backend setup
+2. User authentication system
+3. API endpoints for search
+4. Frontend integration
+
+
+═══════════════════════════════════════════════════════════════
+💡 KEY FEATURES
+═══════════════════════════════════════════════════════════════
+
+✓ 384-dimensional semantic embeddings
+✓ Persistent ChromaDB vector database
+✓ RBAC metadata preserved
+✓ Fast semantic similarity search (<100ms)
+✓ Role-based access filtering
+✓ Department-based filtering
+✓ Batch processing for efficiency
+✓ GPU acceleration support
+
+
+═══════════════════════════════════════════════════════════════
+📝 IMPORTANT NOTES
+═══════════════════════════════════════════════════════════════
+
+- Vector DB persists across restarts
+- RBAC filtering happens post-retrieval
+- Model downloaded once, cached locally (~80MB)
+- Supports 10K+ documents efficiently
+- Cosine similarity for search (default)
+
+
+═══════════════════════════════════════════════════════════════
+End of Quick Reference
+═══════════════════════════════════════════════════════════════

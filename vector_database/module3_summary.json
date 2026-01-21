@@ -1,0 +1,17 @@
+{
+  "total_chunks": 70,
+  "embedding_dimension": 384,
+  "vector_db_stats": {
+    "total_documents": 70,
+    "collection_name": "rag_documents",
+    "by_department": {
+      "Engineering": 13,
+      "Finance": 9,
+      "General": 7,
+      "HR": 25,
+      "Marketing": 16
+    }
+  },
+  "model_used": "sentence-transformers/all-MiniLM-L6-v2",
+  "status": "complete"
+}
