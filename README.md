@@ -1,12 +1,3 @@
----
-license: mit
-title: 'Secure Internal Chatbot System: An AI-Powered Corporate Assistant with secured RAG Implementation and Role-Based Access Control'
-sdk: docker
-emoji: 🏢
-colorFrom: green
-colorTo: blue
-short_description: A secure internal chatbot system for company employees
----
 # 🏢 Secure Internal Chatbot System  
 **An AI-Powered Corporate Assistant with Secure RAG & Role-Based Access Control**
 
