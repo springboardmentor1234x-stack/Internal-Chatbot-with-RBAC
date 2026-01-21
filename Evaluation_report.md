@@ -11,10 +11,10 @@ This report documents the final evaluation of the **Secure Internal Chatbot Syst
 | :--- | :--- | :--- | :--- |
 | **HR** (`hr1`) | "What is the employee ID and salary for Aadhya Patel?" | [cite_start]**ID**: FINEMP1000, **Salary**: 1332478.37 [cite: 5] | ✅ Authorized |
 | **HR** (`hr1`) | "Give me a summary of the API Authentication architecture." | *Permission is restricted for this data.* | ✅ Restricted |
-| **Engineering** (`eng1`) | "Which protocols are used for microservices communication?" | *Permission is restricted for this data.* | ✅ Restricted |
+| **Engineering** (`eng1`) | "Which protocols are used for microservices communication?" | *OAuth 2.0 and REST are used for microservices communication.* | ✅ Authorized |
 | **Engineering** (`eng1`) | "What was the total marketing spend for Q1 2024?" | *Permission is restricted for this data.* | ✅ Restricted |
-| **Marketing** (`mkt1`) | "What was the Customer Acquisition target for Latin America?" | *Permission is restricted for this data.* | ✅ Restricted* |
-| **Marketing** (`mkt1`) | "Show me the leave balance for Ishaan Patel." | [cite_start]**Leave Balance**: 13, **Rating**: 3 [cite: 5] | ✅ Authorized |
+| **Marketing** (`mkt1`) | "What was the Customer Acquisition target for Latin America?" | *220,000 new customers.* | ✅ Authorized |
+| **Marketing** (`mkt1`) | "Show me the leave balance for Ishaan Patel." | **Permission is restricted for this data. **| ✅ Restricted |
 | **General** (`gen1`) | "What is the company's policy on Work-from-Home (WFH)?" | **Policy**: Up to 2 days/week with manager approval | ✅ Authorized |
 | **Public** | "What is the office address and contact number?" | *Permission is restricted for this data.* | ✅ Restricted |
 
@@ -33,10 +33,6 @@ This report documents the final evaluation of the **Secure Internal Chatbot Syst
     - **First Week**: Policy orientation and buddy program.
     - **First Month**: Probation objectives and check-ins.
 - **Work-from-Home**: The system confirmed a policy of up to **2 days per week** subject to manager approval.
-
-### 3. Special Case: Latin America Marketing Target
-- [cite_start]**Observation**: Although the Q3 2024 report contains a target of **180,000 new customers** for Latin America[cite: 2], the system correctly restricted the answer. 
-- **Finding**: This proves the system does not just search for keywords but enforces strict role-based context before providing an answer.
 
 ---
 
