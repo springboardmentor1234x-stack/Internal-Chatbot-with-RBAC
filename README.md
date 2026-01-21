@@ -398,93 +398,67 @@ http://localhost:8501
 
 ---
 
-.
+## Audit Logging & Admin Monitoring
 
-📜 Audit Logging & Admin Monitoring
+The system incorporates centralized, persistent backend audit logging to ensure security, traceability, and compliance across all critical operations.
+Audit logging is enforced strictly at the backend layer and is fail-safe, ensuring that audit failures do not disrupt core application workflows.
 
-The system implements persistent, centralized backend audit logging to ensure security, traceability, and compliance across all sensitive operations. Audit logging is enforced at the backend level and is fail-safe, meaning audit failures never interrupt core application workflows.
+### Audit Storage
 
-🗄️ Audit Storage
+- Database: SQLite (auth.db)
+- Table: audit_logs
+- Model: data/database/models/audit_log.py
+- Timestamp Standard: UTC
+- Record Policy: Append-only and immutable
 
-Database: SQLite (auth.db)
+### Audit Record Structure
 
-Table: audit_logs
+Each audit record captures:
 
-Model: data/database/models/audit_log.py
+- Username and role at the time of action
+- User ID (if available)
+- Action performed
+- Query text (for search or RAG requests, where applicable)
+- Accessed document metadata (stored safely as JSON)
+- Timestamp (UTC)
 
-Timestamp Standard: UTC
+### Audited System Events
 
-Each audit record is append-only and immutable once written.
+The following events are automatically logged:
 
-🧾 Audit Record Contents
+- Authentication events
+  - LOGIN
+  - LOGOUT
+- Access control decisions
+  - RBAC_ALLOWED
+  - RBAC_DENIED
+- Knowledge access events
+  - SEARCH
+  - RAG_QUERY_SUCCESS
+  - RAG_RBAC_DENIED
+- Data operations
+  - DOWNLOAD_DATASET
+- Security events
+  - TOKEN_EXPIRED
+  - INVALID_TOKEN
 
-Each audit entry captures the following information:
+### Audit Design Principles
 
-Username
+- Centralized audit logging via a single backend entry point
+- Fail-safe design ensuring uninterrupted system operation
+- Secure JSON-based storage for document metadata
+- RBAC-aware logging preserving role context
+- No debug or sensitive logs exposed to end users
 
-Role at the time of action
+### Admin Audit Interface
 
-User ID (if available)
+- Read-only access restricted to Admin users
+- Exposed via a dedicated Streamlit Admin Audit UI
+- Supports filtering by:
+  - Username
+  - Action type
+- Designed for compliance review, operational monitoring, and security analysis
 
-Action performed
-
-Query text (for search or RAG requests, if applicable)
-
-List of accessed documents (stored safely as JSON)
-
-Timestamp
-
-🔍 Audited System Events
-
-The following system events are automatically logged:
-
-LOGIN
-
-LOGOUT
-
-SEARCH
-
-RAG_QUERY_SUCCESS
-
-RAG_RBAC_DENIED
-
-RBAC_ALLOWED
-
-RBAC_DENIED
-
-DOWNLOAD_DATASET
-
-TOKEN_EXPIRED
-
-INVALID_TOKEN
-
-🧠 Audit Design Principles
-
-Centralized audit entry point via a dedicated logging function
-
-Fail-safe logging (audit failures never affect user operations)
-
-JSON-safe storage for document metadata
-
-No debug or console logs exposed to end users
-
-RBAC-aware logging, preserving role context at the time of action
-
-🛡️ Admin Audit Interface
-
-Audit logs are read-only
-
-Accessible only to Admin users
-
-Exposed via a dedicated Streamlit Admin Audit UI
-
-Supports filtering by:
-
-Username
-
-Action type
-
-This interface is designed for compliance review, operational monitoring, and security analysis, while fully preserving RBAC guarantees and data isolation.
 
 ## 🚀 Deployment Strategy
 
