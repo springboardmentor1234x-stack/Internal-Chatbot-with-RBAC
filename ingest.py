@@ -6,7 +6,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
-# Absolute paths ensure stability on Windows
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(BASE_DIR, "chroma_db")
@@ -25,18 +24,17 @@ def process_files():
         print(f"📁 Folder created at {DATA_PATH}. Place your dept folders here.")
         return
 
-    # Fresh Start: Clears old data to prevent "WinError 32" locking issues
     if os.path.exists(DB_PATH):
         try:
             shutil.rmtree(DB_PATH)
+            print("🧹 Old database cleared.")
         except PermissionError:
-            print("🛑 Error: Database is locked. Close all other terminals first!")
+            print("🛑 Error: Database is locked. CLOSE the terminal running 'main.py' before ingesting!")
             return
 
     all_docs = []
-    # walk into subfolders: data/hr, data/finance, etc.
+    
     for root, dirs, files in os.walk(DATA_PATH):
-        # The department name is the folder name
         dept = os.path.basename(root).lower()
         if dept == "data" or not dept:
             dept = "general"
@@ -44,7 +42,6 @@ def process_files():
         for file in files:
             file_path = os.path.join(root, file)
             try:
-                # Select loader based on extension
                 if file.lower().endswith(".pdf"):
                     loader = PyPDFLoader(file_path)
                 elif file.lower().endswith(".csv"):
@@ -57,26 +54,25 @@ def process_files():
                 documents = loader.load()
                 for doc in documents:
                     doc.page_content = clean_text(doc.page_content)
-                    # Metadata Tagging: This is where RBAC is enforced
                     doc.metadata.update({"dept": dept, "source": file})
+                
                 all_docs.extend(documents)
                 print(f"✅ Assigned {file} -> Department: {dept}")
             except Exception as e:
                 print(f"❌ Error loading {file}: {e}")
 
     if all_docs:
-        # Smaller chunks (350) for high-precision retrieval
         splitter = RecursiveCharacterTextSplitter(chunk_size=350, chunk_overlap=50)
         chunks = splitter.split_documents(all_docs)
         
-        Chroma.from_documents(
+        vector_db = Chroma.from_documents(
             documents=chunks, 
             embedding=embeddings, 
             persist_directory=DB_PATH
         )
         print(f"🎉 Success! Vector database built with {len(chunks)} chunks.")
     else:
-        print("🛑 No documents found! Ensure your files are inside subfolders in 'data/'.")
+        print("🛑 No documents found! Ensure your files are inside 'data/' or subfolders.")
 
 if __name__ == "__main__":
     process_files()

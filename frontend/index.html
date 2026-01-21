@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSolve | Secure AI Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --bg-light: #f9fafb;
+            --sidebar-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --bot-bubble: #ffffff;
+            --user-bubble: #eff6ff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-light); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; padding: 24px; }
+        .logo-section { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+        .logo-icon { background: var(--primary-blue); color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; }
+
+        .user-profile { display: flex; align-items: center; gap: 12px; padding: 15px; background: #f3f4f6; border-radius: 12px; margin-bottom: 30px; }
+        .user-profile img { width: 40px; border-radius: 50%; }
+
+        .dept-selector { margin-top: 20px; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; margin-top: 8px; }
+
+        .chat-container { flex: 1; display: flex; flex-direction: column; }
+        .chat-header { padding: 20px 40px; background: white; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+        .chat-window { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+
+        .bubble { max-width: 80%; padding: 16px; border-radius: 16px; font-size: 14px; box-shadow: var(--shadow); }
+        .bot-msg { background: var(--bot-bubble); align-self: flex-start; border-bottom-left-radius: 2px; white-space: pre-wrap; }
+        .user-msg { background: var(--user-bubble); align-self: flex-end; border-bottom-right-radius: 2px; border: 1px solid #dbeafe; }
+
+        /* THE SPINNING LINE */
+        .loading-container { padding: 10px 40px; display: flex; align-items: center; gap: 15px; color: var(--text-muted); font-size: 13px; }
+        .processing-line { width: 100px; height: 4px; background: #e5e7eb; border-radius: 2px; position: relative; overflow: hidden; }
+        .processing-line::after { content: ""; position: absolute; width: 40%; height: 100%; background: var(--primary-blue); animation: moveLine 1.5s infinite ease-in-out; }
+        @keyframes moveLine { 0% { left: -40%; } 100% { left: 100%; } }
+        .hidden { display: none !important; }
+
+        .input-area { padding: 30px 40px; }
+        .input-wrapper { background: white; padding: 8px 15px; border-radius: 12px; display: flex; box-shadow: var(--shadow); }
+        input { flex: 1; border: none; outline: none; padding: 10px; }
+        button { background: var(--primary-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-section"><div class="logo-icon">F</div><h2>FinSolve</h2></div>
+        <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff">
+            <div><strong>Admin User</strong><br><small style="color: #10b981;">● Online</small></div>
+        </div>
+        <div class="dept-selector">
+            <label>Access Department:</label>
+            <select id="dept-select">
+                <option value="finance">Finance</option>
+                <option value="marketing">Marketing</option>
+                <option value="hr">HR</option>
+                <option value="engineering">Engineering</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <header class="chat-header"><h3>Corporate AI Assistant</h3></header>
+        <div id="chat-window" class="chat-window">
+            <div class="bot-msg bubble">Authentication Successful. How can I assist you with the company records?</div>
+        </div>
+        <div id="loading-container" class="loading-container hidden">
+            <div class="processing-line"></div><span>Scanning Encrypted Database...</span>
+        </div>
+        <footer class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="user-input" placeholder="Enter your query...">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const loader = document.getElementById('loading-container');
+        const deptSelect = document.getElementById('dept-select');
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            const dept = deptSelect.value;
+            if (!query) return;
+
+            // Add user message
+            chatWindow.innerHTML += `<div class="user-msg bubble">${query}</div>`;
+            userInput.value = '';
+            
+            // Show Loading Animation
+            loader.classList.remove('hidden');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                // Change "admin" to match your testing role
+                const response = await fetch(`http://127.0.0.1:8000/ask?role=admin&dept=${dept}&query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                loader.classList.add('hidden');
+                chatWindow.innerHTML += `<div class="bot-msg bubble">${data.answer}</div>`;
+            } catch (error) {
+                loader.classList.add('hidden');
+                chatWindow.innerHTML += `<div class="bot-msg bubble" style="color: red;">Error: Backend (main.py) not responding.</div>`;
+            }
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
