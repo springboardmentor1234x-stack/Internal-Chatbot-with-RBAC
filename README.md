@@ -1,4 +1,4 @@
-# Company Internal RAG Chatbot with RBAC
+# SentinelAI - Company Internal RAG Chatbot with RBAC
 
 A secure, production-ready Retrieval-Augmented Generation (RAG) chatbot system with comprehensive role-based access control, JWT authentication, and complete audit logging.
 
