@@ -1,0 +1,96 @@
+{
+  "total_documents": 10,
+  "total_chunks": 70,
+  "documents": [
+    {
+      "filename": "engineering_master_doc.md",
+      "department": "Engineering",
+      "format": "markdown",
+      "original_length": 29023,
+      "cleaned_length": 28321
+    },
+    {
+      "filename": "financial_summary.md",
+      "department": "Finance",
+      "format": "markdown",
+      "original_length": 7563,
+      "cleaned_length": 7497
+    },
+    {
+      "filename": "quarterly_financial_report.md",
+      "department": "Finance",
+      "format": "markdown",
+      "original_length": 11500,
+      "cleaned_length": 11442
+    },
+    {
+      "filename": "employee_handbook.md",
+      "department": "General",
+      "format": "markdown",
+      "original_length": 13947,
+      "cleaned_length": 13849
+    },
+    {
+      "filename": "hr_data.csv",
+      "department": "HR",
+      "format": "csv",
+      "original_length": 37346,
+      "cleaned_length": 35432
+    },
+    {
+      "filename": "marketing_report_2024.md",
+      "department": "Marketing",
+      "format": "markdown",
+      "original_length": 7259,
+      "cleaned_length": 7227
+    },
+    {
+      "filename": "marketing_report_q1_2024.md",
+      "department": "Marketing",
+      "format": "markdown",
+      "original_length": 6269,
+      "cleaned_length": 6217
+    },
+    {
+      "filename": "marketing_report_q2_2024.md",
+      "department": "Marketing",
+      "format": "markdown",
+      "original_length": 6544,
+      "cleaned_length": 6492
+    },
+    {
+      "filename": "marketing_report_q3_2024.md",
+      "department": "Marketing",
+      "format": "markdown",
+      "original_length": 6269,
+      "cleaned_length": 6217
+    },
+    {
+      "filename": "market_report_q4_2024.md",
+      "department": "Marketing",
+      "format": "markdown",
+      "original_length": 6738,
+      "cleaned_length": 6686
+    }
+  ],
+  "chunks_by_department": {
+    "Engineering": 13,
+    "Finance": 9,
+    "General": 7,
+    "HR": 25,
+    "Marketing": 16
+  },
+  "chunks_by_role": {
+    "admin": 70,
+    "c_level": 70,
+    "engineering_manager": 20,
+    "engineering_employee": 20,
+    "finance_manager": 16,
+    "finance_employee": 16,
+    "marketing_manager": 23,
+    "marketing_employee": 23,
+    "hr_manager": 32,
+    "hr_employee": 32,
+    "employee": 7
+  }
+}
