@@ -1,0 +1,156 @@
+{
+  "documents": [
+    {
+      "filename": "marketing_report_q3_2024.md",
+      "path": "../Dataset/Marketing/marketing_report_q3_2024.md",
+      "size": 6269,
+      "extension": ".md",
+      "department": "Marketing"
+    },
+    {
+      "filename": "marketing_report_q1_2024.md",
+      "path": "../Dataset/Marketing/marketing_report_q1_2024.md",
+      "size": 6269,
+      "extension": ".md",
+      "department": "Marketing"
+    },
+    {
+      "filename": "market_report_q4_2024.md",
+      "path": "../Dataset/Marketing/market_report_q4_2024.md",
+      "size": 6738,
+      "extension": ".md",
+      "department": "Marketing"
+    },
+    {
+      "filename": "marketing_report_q2_2024.md",
+      "path": "../Dataset/Marketing/marketing_report_q2_2024.md",
+      "size": 6544,
+      "extension": ".md",
+      "department": "Marketing"
+    },
+    {
+      "filename": "marketing_report_2024.md",
+      "path": "../Dataset/Marketing/marketing_report_2024.md",
+      "size": 7277,
+      "extension": ".md",
+      "department": "Marketing"
+    },
+    {
+      "filename": "financial_summary.md",
+      "path": "../Dataset/Finance/financial_summary.md",
+      "size": 7585,
+      "extension": ".md",
+      "department": "Finance"
+    },
+    {
+      "filename": "quarterly_financial_report.md",
+      "path": "../Dataset/Finance/quarterly_financial_report.md",
+      "size": 11508,
+      "extension": ".md",
+      "department": "Finance"
+    },
+    {
+      "filename": "hr_data.csv",
+      "path": "../Dataset/HR/hr_data.csv",
+      "size": 15326,
+      "extension": ".csv",
+      "department": "HR"
+    },
+    {
+      "filename": "employee_handbook.md",
+      "path": "../Dataset/General/employee_handbook.md",
+      "size": 13971,
+      "extension": ".md",
+      "department": "General"
+    },
+    {
+      "filename": "engineering_master_doc.md",
+      "path": "../Dataset/Engineering/engineering_master_doc.md",
+      "size": 29125,
+      "extension": ".md",
+      "department": "Engineering"
+    }
+  ],
+  "summary": {
+    "Marketing": {
+      "files": [
+        {
+          "name": "marketing_report_q3_2024.md",
+          "size": 6269,
+          "type": ".md"
+        },
+        {
+          "name": "marketing_report_q1_2024.md",
+          "size": 6269,
+          "type": ".md"
+        },
+        {
+          "name": "market_report_q4_2024.md",
+          "size": 6738,
+          "type": ".md"
+        },
+        {
+          "name": "marketing_report_q2_2024.md",
+          "size": 6544,
+          "type": ".md"
+        },
+        {
+          "name": "marketing_report_2024.md",
+          "size": 7277,
+          "type": ".md"
+        }
+      ],
+      "total_size": 33097,
+      "file_count": 5
+    },
+    "Finance": {
+      "files": [
+        {
+          "name": "financial_summary.md",
+          "size": 7585,
+          "type": ".md"
+        },
+        {
+          "name": "quarterly_financial_report.md",
+          "size": 11508,
+          "type": ".md"
+        }
+      ],
+      "total_size": 19093,
+      "file_count": 2
+    },
+    "HR": {
+      "files": [
+        {
+          "name": "hr_data.csv",
+          "size": 15326,
+          "type": ".csv"
+        }
+      ],
+      "total_size": 15326,
+      "file_count": 1
+    },
+    "General": {
+      "files": [
+        {
+          "name": "employee_handbook.md",
+          "size": 13971,
+          "type": ".md"
+        }
+      ],
+      "total_size": 13971,
+      "file_count": 1
+    },
+    "Engineering": {
+      "files": [
+        {
+          "name": "engineering_master_doc.md",
+          "size": 29125,
+          "type": ".md"
+        }
+      ],
+      "total_size": 29125,
+      "file_count": 1
+    }
+  }
+}

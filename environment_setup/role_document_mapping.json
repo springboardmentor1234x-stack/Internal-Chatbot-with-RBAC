@@ -1,0 +1,128 @@
+{
+  "admin": {
+    "departments": [
+      "Finance",
+      "Marketing",
+      "HR",
+      "Engineering",
+      "General"
+    ],
+    "permissions": [
+      "read",
+      "write",
+      "delete",
+      "admin"
+    ],
+    "description": "Full system access"
+  },
+  "c_level": {
+    "departments": [
+      "Finance",
+      "Marketing",
+      "HR",
+      "Engineering",
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "C-Level executives - read access to all departments"
+  },
+  "finance_manager": {
+    "departments": [
+      "Finance",
+      "General"
+    ],
+    "permissions": [
+      "read",
+      "write",
+      "delete"
+    ],
+    "description": "Finance department manager"
+  },
+  "finance_employee": {
+    "departments": [
+      "Finance",
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "Finance department employee"
+  },
+  "marketing_manager": {
+    "departments": [
+      "Marketing",
+      "General"
+    ],
+    "permissions": [
+      "read",
+      "write",
+      "delete"
+    ],
+    "description": "Marketing department manager"
+  },
+  "marketing_employee": {
+    "departments": [
+      "Marketing",
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "Marketing department employee"
+  },
+  "hr_manager": {
+    "departments": [
+      "HR",
+      "General"
+    ],
+    "permissions": [
+      "read",
+      "write",
+      "delete"
+    ],
+    "description": "HR department manager"
+  },
+  "hr_employee": {
+    "departments": [
+      "HR",
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "HR department employee"
+  },
+  "engineering_manager": {
+    "departments": [
+      "Engineering",
+      "General"
+    ],
+    "permissions": [
+      "read",
+      "write",
+      "delete"
+    ],
+    "description": "Engineering department manager"
+  },
+  "engineering_employee": {
+    "departments": [
+      "Engineering",
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "Engineering department employee"
+  },
+  "employee": {
+    "departments": [
+      "General"
+    ],
+    "permissions": [
+      "read"
+    ],
+    "description": "General employee - access to employee handbook only"
+  }
+}
