@@ -1,0 +1,11 @@
+ ORIGINAL TEXT 
+
+Engineering Department
+
+The engineering team builds backend services.
+They work on APIs and system design.
+
+
+ CLEANED TEXT 
+
+engineering department the engineering team builds backend services. they work on apis and system design.
