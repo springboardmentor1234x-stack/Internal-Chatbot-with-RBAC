@@ -1,0 +1,2 @@
+Salary details are confidential.
+Only admin users can access salary information.
