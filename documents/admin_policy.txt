@@ -1,0 +1,2 @@
+Admins can manage users and roles.
+Admins have access to all company documents.

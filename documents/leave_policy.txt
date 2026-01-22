@@ -1,0 +1,2 @@
+Employees are allowed 12 casual leaves per year.
+Leaves cannot be carried forward.
