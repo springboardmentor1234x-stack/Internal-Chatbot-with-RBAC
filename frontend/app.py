@@ -203,7 +203,7 @@ def clear_session():
 
 
 def view_document(filename):
-    """Display document content in a modal-like expander with enhanced error handling"""
+    """Display document content in a modal-like expander with enhanced error handling and audit logging"""
     # Fix path to be relative to project root, not frontend folder
     file_path = os.path.join("..", "data", "raw", filename)
 
@@ -213,11 +213,34 @@ def view_document(filename):
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
+                # Log document access for audit purposes
+                try:
+                    headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                    audit_data = {
+                        "document_name": filename,
+                        "access_type": "view",
+                        "username": st.session_state.get('username', 'unknown'),
+                        "user_role": st.session_state.get('user_role', 'Employee'),
+                        "session_id": st.session_state.get('chat_session_id', 'unknown')
+                    }
+                    
+                    # Make a simple request to log the document view (non-blocking)
+                    requests.post(
+                        f"{BACKEND_URL}/api/v1/audit/log-document-view",
+                        json=audit_data,
+                        headers=headers,
+                        timeout=2  # Short timeout to not block UI
+                    )
+                except:
+                    # Silently fail audit logging to not affect user experience
+                    pass
+
                 # Create a unique key for each document viewer
                 with st.expander(f"📖 Viewing: {filename}", expanded=True):
                     st.markdown("---")
                     st.markdown(content)
                     st.markdown("---")
+                    st.caption(f"📊 **Document Access Logged**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                     if st.button(f"Close {filename}", key=f"close_{filename}"):
                         st.rerun()
                         
@@ -501,6 +524,100 @@ def main_chat_interface():
         
         with col2:
             if st.button("🔄 Refresh", use_container_width=True, help="Refresh the interface"):
+                st.rerun()
+        
+        # Audit Dashboard for C-Level and HR users
+        if user_role in ["C-Level", "HR"]:
+            st.divider()
+            st.subheader("📊 Audit Dashboard")
+            st.caption("Available to C-Level and HR roles only")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("👥 Login Stats", use_container_width=True, help="View login statistics"):
+                    try:
+                        headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                        response = requests.get(
+                            f"{BACKEND_URL}/api/v1/audit/login-statistics?days=7",
+                            headers=headers,
+                            timeout=10
+                        )
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            st.session_state.audit_login_data = data.get("data", {})
+                            st.success("✅ Login stats loaded")
+                        else:
+                            st.error("❌ Failed to load login stats")
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+            
+            with col2:
+                if st.button("📄 Doc Access", use_container_width=True, help="View document access statistics"):
+                    try:
+                        headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+                        response = requests.get(
+                            f"{BACKEND_URL}/api/v1/audit/document-access-statistics?days=7",
+                            headers=headers,
+                            timeout=10
+                        )
+                        
+                        if response.status_code == 200:
+                            data = response.json()
+                            st.session_state.audit_doc_data = data.get("data", {})
+                            st.success("✅ Document stats loaded")
+                        else:
+                            st.error("❌ Failed to load document stats")
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+            
+            # Display audit data if loaded
+            if st.session_state.get('audit_login_data'):
+                with st.expander("👥 Login Statistics (Last 7 Days)", expanded=False):
+                    login_data = st.session_state.audit_login_data
+                    
+                    if login_data.get('total_statistics'):
+                        stats = login_data['total_statistics']
+                        col1, col2, col3, col4 = st.columns(4)
+                        
+                        with col1:
+                            st.metric("Total Logins", stats.get('successful_logins', 0))
+                        with col2:
+                            st.metric("Unique Users", stats.get('unique_users', 0))
+                        with col3:
+                            st.metric("Failed Attempts", stats.get('failed_logins', 0))
+                        with col4:
+                            success_rate = 0
+                            if stats.get('total_attempts', 0) > 0:
+                                success_rate = (stats.get('successful_logins', 0) / stats.get('total_attempts', 1)) * 100
+                            st.metric("Success Rate", f"{success_rate:.1f}%")
+                    
+                    # Show top users
+                    if login_data.get('top_users'):
+                        st.subheader("Most Active Users")
+                        for user in login_data['top_users'][:5]:
+                            st.write(f"**{user.get('username')}** ({user.get('user_role')}) - {user.get('login_count')} logins")
+            
+            if st.session_state.get('audit_doc_data'):
+                with st.expander("📄 Document Access Statistics (Last 7 Days)", expanded=False):
+                    doc_data = st.session_state.audit_doc_data
+                    
+                    # Show most accessed documents
+                    if doc_data.get('document_statistics'):
+                        st.subheader("Most Accessed Documents")
+                        for doc in doc_data['document_statistics'][:5]:
+                            st.write(f"**{doc.get('document_name')}** - {doc.get('access_count')} accesses by {doc.get('unique_users')} users")
+                    
+                    # Show access by role
+                    if doc_data.get('role_statistics'):
+                        st.subheader("Access by Role")
+                        for role in doc_data['role_statistics']:
+                            st.write(f"**{role.get('user_role')}** - {role.get('access_count')} accesses, {role.get('documents_accessed')} documents")
+            
+            if st.button("🔄 Clear Audit Data", use_container_width=True):
+                st.session_state.audit_login_data = None
+                st.session_state.audit_doc_data = None
+                st.success("✅ Audit data cleared")
                 st.rerun()
         
         # Save current session

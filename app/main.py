@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from datetime import timedelta
+from datetime import datetime, timedelta
 import jwt
 import os
 import sys
@@ -22,6 +22,7 @@ try:
         ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS,
         SECRET_KEY, ALGORITHM,
     )
+    from audit_logger import log_login_attempt
 except ImportError as e:
     print(f"Import error: {e}")
     sys.exit(1)
@@ -43,13 +44,20 @@ app.add_middleware(
 
 # AUTHENTICATION ENDPOINTS
 @app.post("/auth/login", tags=["Authentication"])
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Simple working login endpoint"""
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), request: Request = None):
+    """Simple working login endpoint with audit logging"""
     try:
         username = form_data.username.strip() if form_data.username else ""
         password = form_data.password if form_data.password else ""
         
+        # Get client info for audit logging
+        client_ip = request.client.host if request else None
+        user_agent = request.headers.get("user-agent") if request else None
+        
         if not username or not password:
+            # Log failed login attempt
+            log_login_attempt(username or "unknown", "unknown", success=False, 
+                            ip_address=client_ip, user_agent=user_agent)
             raise HTTPException(
                 status_code=400,
                 detail="Username and password are required"
@@ -59,6 +67,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         user = get_user_from_db(username)
         
         if not user:
+            # Log failed login attempt
+            log_login_attempt(username, "unknown", success=False, 
+                            ip_address=client_ip, user_agent=user_agent)
             raise HTTPException(
                 status_code=401,
                 detail="Invalid username or password"
@@ -67,6 +78,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         # Verify password
         if not PWD_CONTEXT.verify(password, user["password_hash"]):
             update_login_attempt(username, success=False)
+            # Log failed login attempt
+            log_login_attempt(username, user.get("role", "unknown"), success=False, 
+                            ip_address=client_ip, user_agent=user_agent)
             raise HTTPException(
                 status_code=401,
                 detail="Invalid username or password"
@@ -87,6 +101,14 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         # Record successful login
         update_login_attempt(username, success=True)
         
+        # Create session ID for audit logging
+        session_id = f"{username}_{int(datetime.now().timestamp())}"
+        
+        # Log successful login attempt
+        log_login_attempt(username, user["role"], success=True, 
+                        ip_address=client_ip, user_agent=user_agent, 
+                        session_id=session_id)
+        
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -101,6 +123,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     except HTTPException:
         raise
     except Exception as e:
+        # Log failed login attempt for unexpected errors
+        log_login_attempt(username if 'username' in locals() else "unknown", 
+                        "unknown", success=False, 
+                        ip_address=client_ip if 'client_ip' in locals() else None, 
+                        user_agent=user_agent if 'user_agent' in locals() else None)
         raise HTTPException(
             status_code=500,
             detail=f"Login failed: {str(e)}"

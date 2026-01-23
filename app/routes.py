@@ -7,9 +7,11 @@ from datetime import datetime
 try:
     from .rag_pipeline_enhanced_real import run_pipeline
     from .auth_utils import get_current_user, check_permission
+    from .audit_logger import get_login_statistics, get_document_access_statistics, get_audit_dashboard_data
 except ImportError:
     from rag_pipeline_enhanced_real import run_pipeline
     from auth_utils import get_current_user, check_permission
+    from audit_logger import get_login_statistics, get_document_access_statistics, get_audit_dashboard_data
 
 router = APIRouter()
 
@@ -41,12 +43,15 @@ async def chat_endpoint(
     request: QueryRequest, current_user: dict = Depends(get_current_user)
 ):
     """
-    Simple working chat endpoint for your original project
+    Simple working chat endpoint for your original project with audit logging
     """
     try:
         # Extract user information
         user_role = current_user.get("role", "Employee")
         username = current_user.get("username", "User")
+        
+        # Create session ID for audit tracking
+        session_id = f"{username}_{int(datetime.now().timestamp())}"
         
         # Check basic permissions
         if not check_permission(user_role, "read:general"):
@@ -55,8 +60,8 @@ async def chat_endpoint(
                 detail=f"Access denied: Role '{user_role}' does not have search permissions",
             )
 
-        # Use RAG pipeline with role-based access
-        rag_result = run_pipeline(request.query, user_role)
+        # Use RAG pipeline with role-based access and audit logging
+        rag_result = run_pipeline(request.query, user_role, username, session_id)
         
         # Format the response based on available documents
         if rag_result and rag_result.get("response"):
@@ -132,6 +137,7 @@ async def chat_endpoint(
             "improvement_suggestions": formatted_result.get("improvement_suggestions", []),
             "query_optimization": formatted_result.get("query_optimization", {}),
             "timestamp": datetime.now().isoformat(),
+            "audit_logged": True  # Indicate that access was logged
         }
 
     except HTTPException:
@@ -181,3 +187,91 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
         "role": current_user.get("role", "Employee"),
         "permissions": ["read_documents", "chat_access"]
     }
+
+
+# Audit endpoints for administrators
+@router.get("/audit/login-statistics")
+async def get_login_audit_statistics(
+    days: int = 30, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Get login statistics (C-Level and HR access only)"""
+    user_role = current_user.get("role", "Employee")
+    
+    # Only C-Level and HR can access audit logs
+    if user_role not in ["C-Level", "HR"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: Only C-Level and HR roles can access audit logs"
+        )
+    
+    try:
+        stats = get_login_statistics(days)
+        return {
+            "success": True,
+            "data": stats,
+            "requested_by": current_user.get("username"),
+            "access_level": user_role
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve login statistics: {str(e)}"
+        )
+
+
+@router.get("/audit/document-access-statistics")
+async def get_document_audit_statistics(
+    days: int = 30,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get document access statistics (C-Level and HR access only)"""
+    user_role = current_user.get("role", "Employee")
+    
+    # Only C-Level and HR can access audit logs
+    if user_role not in ["C-Level", "HR"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: Only C-Level and HR roles can access audit logs"
+        )
+    
+    try:
+        stats = get_document_access_statistics(days)
+        return {
+            "success": True,
+            "data": stats,
+            "requested_by": current_user.get("username"),
+            "access_level": user_role
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve document access statistics: {str(e)}"
+        )
+
+
+@router.get("/audit/dashboard")
+async def get_audit_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive audit dashboard data (C-Level and HR access only)"""
+    user_role = current_user.get("role", "Employee")
+    
+    # Only C-Level and HR can access audit logs
+    if user_role not in ["C-Level", "HR"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: Only C-Level and HR roles can access audit dashboard"
+        )
+    
+    try:
+        dashboard_data = get_audit_dashboard_data()
+        return {
+            "success": True,
+            "data": dashboard_data,
+            "requested_by": current_user.get("username"),
+            "access_level": user_role
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve audit dashboard data: {str(e)}"
+        )

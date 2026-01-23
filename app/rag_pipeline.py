@@ -103,22 +103,40 @@ class FinSolveRAGPipeline:
 
     def run_pipeline(self, question: str):
         if not os.path.exists(CHROMA_PATH):
+            print(f"Vector store not found at {CHROMA_PATH}")
             return []
 
         db = Chroma(persist_directory=CHROMA_PATH, embedding_function=self.embeddings)
 
-        # Corrected Chroma Filter for RBAC
-        # This ensures the user_role is present in the allowed_roles list for that chunk
-        chroma_filter = {"allowed_roles": {"$in": [self.user_role]}}
-
-        retriever = db.as_retriever(search_kwargs={"k": 5, "filter": chroma_filter})
-
-        docs = retriever.invoke(question)
+        # Get all documents first, then filter by role
+        retriever = db.as_retriever(search_kwargs={"k": 20})  # Get more docs to filter
+        all_docs = retriever.invoke(question)
+        
+        # Filter documents based on user role
+        filtered_docs = []
+        for doc in all_docs:
+            allowed_roles = doc.metadata.get("allowed_roles", [])
+            if self.user_role in allowed_roles:
+                filtered_docs.append(doc)
+        
+        # Limit to top 5 results after filtering
+        filtered_docs = filtered_docs[:5]
+        
+        print(f"User role: {self.user_role}")
+        print(f"Found {len(all_docs)} total documents, {len(filtered_docs)} accessible to user")
+        
+        if not filtered_docs:
+            print(f"No documents accessible to role: {self.user_role}")
+            return []
 
         # Return structured data for routes.py
         return [
-            {"doc_id": d.metadata.get("source"), "content": d.page_content}
-            for d in docs
+            {
+                "doc_id": d.metadata.get("source"), 
+                "content": d.page_content,
+                "allowed_roles": d.metadata.get("allowed_roles", [])
+            }
+            for d in filtered_docs
         ]
 
 

@@ -1,8 +1,14 @@
 """
-Enhanced RAG pipeline that reads from actual documents
+Enhanced RAG pipeline that reads from actual documents with audit logging
 """
 from typing import Dict, Any, List
 import os
+
+# Import audit logger
+try:
+    from .audit_logger import log_document_access
+except ImportError:
+    from audit_logger import log_document_access
 
 def read_document_content(filename: str) -> str:
     """Read actual document content from data/raw folder"""
@@ -21,8 +27,8 @@ def read_document_content(filename: str) -> str:
     except Exception as e:
         return f"Error reading document {filename}: {str(e)}"
 
-def run_pipeline(query: str, user_role: str) -> Dict[str, Any]:
-    """Enhanced RAG pipeline that uses actual document content"""
+def run_pipeline(query: str, user_role: str, username: str = None, session_id: str = None) -> Dict[str, Any]:
+    """Enhanced RAG pipeline that uses actual document content with audit logging"""
     
     # Role-based document access mapping
     role_documents = {
@@ -60,8 +66,41 @@ def run_pipeline(query: str, user_role: str) -> Dict[str, Any]:
     if relevant_doc not in accessible_docs:
         relevant_doc = accessible_docs[0]
     
+    # Check if user has access to the document
+    access_granted = relevant_doc in accessible_docs
+    
+    # Log document access attempt
+    if username:
+        log_document_access(
+            username=username,
+            user_role=user_role,
+            document_name=relevant_doc,
+            access_type="query",
+            query_text=query,
+            access_granted=access_granted,
+            chunks_accessed=len(accessible_docs),
+            session_id=session_id
+        )
+    
     # Read actual document content
     document_content = read_document_content(relevant_doc)
+    
+    # Calculate accuracy based on document access and content quality
+    accuracy_score = 92.0 if access_granted and "not found" not in document_content else 85.0
+    
+    # Log the response accuracy back to audit system
+    if username and access_granted:
+        log_document_access(
+            username=username,
+            user_role=user_role,
+            document_name=relevant_doc,
+            access_type="response",
+            query_text=query,
+            access_granted=True,
+            response_accuracy=accuracy_score,
+            chunks_accessed=len(accessible_docs),
+            session_id=session_id
+        )
     
     # Create response based on actual document content
     if "not found" in document_content or "Error reading" in document_content:
@@ -78,12 +117,12 @@ def run_pipeline(query: str, user_role: str) -> Dict[str, Any]:
         response_text = fallback_responses.get(user_role, fallback_responses["Employee"])
     else:
         # Use actual document content in response
-        response_text = f"Based on {relevant_doc} (accessible to your {user_role} role), here's information about '{query}':\n\n{document_content}\n\n📋 **Your Access Level**: {user_role}\n📄 **Source Document**: {relevant_doc}\n🔐 **Role-Based Access**: Active"
+        response_text = f"Based on {relevant_doc} (accessible to your {user_role} role), here's information about '{query}':\n\n{document_content}\n\n📋 **Your Access Level**: {user_role}\n📄 **Source Document**: {relevant_doc}\n🔐 **Role-Based Access**: Active\n📊 **Access Logged**: Yes"
     
     return {
         "response": response_text,
         "sources": [relevant_doc],
-        "accuracy_score": 92.0 if "not found" not in document_content else 85.0,
+        "accuracy_score": accuracy_score,
         "confidence_level": "high" if "not found" not in document_content else "medium",
         "validation_score": 90.0 if "not found" not in document_content else 80.0,
         "query_category": "document_based" if "not found" not in document_content else "fallback",

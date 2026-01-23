@@ -1,63 +1,100 @@
 #!/usr/bin/env python3
 """
-Main entry point for FinSolve Internal Chatbot
-Run both backend and frontend together
-Developed by: Sreevidya P S
+Simple run script for FinSolve - works from project root
 """
 import subprocess
 import sys
-import time
 import os
 import threading
-from pathlib import Path
+import time
 
-def run_backend():
-    """Run the FastAPI backend"""
-    print("🚀 Starting Backend (FastAPI)...")
+def start_backend():
+    """Start the backend server"""
+    print("🚀 Starting Backend...")
+    
+    # Get absolute paths from the original working directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    app_dir = os.path.join(script_dir, "app")
+    
+    if not os.path.exists(app_dir):
+        print(f"❌ Error: app directory not found at {app_dir}")
+        return
+    
+    os.chdir(app_dir)
     try:
-        subprocess.run([sys.executable, "app/main.py"], check=True)
+        subprocess.run([
+            sys.executable, "-m", "uvicorn", 
+            "main:app", 
+            "--host", "127.0.0.1", 
+            "--port", "8000", 
+            "--reload"
+        ])
     except KeyboardInterrupt:
-        print("\n🛑 Backend stopped by user")
+        print("\n🛑 Backend stopped")
     except Exception as e:
         print(f"❌ Backend error: {e}")
+    finally:
+        os.chdir(script_dir)
 
-def run_frontend():
-    """Run the Streamlit frontend"""
-    print("🎨 Starting Frontend (Streamlit)...")
+def start_frontend():
+    """Start the frontend server"""
+    print("🎨 Starting Frontend...")
+    
+    # Get absolute paths from the original working directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    frontend_dir = os.path.join(script_dir, "frontend")
+    
+    if not os.path.exists(frontend_dir):
+        print(f"❌ Error: frontend directory not found at {frontend_dir}")
+        return
+    
+    os.chdir(frontend_dir)
     try:
-        time.sleep(3)  # Wait for backend to start
         subprocess.run([
-            sys.executable, "-m", "streamlit", "run", "frontend/app.py",
-            "--server.port=8501",
-            "--server.address=localhost"
-        ], check=True)
+            sys.executable, "-m", "streamlit", "run", 
+            "app.py", 
+            "--server.port", "8501",
+            "--server.address", "127.0.0.1"
+        ])
     except KeyboardInterrupt:
-        print("\n🛑 Frontend stopped by user")
+        print("\n🛑 Frontend stopped")
     except Exception as e:
         print(f"❌ Frontend error: {e}")
+    finally:
+        os.chdir(script_dir)
 
 def main():
-    """Main function to run both services"""
-    print("🔥 FinSolve Internal Chatbot with RBAC")
-    print("👩‍💻 Developed by: Sreevidya P S")
-    print("=" * 50)
-    print("📍 Backend: http://127.0.0.1:8000")
-    print("📍 Frontend: http://localhost:8501")
+    print("🤖 FinSolve Chatbot - Quick Start")
+    print("=" * 40)
+    print(f"📁 Working directory: {os.getcwd()}")
+    print("🌐 Backend: http://127.0.0.1:8000")
+    print("🎨 Frontend: http://127.0.0.1:8501")
     print("📚 API Docs: http://127.0.0.1:8000/docs")
-    print("⏹️  Press Ctrl+C to stop both services")
-    print("=" * 50)
+    print("=" * 40)
     
+    # Check if we're in the right directory
+    if not os.path.exists("app") or not os.path.exists("frontend"):
+        print("❌ Error: Please run this script from the project root directory")
+        print("💡 Make sure you're in the finsolve-chatbot folder")
+        print(f"📁 Current directory: {os.getcwd()}")
+        print("📁 Expected files: app/, frontend/, project.db")
+        return
+    
+    print("Press Ctrl+C to stop both services")
+    print()
+    
+    # Start backend in thread
+    backend_thread = threading.Thread(target=start_backend, daemon=True)
+    backend_thread.start()
+    
+    # Wait for backend to start
+    time.sleep(3)
+    
+    # Start frontend in main thread
     try:
-        # Start backend in a separate thread
-        backend_thread = threading.Thread(target=run_backend, daemon=True)
-        backend_thread.start()
-        
-        # Start frontend in main thread
-        run_frontend()
-        
+        start_frontend()
     except KeyboardInterrupt:
-        print("\n👋 Shutting down both services...")
-        print("✅ Application stopped successfully!")
+        print("\n🛑 Shutting down...")
 
 if __name__ == "__main__":
     main()
