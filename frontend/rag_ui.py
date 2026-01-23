@@ -5,7 +5,6 @@ from datetime import datetime
 from auth_ui import trigger_logout
 from urllib.parse import quote
 from pathlib import Path
-from admin_audit_ui import admin_audit_ui
 
 API_BASE = "http://127.0.0.1:8000"
 
@@ -35,9 +34,6 @@ def ensure_session_state():
 
     if "scroll_to" not in st.session_state:
         st.session_state.scroll_to = None
-
-    if "view" not in st.session_state:
-        st.session_state.view = "chat"
 
     # 🔑 In-memory application cache
     if "query_cache" not in st.session_state:
@@ -88,13 +84,6 @@ def rag_ui():
 
     headers = {"Authorization": f"Bearer {token}"}
 
-    # =====================================================
-    # Admin Audit View
-    # =====================================================
-    if st.session_state.view == "audit":
-        admin_audit_ui()
-        return
-
     # ---------------- Header ----------------
     st.title("💬 Internal Knowledge Chat")
     st.caption(f"👤 **{username}** | Role: **{role}**")
@@ -114,9 +103,10 @@ def rag_ui():
         st.write(f"**Role:** {role}")
         st.divider()
 
+        # ✅ Admin navigation (delegated to app.py)
         if "admin" in role.lower():
             if st.button("📜 View Audit Logs"):
-                st.session_state.view = "audit"
+                st.session_state.page = "admin_audit"
                 st.rerun()
 
         st.divider()
@@ -134,7 +124,7 @@ def rag_ui():
             st.session_state.scroll_to = None
             st.rerun()
 
-        # ✅ Clear Cache Button (MANDATORY)
+        # ✅ Clear Cache Button
         if st.button("🧹 Clear cache"):
             st.session_state.query_cache.clear()
             st.success("Cache cleared successfully!")

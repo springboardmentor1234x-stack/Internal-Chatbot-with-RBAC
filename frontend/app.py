@@ -47,6 +47,11 @@ if "role" not in st.session_state:
 if "token_expiry" not in st.session_state:
     st.session_state.token_expiry = None
 
+# 👉 PAGE STATE (ADDED – REQUIRED FOR NAVIGATION)
+if "page" not in st.session_state:
+    st.session_state.page = "chat"  # default view
+
+
 # -------------------------------------------------
 # 🚪 GLOBAL LOGOUT HANDLER
 # -------------------------------------------------
@@ -79,13 +84,22 @@ if expiry and datetime.now() > expiry:
 # -------------------------------------------------
 try:
     # -------------------------------------------------
-    # 🔐 ROUTING LOGIC (AUTH GATE)
+    # 🔐 ROUTING LOGIC (AUTH GATE + PAGE ROUTER)
     # -------------------------------------------------
     if not st.session_state.logged_in or not st.session_state.access_token:
         login_ui()
         st.stop()
     else:
-        rag_ui()
+        if st.session_state.page == "chat":
+            rag_ui()
+
+        elif st.session_state.page == "admin_audit":
+            admin_audit_ui()
+
+        else:
+            # Failsafe
+            st.session_state.page = "chat"
+            st.rerun()
 
 except Exception:
     # NEVER expose stack traces to user

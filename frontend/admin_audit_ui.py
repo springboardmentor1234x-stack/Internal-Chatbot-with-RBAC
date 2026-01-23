@@ -59,6 +59,13 @@ def admin_audit_ui():
     st.title("📜 Audit Logs")
     st.caption("Read-only system activity logs (Admin only)")
 
+    # 🔁 Navigation (NEW – SAFE)
+    if st.button("⬅ Back to Chat"):
+        st.session_state.page = "chat"
+        st.rerun()
+
+    st.divider()
+
     # ---------------- Fetch Logs ----------------
     with st.spinner("Loading audit logs..."):
         logs = fetch_audit_logs(headers)
@@ -105,4 +112,3 @@ def admin_audit_ui():
                     st.markdown(f"- {doc}")
             else:
                 st.caption("No documents associated.")
-
