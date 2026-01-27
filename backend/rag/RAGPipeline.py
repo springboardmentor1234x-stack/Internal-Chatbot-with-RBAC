@@ -73,6 +73,7 @@ class CompleteRAGPipeline:
         
         # ========== STEP 2: QUERY EXPANSION ==========
         query_variants = self.normalizer.generate_variants(normalized_query)
+        # query_variants.insert(0, query)
         self.audit_logger.log_query_variants(query_variants)
         
         # ========== STEP 3: RBAC RESOLUTION ==========

@@ -112,12 +112,7 @@ class QueryNormalizer:
         key_terms = self._extract_key_terms(query)
         if key_terms and key_terms != query:
             variants.append(key_terms)
-        
-        # Variant 3: Expand with synonyms
-        expanded = self._add_domain_synonyms(query)
-        if expanded and expanded != query:
-            variants.append(expanded)
-        
+
         # Remove duplicates while preserving order
         seen = set()
         unique_variants = []
@@ -157,27 +152,3 @@ class QueryNormalizer:
         
         return " ".join(key_words) if key_words else query
     
-    def _add_domain_synonyms(self, query: str) -> str:
-        """Expand query with domain-specific synonyms"""
-        synonym_map = {
-            'revenue': 'revenue income earnings',
-            'profit': 'profit earnings margin',
-            'cost': 'cost expense expenditure',
-            'employee': 'employee staff personnel',
-            'customer': 'customer client user',
-            'growth': 'growth increase expansion'
-        }
-        
-        words = query.split()
-        expanded_words = []
-        
-        for word in words:
-            if word in synonym_map:
-                expanded_words.append(synonym_map[word])
-            else:
-                expanded_words.append(word)
-        
-        expanded = " ".join(expanded_words)
-        
-        # Only return if significantly different
-        return expanded if len(expanded) > len(query) * 1.2 else query

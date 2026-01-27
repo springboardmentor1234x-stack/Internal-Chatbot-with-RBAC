@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional
 from sentence_transformers import SentenceTransformer
 from services.audit_logger import AuditLogger
 from functools import lru_cache
+from sklearn.metrics.pairwise import cosine_similarity
 
 class VectorRetriever:
     """Vector-based document retrieval using ChromaDB"""
@@ -53,7 +54,7 @@ class VectorRetriever:
         if query in self._query_embedding_cache:
             return self._query_embedding_cache[query]
 
-        embedding = self.model.encode([query])[0].reshape(1, -1)
+        embedding = self.model.encode([query], normalize_embeddings=True)[0].reshape(1, -1)
         self._query_embedding_cache[query] = embedding
         return embedding
     
@@ -61,7 +62,7 @@ class VectorRetriever:
         self,
         query_embedding: np.ndarray,
         departments: List[str],
-        top_k: int = 10
+        top_k: int
     ) -> List[Dict[str, Any]]:
         """
         Search across multiple departments using ChromaDB collections
@@ -109,15 +110,21 @@ class VectorRetriever:
                         query_embeddings=[query_embedding.flatten().tolist()],
                         n_results=top_k
                     )
-                    
                     # Process results
                     for i in range(len(results["ids"][0])):
                         chunk_id = results["ids"][0][i]
-                        distance = results["distances"][0][i]
-                        similarity = 1 - distance  # Convert distance to similarity
-                        
+
                         chunk_data = self.chunk_lookup.get(chunk_id, {})
                         metadata = self.metadata_lookup.get(chunk_id, {})
+                        chunk_embedding = self.embedding_lookup.get(chunk_id)
+
+                        if chunk_embedding is None:
+                            continue
+
+                        similarity = cosine_similarity(
+                            query_embedding.reshape(1, -1),
+                            chunk_embedding.reshape(1, -1)
+                        )[0][0]
                         
                         all_results.append({
                             "id": chunk_id,
