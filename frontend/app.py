@@ -267,23 +267,16 @@ def view_document(filename):
 
 
 def check_user_access(filename, user_role):
-    """Check if user has access to a specific document"""
+    """Check if user has access to a specific document - Strict role-based access"""
+    # Strict document permissions - each role gets only their specific documents
     document_permissions = {
         "quarterly_financial_report.md": ["Finance", "C-Level"],
         "market_report_q4_2024.md": ["Marketing", "C-Level"],
-        "employee_handbook.md": [
-            "HR",
-            "Employee",
-            "C-Level",
-            "Finance",
-            "Marketing",
-            "Engineering",
-            "Intern",
-        ],
+        "employee_handbook.md": ["HR", "C-Level"],  # Only HR and C-Level can access
         "engineering_master_doc.md": ["Engineering", "C-Level"],
     }
 
-    allowed_roles = document_permissions.get(filename, ["Employee"])
+    allowed_roles = document_permissions.get(filename, [])  # No default access
     return user_role in allowed_roles
 
 
@@ -985,23 +978,24 @@ def main_chat_interface():
     
     with st.expander("📄 Available Documents (Click to View)", expanded=False):
         st.info("💡 **Tip:** Click on any document you have access to for detailed viewing")
+        st.warning("🔐 **Strict Access Control**: Each role can only access their specific documents")
         
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("� FinaQncial Documents")
+            st.subheader("💰 Financial Documents")
             if check_user_access("quarterly_financial_report.md", user_role):
                 if st.button("📈 Quarterly Financial Report", key="fin_report"):
                     view_document("quarterly_financial_report.md")
             else:
-                st.write("�  Access Denied - Finance role required")
+                st.write("🔒 Access Denied - Finance or C-Level role required")
 
-            st.subheader("� HR  Documents")
+            st.subheader("👥 HR Documents")
             if check_user_access("employee_handbook.md", user_role):
                 if st.button("📋 Employee Handbook", key="hr_handbook"):
                     view_document("employee_handbook.md")
             else:
-                st.write("🔒 Access Denied - HR role required")
+                st.write("🔒 Access Denied - HR or C-Level role required")
 
         with col2:
             st.subheader("📈 Marketing Documents")
@@ -1009,14 +1003,33 @@ def main_chat_interface():
                 if st.button("📊 Q4 2024 Market Report", key="marketing_report"):
                     view_document("market_report_q4_2024.md")
             else:
-                st.write("🔒 Access Denied - Marketing role required")
+                st.write("🔒 Access Denied - Marketing or C-Level role required")
 
             st.subheader("⚙️ Engineering Documents")
             if check_user_access("engineering_master_doc.md", user_role):
                 if st.button("🔧 Engineering Master Doc", key="eng_doc"):
                     view_document("engineering_master_doc.md")
             else:
-                st.write("🔒 Access Denied - Engineering role required")
+                st.write("🔒 Access Denied - Engineering or C-Level role required")
+        
+        # Show user's access summary
+        st.divider()
+        st.subheader(f"📋 Your Access Summary ({user_role})")
+        
+        access_summary = {
+            "C-Level": "✅ Full access to all documents",
+            "Finance": "✅ Financial reports only",
+            "Marketing": "✅ Marketing reports only", 
+            "HR": "✅ Employee handbook only",
+            "Engineering": "✅ Technical documentation only",
+            "Employee": "❌ No specific document access - general information only",
+            "Intern": "❌ No specific document access - training materials only"
+        }
+        
+        st.info(access_summary.get(user_role, "❌ No document access"))
+        
+        if user_role in ["Employee", "Intern"]:
+            st.warning("💡 **Note**: Your role has limited access. Contact your administrator if you need access to specific documents.")
 
     # Enhanced chat input with processing state and error handling
     if not st.session_state.get('processing', False):
