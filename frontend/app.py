@@ -202,9 +202,54 @@ def clear_session():
     initialize_session_state()
 
 
-def view_document(filename):
-    """Display document content in a modal-like expander with enhanced error handling and audit logging"""
-    # Fix path to be relative to project root, not frontend folder
+def view_document(filename, user_role=None):
+    """Display document content with proper access control and audit logging"""
+    
+    # Get user role from session state if not provided
+    if user_role is None:
+        user_role = st.session_state.get('user_role', 'Employee')
+    
+    # Check access permissions first
+    if not check_user_access(filename, user_role):
+        st.error(f"🔒 **Access Denied**")
+        st.warning(f"Your role ({user_role}) does not have permission to view '{filename}'")
+        
+        # Show what roles can access this document
+        document_permissions = {
+            "quarterly_financial_report.md": ["Finance", "C-Level"],
+            "market_report_q4_2024.md": ["Marketing", "C-Level"],
+            "employee_handbook.md": ["HR", "Employee", "C-Level", "Finance", "Marketing", "Engineering", "Intern"],
+            "engineering_master_doc.md": ["Engineering", "C-Level"],
+            "hr_data.csv": ["HR", "C-Level"],
+        }
+        
+        allowed_roles = document_permissions.get(filename, [])
+        if allowed_roles:
+            st.info(f"📋 **Required roles**: {', '.join(allowed_roles)}")
+        
+        # Log denied access attempt
+        try:
+            headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
+            audit_data = {
+                "document_name": filename,
+                "access_type": "view_denied",
+                "username": st.session_state.get('username', 'unknown'),
+                "user_role": user_role,
+                "session_id": st.session_state.get('chat_session_id', 'unknown')
+            }
+            
+            requests.post(
+                f"{BACKEND_URL}/api/v1/audit/log-document-view",
+                json=audit_data,
+                headers=headers,
+                timeout=2
+            )
+        except:
+            pass  # Silently fail audit logging
+        
+        return
+    
+    # User has access, proceed with document viewing
     file_path = os.path.join("..", "data", "raw", filename)
 
     try:
@@ -213,36 +258,52 @@ def view_document(filename):
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
-                # Log document access for audit purposes
+                # Log successful document access for audit purposes
                 try:
                     headers = {"Authorization": f"Bearer {st.session_state.get('access_token')}"}
                     audit_data = {
                         "document_name": filename,
-                        "access_type": "view",
+                        "access_type": "view_granted",
                         "username": st.session_state.get('username', 'unknown'),
-                        "user_role": st.session_state.get('user_role', 'Employee'),
+                        "user_role": user_role,
                         "session_id": st.session_state.get('chat_session_id', 'unknown')
                     }
                     
-                    # Make a simple request to log the document view (non-blocking)
                     requests.post(
                         f"{BACKEND_URL}/api/v1/audit/log-document-view",
                         json=audit_data,
                         headers=headers,
-                        timeout=2  # Short timeout to not block UI
+                        timeout=2
                     )
                 except:
-                    # Silently fail audit logging to not affect user experience
-                    pass
+                    pass  # Silently fail audit logging
 
-                # Create a unique key for each document viewer
-                with st.expander(f"📖 Viewing: {filename}", expanded=True):
-                    st.markdown("---")
-                    st.markdown(content)
-                    st.markdown("---")
-                    st.caption(f"📊 **Document Access Logged**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                    if st.button(f"Close {filename}", key=f"close_{filename}"):
-                        st.rerun()
+                # Display document content in a new container (not nested expander)
+                st.success(f"✅ **Access Granted** - Your role ({user_role}) can view this document")
+                st.info(f"📖 **Viewing**: {filename}")
+                st.markdown("---")
+                
+                # Create a scrollable text area for the document content
+                st.text_area(
+                    f"📄 Document Content: {filename}",
+                    content,
+                    height=400,
+                    key=f"doc_content_{filename}",
+                    disabled=True
+                )
+                
+                st.markdown("---")
+                st.caption(f"📊 **Document Access Logged**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                st.caption(f"� **Access Level**: {user_role}")
+                
+                # Add download button
+                st.download_button(
+                    label=f"📥 Download {filename}",
+                    data=content,
+                    file_name=filename,
+                    mime="text/markdown",
+                    key=f"download_{filename}"
+                )
                         
             except UnicodeDecodeError:
                 st.error(f"❌ Cannot read {filename}: File encoding not supported")
@@ -252,32 +313,42 @@ def view_document(filename):
                 st.info("💡 Check file permissions or contact administrator")
             except Exception as e:
                 st.error(f"❌ Error reading {filename}: {str(e)}")
-                frontend_error_handler.handle_request_error(
-                    e, f"reading document {filename}", show_user_message=False
-                )
         else:
-            st.error(f"❌ Document {filename} not found at {file_path}")
+            st.error(f"❌ Document {filename} not found")
             st.info("💡 Contact administrator to ensure document is available")
             
     except Exception as e:
         st.error(f"❌ Unexpected error accessing document: {str(e)}")
-        frontend_error_handler.handle_request_error(
-            e, f"accessing document {filename}", show_user_message=False
-        )
+        print(f"Document access error: {e}")  # Log for debugging
 
 
 def check_user_access(filename, user_role):
-    """Check if user has access to a specific document - Strict role-based access"""
-    # Strict document permissions - each role gets only their specific documents
+    """Check if user has access to a specific document with enhanced role-based control"""
+    
+    # Comprehensive document permissions mapping
     document_permissions = {
         "quarterly_financial_report.md": ["Finance", "C-Level"],
         "market_report_q4_2024.md": ["Marketing", "C-Level"],
-        "employee_handbook.md": ["HR", "C-Level"],  # Only HR and C-Level can access
+        "employee_handbook.md": ["HR", "Employee", "C-Level", "Finance", "Marketing", "Engineering", "Intern"],
         "engineering_master_doc.md": ["Engineering", "C-Level"],
+        "hr_data.csv": ["HR", "C-Level"],  # HR specific data
     }
-
-    allowed_roles = document_permissions.get(filename, [])  # No default access
-    return user_role in allowed_roles
+    
+    # Get allowed roles for this document
+    allowed_roles = document_permissions.get(filename, [])
+    
+    # If no specific permissions defined, deny access (secure by default)
+    if not allowed_roles:
+        return False
+    
+    # Check if user's role is in allowed roles
+    has_access = user_role in allowed_roles
+    
+    # Log access attempt for audit
+    if not has_access:
+        print(f"Access denied: {user_role} tried to access {filename}")
+    
+    return has_access
 
 
 def login():
@@ -905,12 +976,20 @@ def main_chat_interface():
                                     with col1:
                                         for metric, score in list(metrics.items())[:3]:
                                             metric_name = metric.replace("_", " ").title()
-                                            st.metric(metric_name, f"{score:.1f}%")
+                                            try:
+                                                score_val = float(score) if isinstance(score, (str, int, float)) else 0.0
+                                                st.metric(metric_name, f"{score_val:.1f}%")
+                                            except (ValueError, TypeError):
+                                                st.metric(metric_name, str(score))
                                     
                                     with col2:
                                         for metric, score in list(metrics.items())[3:]:
                                             metric_name = metric.replace("_", " ").title()
-                                            st.metric(metric_name, f"{score:.1f}%")
+                                            try:
+                                                score_val = float(score) if isinstance(score, (str, int, float)) else 0.0
+                                                st.metric(metric_name, f"{score_val:.1f}%")
+                                            except (ValueError, TypeError):
+                                                st.metric(metric_name, str(score))
                                 
                                 # Improvement suggestions
                                 if message.get("improvement_suggestions"):
@@ -978,7 +1057,7 @@ def main_chat_interface():
     
     with st.expander("📄 Available Documents (Click to View)", expanded=False):
         st.info("💡 **Tip:** Click on any document you have access to for detailed viewing")
-        st.warning("🔐 **Strict Access Control**: Each role can only access their specific documents")
+        st.info(f"🔐 **Your Access Level**: {user_role}")
         
         col1, col2 = st.columns(2)
 
@@ -986,50 +1065,52 @@ def main_chat_interface():
             st.subheader("💰 Financial Documents")
             if check_user_access("quarterly_financial_report.md", user_role):
                 if st.button("📈 Quarterly Financial Report", key="fin_report"):
-                    view_document("quarterly_financial_report.md")
+                    view_document("quarterly_financial_report.md", user_role)
             else:
                 st.write("🔒 Access Denied - Finance or C-Level role required")
 
             st.subheader("👥 HR Documents")
             if check_user_access("employee_handbook.md", user_role):
                 if st.button("📋 Employee Handbook", key="hr_handbook"):
-                    view_document("employee_handbook.md")
+                    view_document("employee_handbook.md", user_role)
             else:
-                st.write("🔒 Access Denied - HR or C-Level role required")
+                st.write("🔒 Access Denied - All roles should have access to this")
 
         with col2:
             st.subheader("📈 Marketing Documents")
             if check_user_access("market_report_q4_2024.md", user_role):
                 if st.button("📊 Q4 2024 Market Report", key="marketing_report"):
-                    view_document("market_report_q4_2024.md")
+                    view_document("market_report_q4_2024.md", user_role)
             else:
                 st.write("🔒 Access Denied - Marketing or C-Level role required")
 
             st.subheader("⚙️ Engineering Documents")
             if check_user_access("engineering_master_doc.md", user_role):
                 if st.button("🔧 Engineering Master Doc", key="eng_doc"):
-                    view_document("engineering_master_doc.md")
+                    view_document("engineering_master_doc.md", user_role)
             else:
                 st.write("🔒 Access Denied - Engineering or C-Level role required")
         
-        # Show user's access summary
+        # Show available documents for current role
         st.divider()
-        st.subheader(f"📋 Your Access Summary ({user_role})")
+        st.subheader(f"📋 Documents Available to {user_role} Role:")
         
-        access_summary = {
-            "C-Level": "✅ Full access to all documents",
-            "Finance": "✅ Financial reports only",
-            "Marketing": "✅ Marketing reports only", 
-            "HR": "✅ Employee handbook only",
-            "Engineering": "✅ Technical documentation only",
-            "Employee": "❌ No specific document access - general information only",
-            "Intern": "❌ No specific document access - training materials only"
+        available_docs = []
+        all_docs = {
+            "quarterly_financial_report.md": "📈 Quarterly Financial Report",
+            "market_report_q4_2024.md": "📊 Q4 2024 Market Report", 
+            "employee_handbook.md": "📋 Employee Handbook",
+            "engineering_master_doc.md": "🔧 Engineering Master Doc"
         }
         
-        st.info(access_summary.get(user_role, "❌ No document access"))
+        for doc, display_name in all_docs.items():
+            if check_user_access(doc, user_role):
+                available_docs.append(f"✅ {display_name}")
+            else:
+                available_docs.append(f"❌ {display_name}")
         
-        if user_role in ["Employee", "Intern"]:
-            st.warning("💡 **Note**: Your role has limited access. Contact your administrator if you need access to specific documents.")
+        for doc in available_docs:
+            st.write(doc)
 
     # Enhanced chat input with processing state and error handling
     if not st.session_state.get('processing', False):

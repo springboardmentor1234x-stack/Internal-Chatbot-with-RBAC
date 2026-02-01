@@ -1,5 +1,5 @@
 """
-Enhanced RAG pipeline that reads from actual documents with audit logging
+Enhanced RAG pipeline that reads from actual documents with audit logging and strict access control
 """
 from typing import Dict, Any, List
 import os
@@ -9,6 +9,81 @@ try:
     from .audit_logger import log_document_access
 except ImportError:
     from audit_logger import log_document_access
+
+def create_access_denied_response(query: str, user_role: str, requested_content: str, username: str = None, session_id: str = None) -> Dict[str, Any]:
+    """Create a response when user doesn't have access to requested documents"""
+    
+    # Log denied access attempt
+    if username:
+        log_document_access(
+            username=username,
+            user_role=user_role,
+            document_name=requested_content,
+            access_type="query_denied",
+            query_text=query,
+            access_granted=False,
+            chunks_accessed=0,
+            session_id=session_id
+        )
+    
+    response_text = f"🔒 **Access Denied**\n\n"
+    response_text += f"I cannot provide information about '{query}' because it requires access to {requested_content}, which is not available to your role ({user_role}).\n\n"
+    response_text += f"**Your current access level**: {user_role}\n"
+    response_text += f"**Required access**: "
+    
+    # Show what roles can access the requested content
+    if "financial" in requested_content.lower():
+        response_text += "Finance or C-Level\n"
+    elif "marketing" in requested_content.lower():
+        response_text += "Marketing or C-Level\n"
+    elif "engineering" in requested_content.lower():
+        response_text += "Engineering or C-Level\n"
+    else:
+        response_text += "Higher privilege level\n"
+    
+    response_text += f"\n**Available to you**: Employee Handbook and general company information\n"
+    response_text += f"**Suggestion**: Try asking about general company policies, employee benefits, or workplace guidelines.\n\n"
+    response_text += f"📊 **Access attempt logged for security audit**"
+    
+    return {
+        "response": response_text,
+        "sources": [],
+        "accuracy_score": 0.0,
+        "confidence_level": "low",
+        "validation_score": 0.0,
+        "query_category": "access_denied",
+        "total_chunks_analyzed": 0,
+        "citations": [],
+        "chunk_details": [],
+        "quality_metrics": {"access_denied": True, "role": user_role},
+        "improvement_suggestions": [
+            "Try asking about topics available to your role",
+            "Contact administrator for additional access if needed",
+            "Rephrase your question to focus on general company information"
+        ],
+        "query_optimization": {"access_denied": True, "user_role": user_role}
+    }
+
+def get_fallback_response(query: str, user_role: str) -> str:
+    """Get role-appropriate fallback response when documents can't be read"""
+    
+    fallback_responses = {
+        "C-Level": f"Based on executive-level analysis for '{query}': Our strategic initiatives show positive momentum across all departments. Financial performance remains strong with sustainable growth patterns. Leadership team continues to drive innovation and operational excellence.",
+        
+        "Finance": f"Financial overview for '{query}': Current fiscal performance shows healthy margins and controlled expenditure. Revenue streams remain diversified with strong cash flow management. Budget allocations align with strategic priorities.",
+        
+        "Marketing": f"Marketing insights for '{query}': Brand positioning continues to strengthen in target markets. Customer engagement metrics show positive trends across digital channels. Campaign effectiveness demonstrates strong ROI potential.",
+        
+        "HR": f"HR information for '{query}': Employee policies support work-life balance and professional development. Comprehensive benefits package includes health coverage and learning opportunities. Performance management focuses on growth and recognition.",
+        
+        "Engineering": f"Engineering overview for '{query}': Technical infrastructure supports scalable operations with robust security measures. Development processes follow industry best practices with continuous integration. Innovation initiatives drive technological advancement.",
+        
+        "Employee": f"Employee information for '{query}': Company culture emphasizes collaboration and professional growth. Workplace policies support flexible arrangements and career development. Resources are available for skill enhancement and team engagement.",
+        
+        "Intern": f"Intern program information for '{query}': Welcome to our comprehensive internship experience! Learning opportunities include mentorship, skill development, and project participation. Support systems ensure successful integration into our team environment."
+    }
+    
+    return fallback_responses.get(user_role, fallback_responses["Employee"])
 
 def read_document_content(filename: str) -> str:
     """Read actual document content from data/raw folder"""
@@ -20,155 +95,62 @@ def read_document_content(filename: str) -> str:
         if os.path.exists(file_path):
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                # Return first 500 characters for response
-                return content[:500] + "..." if len(content) > 500 else content
+                # Return first 2000 characters for response (increased from 500)
+                return content[:2000] + "..." if len(content) > 2000 else content
         else:
             return f"Document {filename} not found in the system."
     except Exception as e:
         return f"Error reading document {filename}: {str(e)}"
 
-def _analyze_query_intent(query: str) -> str:
-    """Analyze what the query is asking about"""
-    query_lower = query.lower()
-    
-    if any(word in query_lower for word in ["financial", "finance", "revenue", "profit", "budget", "money", "quarterly"]):
-        return "Financial information"
-    elif any(word in query_lower for word in ["marketing", "market", "customer", "campaign", "sales", "q4"]):
-        return "Marketing information"
-    elif any(word in query_lower for word in ["employee", "handbook", "hr", "policy", "benefits"]):
-        return "HR/Employee information"
-    elif any(word in query_lower for word in ["engineering", "technical", "code", "development", "tech"]):
-        return "Technical/Engineering information"
-    else:
-        return "General information"
-
-def _get_required_document(query: str) -> str:
-    """Determine which document would be needed to answer the query"""
-    query_lower = query.lower()
-    
-    if any(word in query_lower for word in ["financial", "finance", "revenue", "profit", "budget", "money", "quarterly"]):
-        return "Quarterly Financial Report"
-    elif any(word in query_lower for word in ["marketing", "market", "customer", "campaign", "sales", "q4"]):
-        return "Marketing Report"
-    elif any(word in query_lower for word in ["employee", "handbook", "hr", "policy", "benefits"]):
-        return "Employee Handbook"
-    elif any(word in query_lower for word in ["engineering", "technical", "code", "development", "tech"]):
-        return "Engineering Documentation"
-    else:
-        return "Unknown document type"
-
 def run_pipeline(query: str, user_role: str, username: str = None, session_id: str = None) -> Dict[str, Any]:
-    """Enhanced RAG pipeline that uses actual document content with audit logging"""
+    """Enhanced RAG pipeline that uses actual document content with strict access control and audit logging"""
     
-    # Strict role-based document access mapping - each role gets only their specific documents
+    # Role-based document access mapping - STRICT CONTROL
     role_documents = {
         "C-Level": ["quarterly_financial_report.md", "market_report_q4_2024.md", "employee_handbook.md", "engineering_master_doc.md"],
-        "Finance": ["quarterly_financial_report.md"],  # Only financial documents
-        "Marketing": ["market_report_q4_2024.md"],     # Only marketing documents
-        "HR": ["employee_handbook.md"],                # Only HR documents
-        "Engineering": ["engineering_master_doc.md"],  # Only engineering documents
-        "Employee": [],                                 # No specific documents - general access only
-        "Intern": []                                    # No specific documents - training materials only
+        "Finance": ["quarterly_financial_report.md", "employee_handbook.md"],
+        "Marketing": ["market_report_q4_2024.md", "employee_handbook.md"],
+        "HR": ["employee_handbook.md"],
+        "Engineering": ["engineering_master_doc.md", "employee_handbook.md"],
+        "Employee": ["employee_handbook.md"],
+        "Intern": ["employee_handbook.md"]
     }
     
     # Get documents accessible to this role
-    accessible_docs = role_documents.get(user_role, [])
-    
-    # If no documents are accessible, return access denied message
-    if not accessible_docs:
-        # Log access denied
-        if username:
-            log_document_access(
-                username=username,
-                user_role=user_role,
-                document_name="any_document",
-                access_type="query",
-                query_text=query,
-                access_granted=False,
-                chunks_accessed=0,
-                session_id=session_id
-            )
-        
-        return {
-            "response": f"Access Denied: Your role ({user_role}) does not have access to any specific documents.\n\n"
-                       f"🔐 **Your Access Level**: {user_role}\n"
-                       f"📄 **Available Documents**: None\n\n"
-                       f"**Access Policy:**\n"
-                       f"• C-Level: All documents\n"
-                       f"• Finance: Financial reports only\n"
-                       f"• Marketing: Marketing reports only\n"
-                       f"• HR: Employee handbook only\n"
-                       f"• Engineering: Technical documentation only\n"
-                       f"• Employee: General information only (no specific documents)\n"
-                       f"• Intern: Training materials only (no specific documents)\n\n"
-                       f"💡 Contact your administrator if you need access to specific documents.",
-            "sources": [],
-            "accuracy_score": 0.0,
-            "confidence_level": "low",
-            "validation_score": 0.0,
-            "query_category": "access_denied",
-            "total_chunks_analyzed": 0,
-            "citations": [],
-            "chunk_details": []
-        }
+    accessible_docs = role_documents.get(user_role, ["employee_handbook.md"])
     
     # Try to find the most relevant document based on query keywords
     query_lower = query.lower()
     relevant_doc = None
     
-    # Strict keyword matching - only return document if query specifically matches
-    if any(word in query_lower for word in ["financial", "finance", "revenue", "profit", "budget", "money", "quarterly", "report"]):
+    # Enhanced keyword matching with strict access control
+    if any(word in query_lower for word in ["financial", "finance", "revenue", "profit", "budget", "money", "quarterly", "earnings", "cash", "flow", "q1", "q2", "q3", "q4"]):
         if "quarterly_financial_report.md" in accessible_docs:
             relevant_doc = "quarterly_financial_report.md"
-    elif any(word in query_lower for word in ["marketing", "market", "customer", "campaign", "sales", "q4", "2024"]):
+        else:
+            # User doesn't have access to financial documents
+            return create_access_denied_response(query, user_role, "financial documents", username, session_id)
+            
+    elif any(word in query_lower for word in ["marketing", "market", "customer", "campaign", "sales", "advertising", "promotion"]):
         if "market_report_q4_2024.md" in accessible_docs:
             relevant_doc = "market_report_q4_2024.md"
-    elif any(word in query_lower for word in ["employee", "handbook", "hr", "policy", "policies", "benefits"]):
-        if "employee_handbook.md" in accessible_docs:
-            relevant_doc = "employee_handbook.md"
-    elif any(word in query_lower for word in ["engineering", "technical", "code", "development", "tech", "master", "doc"]):
+        else:
+            # User doesn't have access to marketing documents
+            return create_access_denied_response(query, user_role, "marketing documents", username, session_id)
+            
+    elif any(word in query_lower for word in ["engineering", "technical", "code", "development", "tech", "software", "system"]):
         if "engineering_master_doc.md" in accessible_docs:
             relevant_doc = "engineering_master_doc.md"
+        else:
+            # User doesn't have access to engineering documents
+            return create_access_denied_response(query, user_role, "engineering documents", username, session_id)
+    else:
+        # Default to employee handbook for general queries
+        relevant_doc = "employee_handbook.md"
     
-    # If no relevant document found or user doesn't have access, deny access
-    if not relevant_doc or relevant_doc not in accessible_docs:
-        # Log access denied
-        if username:
-            log_document_access(
-                username=username,
-                user_role=user_role,
-                document_name=relevant_doc or "unknown_document",
-                access_type="query",
-                query_text=query,
-                access_granted=False,
-                chunks_accessed=0,
-                session_id=session_id
-            )
-        
-        return {
-            "response": f"Access Denied: Your query '{query}' cannot be answered with your available documents.\n\n"
-                       f"🔐 **Your Access Level**: {user_role}\n"
-                       f"📄 **Your Available Documents**: {', '.join(accessible_docs) if accessible_docs else 'None'}\n\n"
-                       f"**Query Analysis:**\n"
-                       f"• Your query appears to be about: {_analyze_query_intent(query)}\n"
-                       f"• Required document access: {_get_required_document(query)}\n"
-                       f"• Your role permissions: {', '.join(accessible_docs) if accessible_docs else 'No specific documents'}\n\n"
-                       f"💡 **Suggestions:**\n"
-                       f"• Ask questions related to your accessible documents\n"
-                       f"• Contact your administrator for additional access\n"
-                       f"• Rephrase your question to match your available documents",
-            "sources": [],
-            "accuracy_score": 0.0,
-            "confidence_level": "low",
-            "validation_score": 0.0,
-            "query_category": "access_denied",
-            "total_chunks_analyzed": 0,
-            "citations": [],
-            "chunk_details": []
-        }
-    
-    # Check if user has access to the document
-    access_granted = relevant_doc in accessible_docs
+    # Double-check access (security measure)
+    if relevant_doc not in accessible_docs:
+        return create_access_denied_response(query, user_role, relevant_doc, username, session_id)
     
     # Log document access attempt
     if username:
@@ -178,7 +160,7 @@ def run_pipeline(query: str, user_role: str, username: str = None, session_id: s
             document_name=relevant_doc,
             access_type="query",
             query_text=query,
-            access_granted=access_granted,
+            access_granted=True,
             chunks_accessed=len(accessible_docs),
             session_id=session_id
         )
@@ -187,10 +169,10 @@ def run_pipeline(query: str, user_role: str, username: str = None, session_id: s
     document_content = read_document_content(relevant_doc)
     
     # Calculate accuracy based on document access and content quality
-    accuracy_score = 92.0 if access_granted and "not found" not in document_content else 85.0
+    accuracy_score = 92.0 if "not found" not in document_content else 85.0
     
     # Log the response accuracy back to audit system
-    if username and access_granted:
+    if username:
         log_document_access(
             username=username,
             user_role=user_role,
@@ -205,20 +187,35 @@ def run_pipeline(query: str, user_role: str, username: str = None, session_id: s
     
     # Create response based on actual document content
     if "not found" in document_content or "Error reading" in document_content:
-        # Fallback to hardcoded responses if document can't be read
-        fallback_responses = {
-            "C-Level": f"Based on company analysis for '{query}': Financial performance shows strong growth with 15% revenue increase. Market position is solid with expanding customer base. Strategic initiatives are on track.",
-            "Finance": f"Financial analysis for '{query}': Q4 revenue reached $2.5M with 28% profit margin. Operating expenses controlled at $1.8M. Growth trajectory remains positive.",
-            "Marketing": f"Marketing insights for '{query}': Customer acquisition improved by 8%. Digital campaigns showing 25% higher ROI. Market share increased to 12%.",
-            "HR": f"HR information for '{query}': Employee policies updated for 2024. Remote work allows 3 days per week. Benefits include comprehensive health coverage.",
-            "Engineering": f"Engineering guidelines for '{query}': Code review requires 2 approvals. CI/CD pipeline uses GitHub Actions. Tech stack includes Python, React, PostgreSQL.",
-            "Employee": f"Employee information for '{query}': Company policies allow flexible work arrangements. Health benefits and 25 days annual leave available. Performance reviews quarterly.",
-            "Intern": f"Intern information for '{query}': Welcome to the internship program! You have access to basic company policies and learning resources. Training materials include orientation guides and mentorship programs."
-        }
-        response_text = fallback_responses.get(user_role, fallback_responses["Employee"])
+        # Fallback to role-appropriate responses
+        response_text = get_fallback_response(query, user_role)
+        response_text += f"\n\n📋 **Note**: Document content could not be loaded, showing fallback response.\n📄 **Your accessible documents**: {', '.join(accessible_docs)}"
     else:
-        # Use actual document content in response
-        response_text = f"Based on {relevant_doc} (accessible to your {user_role} role), here's information about '{query}':\n\n{document_content}\n\n📋 **Your Access Level**: {user_role}\n📄 **Source Document**: {relevant_doc}\n🔐 **Role-Based Access**: Active\n📊 **Access Logged**: Yes"
+        # Use actual document content in response with better formatting
+        if "cash flow" in query_lower or "q2" in query_lower:
+            # Try to find specific Q2 cash flow information
+            lines = document_content.split('\n')
+            q2_content = []
+            in_q2_section = False
+            
+            for line in lines:
+                if 'q2' in line.lower() or 'april' in line.lower() or 'may' in line.lower() or 'june' in line.lower():
+                    in_q2_section = True
+                    q2_content.append(line)
+                elif in_q2_section and ('q3' in line.lower() or 'july' in line.lower()):
+                    break
+                elif in_q2_section:
+                    q2_content.append(line)
+            
+            if q2_content:
+                specific_content = '\n'.join(q2_content[:20])  # First 20 lines of Q2 content
+                response_text = f"**Q2 Cash Flow Analysis** (from {relevant_doc}):\n\n{specific_content}\n\n"
+            else:
+                response_text = f"Based on {relevant_doc}, here's the financial information for your query about '{query}':\n\n{document_content}\n\n"
+        else:
+            response_text = f"Based on {relevant_doc} (accessible to your {user_role} role), here's information about '{query}':\n\n{document_content}\n\n"
+        
+        response_text += f"📋 **Your Access Level**: {user_role}\n📄 **Source Document**: {relevant_doc}\n🔐 **Role-Based Access**: Active\n📊 **Access Logged**: Yes"
     
     return {
         "response": response_text,
